@@ -25,6 +25,10 @@ from core.utils import PHONE_CHANNELS, new_case_code, normalise_msisdn, pseudo_i
 
 MENU_WORDS = {"HELP", "MENU", "START", "/START", "HI", "HELLO"}
 RATINGS = {"1": "good", "2": "ok", "3": "not_good", "😀": "good", "🙂": "good", "😐": "ok", "😞": "not_good"}
+FEELINGS = {"1": "little", "2": "lot", "3": "scared", "4": "danger"}
+# What the child says they feel is a floor: it can raise severity, never lower it.
+FEELING_FLOOR = {"little": 1, "lot": 2, "scared": 3, "danger": 4}
+FEELING_LABELS = {"1": "A little", "2": "A lot", "3": "Scared", "4": "In danger"}
 LANG_OPTIONS = {"1": ("lg", "Luganda"), "2": ("rn", "Runyankore"), "3": ("sw", "Swahili"), "4": ("en", "English")}
 
 
@@ -34,6 +38,41 @@ def _reply(text, state, case=None, options=None):
 
 def _menu_options():
     return [{"key": k, "label": p["short_en"]} for k, p in picks().items()]
+
+
+def _feeling_options():
+    return [{"key": k, "label": label} for k, label in FEELING_LABELS.items()]
+
+
+def apply_feeling(case, feeling):
+    """Record how the child says it feels. Returns the severity the case had before."""
+    was = case.severity
+    case.flags = sorted(set(case.flags) | {f"child_feels_{feeling}"})
+    case.severity = max(was, FEELING_FLOOR[feeling])
+    case.save(update_fields=["flags", "severity"])
+    if case.severity > was:
+        sla.reset_clock(case, f"severity raised {was} -> {case.severity}")
+        sla.once(case, "severity_raised", f"{was} -> {case.severity}: child said how it feels")
+        ai_triage.schedule(case.id)
+    return was
+
+
+def _answer_feeling(conv, text):
+    """Handle the reply to the feeling question. None means it was more information instead."""
+    conv.draft = {}
+    conv.save()
+    if text == "0":
+        return _reply(msg("feeling_thanks"), "CASE_OPEN", conv.case)
+    feeling = FEELINGS.get(text)
+    if feeling is None:
+        return None
+    case = conv.case
+    apply_feeling(case, feeling)
+    if case.severity >= 4:
+        return _reply(msg("danger", code=case.code), "CASE_OPEN", case)
+    if feeling == "little" and case.severity >= 3:
+        return _reply(msg("feeling_higher"), "CASE_OPEN", case)
+    return _reply(msg("feeling_thanks"), "CASE_OPEN", case)
 
 
 def get_reporter(channel, sender_id, language):
@@ -96,10 +135,13 @@ def _case_reply(case, conv, text="", language=None):
         conv.save()
         options = [{"key": k, "label": name} for k, (_, name) in LANG_OPTIONS.items()]
         return _reply(msg("received", code=case.code) + " " + msg("lang_question"), "PICK_LANG", case, options)
-    conv.state, conv.case, conv.draft = "CASE_OPEN", case, {}
+    if case.severity >= 4:  # already in danger: no more questions
+        conv.state, conv.case, conv.draft = "CASE_OPEN", case, {}
+        conv.save()
+        return _reply(msg("danger", code=case.code), "CASE_OPEN", case)
+    conv.state, conv.case, conv.draft = "CASE_OPEN", case, {"awaiting": "feeling"}
     conv.save()
-    key = "danger" if case.severity >= 4 else "received"
-    return _reply(msg(key, code=case.code), "CASE_OPEN", case)
+    return _reply(msg("received", code=case.code) + " " + msg("feeling_ask"), "CASE_OPEN", case, _feeling_options())
 
 
 def _status(reporter, conv, args):
@@ -211,11 +253,17 @@ def _route(channel, reporter, text, language):
             case.save(update_fields=["language", "language_conf"])
             reporter.language = code
             reporter.save(update_fields=["language"])
-            conv.state = "CASE_OPEN"
+            conv.state, conv.draft = "CASE_OPEN", {"awaiting": "feeling"}
             conv.save()
-            return _reply(msg("lang_saved", language=name), "CASE_OPEN", case)
+            return _reply(msg("lang_saved", language=name) + " " + msg("feeling_ask"), "CASE_OPEN", case,
+                          _feeling_options())
         conv.state = "CASE_OPEN"  # they wrote something else: treat it as more information
         conv.save()
+
+    if conv.state == "CASE_OPEN" and conv.case and (conv.draft or {}).get("awaiting") == "feeling":
+        answered = _answer_feeling(conv, text)
+        if answered:
+            return answered
 
     if conv.state == "CHECKIN" and conv.case:
         case = conv.case
