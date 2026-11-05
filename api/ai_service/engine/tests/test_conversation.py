@@ -75,7 +75,7 @@ def test_serious_case_asks_now_then_who_then_offers():
 
 
 def test_happening_now_raises_s2_to_s3():
-    response = turn(text="he asked me to send pictures")
+    response = turn(text="people keep laughing at me in the group chat")
     response = turn(response.state, choice="feel_skip")
     assert response.assessment.severity.value == "S2"
     response = turn(response.state, choice="yes")

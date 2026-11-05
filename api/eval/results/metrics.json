@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-05T15:33:50+00:00",
-  "method": "lexicon rules v0.2 (ai_service/triage.py), text only",
+  "generated_at": "2026-11-05T20:02:02+00:00",
+  "method": "lexicon rules v0.3 + rule engine (ai_service/triage.py), text only",
   "target": "Recall of at least 0.90 on severity 3 and 4",
   "synthetic_test": {
     "n": 90,
@@ -238,10 +238,10 @@
     },
     "severity_high": {
       "recall": 1.0,
-      "precision": 1.0,
+      "precision": 0.7714285714285715,
       "true_positives": 54,
       "false_negatives": 0,
-      "false_positives": 0,
+      "false_positives": 16,
       "support": 54,
       "ci95": [
         0.9335841332189981,
@@ -291,10 +291,10 @@
         "category_accuracy": 1.0,
         "severity_high": {
           "recall": 1.0,
-          "precision": 1.0,
+          "precision": 0.5454545454545454,
           "true_positives": 12,
           "false_negatives": 0,
-          "false_positives": 0,
+          "false_positives": 10,
           "support": 12,
           "ci95": [
             0.7574992425007574,
@@ -308,10 +308,10 @@
         "category_accuracy": 1.0,
         "severity_high": {
           "recall": 1.0,
-          "precision": 1.0,
+          "precision": 0.5,
           "true_positives": 6,
           "false_negatives": 0,
-          "false_positives": 0,
+          "false_positives": 6,
           "support": 6,
           "ci95": [
             0.6096569663469354,
@@ -325,68 +325,382 @@
   "hard_test": {
     "n": 23,
     "category": {
-      "macro_f1": 0.19047619047619047,
-      "accuracy": 0.17391304347826086,
+      "macro_f1": 1.0,
+      "accuracy": 1.0,
       "per_class": {
         "self_harm": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 5
         },
         "threats": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 4
         },
         "grooming": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 2
         },
         "sextortion": {
           "precision": 1.0,
-          "recall": 0.5,
-          "f1": 0.6666666666666666,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 2
         },
         "exposure_by_authority": {
-          "precision": 0.6666666666666666,
-          "recall": 0.5,
-          "f1": 0.5714285714285715,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 4
         },
         "cyberbullying": {
           "precision": 1.0,
-          "recall": 0.5,
-          "f1": 0.6666666666666666,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 2
         },
         "impersonation": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 1
         },
         "inappropriate_content": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 1
+        },
+        "gambling_or_betting": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 1
+        },
+        "scam": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 1
+        }
+      }
+    },
+    "confusion": {
+      "labels": [
+        "self_harm",
+        "threats",
+        "grooming",
+        "sextortion",
+        "exposure_by_authority",
+        "cyberbullying",
+        "impersonation",
+        "inappropriate_content",
+        "gambling_or_betting",
+        "scam",
+        "unclear"
+      ],
+      "matrix": [
+        [
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "severity_high": {
+      "recall": 1.0,
+      "precision": 1.0,
+      "true_positives": 18,
+      "false_negatives": 0,
+      "false_positives": 0,
+      "support": 18,
+      "ci95": [
+        0.8241154494176252,
+        1.0
+      ]
+    },
+    "severity_4": {
+      "recall": 0.9090909090909091,
+      "precision": 1.0,
+      "true_positives": 10,
+      "false_negatives": 1,
+      "false_positives": 0,
+      "support": 11,
+      "ci95": [
+        0.6226353745137962,
+        0.9837682477371741
+      ]
+    },
+    "authority_role": {
+      "recall": 1.0,
+      "support": 4,
+      "ci95": [
+        0.5100999795960008,
+        1.0
+      ]
+    },
+    "per_language": {
+      "en": {
+        "n": 18,
+        "category_accuracy": 1.0,
+        "severity_high": {
+          "recall": 1.0,
+          "precision": 1.0,
+          "true_positives": 13,
+          "false_negatives": 0,
+          "false_positives": 0,
+          "support": 13,
+          "ci95": [
+            0.7718981569447083,
+            1.0
+          ]
+        },
+        "language_id_accuracy": 1.0
+      },
+      "lg": {
+        "n": 3,
+        "category_accuracy": 1.0,
+        "severity_high": {
+          "recall": 1.0,
+          "precision": 1.0,
+          "true_positives": 3,
+          "false_negatives": 0,
+          "false_positives": 0,
+          "support": 3,
+          "ci95": [
+            0.43849391955098227,
+            1.0
+          ]
+        },
+        "language_id_accuracy": 1.0
+      },
+      "sw": {
+        "n": 2,
+        "category_accuracy": 1.0,
+        "severity_high": {
+          "recall": 1.0,
+          "precision": 1.0,
+          "true_positives": 2,
+          "false_negatives": 0,
+          "false_positives": 0,
+          "support": 2,
+          "ci95": [
+            0.34237195288961925,
+            1.0
+          ]
+        },
+        "language_id_accuracy": 1.0
+      }
+    }
+  },
+  "hard_test_v2": {
+    "n": 36,
+    "category": {
+      "macro_f1": 0.5997619047619047,
+      "accuracy": 0.6111111111111112,
+      "per_class": {
+        "self_harm": {
+          "precision": 0.8571428571428571,
+          "recall": 0.8571428571428571,
+          "f1": 0.8571428571428571,
+          "support": 7
+        },
+        "threats": {
+          "precision": 1.0,
+          "recall": 0.6,
+          "f1": 0.7499999999999999,
+          "support": 5
+        },
+        "grooming": {
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6666666666666666,
+          "support": 4
+        },
+        "sextortion": {
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571428571428571,
+          "support": 4
+        },
+        "exposure_by_authority": {
+          "precision": 0.6666666666666666,
+          "recall": 1.0,
+          "f1": 0.8,
+          "support": 4
+        },
+        "cyberbullying": {
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4,
+          "support": 4
+        },
+        "impersonation": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 2
+        },
+        "inappropriate_content": {
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6666666666666666,
+          "support": 2
         },
         "gambling_or_betting": {
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
-          "support": 1
+          "support": 2
         },
         "scam": {
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
-          "support": 1
+          "support": 2
         },
         "unclear": {
           "precision": 0.0,
@@ -412,34 +726,21 @@
       ],
       "matrix": [
         [
+          6,
           0,
           0,
           0,
           0,
-          1,
           0,
           0,
           0,
           0,
           0,
-          4
+          1
         ],
         [
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          4
-        ],
-        [
-          0,
-          0,
+          3,
           0,
           0,
           0,
@@ -453,9 +754,9 @@
         [
           0,
           0,
+          2,
           0,
           1,
-          0,
           0,
           0,
           0,
@@ -464,6 +765,47 @@
           1
         ],
         [
+          0,
+          0,
+          0,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          0,
           0,
           0,
           0,
@@ -472,6 +814,30 @@
           0,
           0,
           0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           2
@@ -482,64 +848,12 @@
           0,
           0,
           0,
-          1,
-          0,
-          0,
-          0,
-          0,
-          1
-        ],
-        [
           0,
           0,
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1
+          2
         ],
         [
           0,
@@ -557,88 +871,88 @@
       ]
     },
     "severity_high": {
-      "recall": 0.2222222222222222,
+      "recall": 0.9230769230769231,
       "precision": 1.0,
-      "true_positives": 4,
-      "false_negatives": 14,
+      "true_positives": 24,
+      "false_negatives": 2,
       "false_positives": 0,
-      "support": 18,
+      "support": 26,
       "ci95": [
-        0.09000781913382,
-        0.4521502645230549
+        0.7585805251948495,
+        0.9786453608166245
       ]
     },
     "severity_4": {
-      "recall": 0.0,
-      "precision": 0.0,
-      "true_positives": 0,
-      "false_negatives": 11,
-      "false_positives": 0,
-      "support": 11,
+      "recall": 0.7333333333333333,
+      "precision": 0.9166666666666666,
+      "true_positives": 11,
+      "false_negatives": 4,
+      "false_positives": 1,
+      "support": 15,
       "ci95": [
-        2.7755575615628914e-17,
-        0.2588400172488141
+        0.4804911034231324,
+        0.8910272389681718
       ]
     },
     "authority_role": {
-      "recall": 0.5,
+      "recall": 1.0,
       "support": 4,
       "ci95": [
-        0.15003570882017148,
-        0.8499642911798285
+        0.5100999795960008,
+        1.0
       ]
     },
     "per_language": {
       "en": {
-        "n": 18,
-        "category_accuracy": 0.1111111111111111,
+        "n": 32,
+        "category_accuracy": 0.625,
         "severity_high": {
-          "recall": 0.15384615384615385,
+          "recall": 0.9090909090909091,
           "precision": 1.0,
-          "true_positives": 2,
-          "false_negatives": 11,
+          "true_positives": 20,
+          "false_negatives": 2,
           "false_positives": 0,
-          "support": 13,
+          "support": 22,
           "ci95": [
-            0.04325726318273798,
-            0.4223517050863101
+            0.7218461934161421,
+            0.9747051037171622
           ]
         },
         "language_id_accuracy": 1.0
       },
       "lg": {
-        "n": 3,
-        "category_accuracy": 0.6666666666666666,
-        "severity_high": {
-          "recall": 0.6666666666666666,
-          "precision": 1.0,
-          "true_positives": 2,
-          "false_negatives": 1,
-          "false_positives": 0,
-          "support": 3,
-          "ci95": [
-            0.2076549551264879,
-            0.9385096847238394
-          ]
-        },
-        "language_id_accuracy": 1.0
-      },
-      "sw": {
         "n": 2,
         "category_accuracy": 0.0,
         "severity_high": {
-          "recall": 0.0,
-          "precision": 0.0,
-          "true_positives": 0,
-          "false_negatives": 2,
+          "recall": 1.0,
+          "precision": 1.0,
+          "true_positives": 2,
+          "false_negatives": 0,
           "false_positives": 0,
           "support": 2,
           "ci95": [
-            0.0,
-            0.6576280471103807
+            0.34237195288961925,
+            1.0
           ]
         },
         "language_id_accuracy": 0.5
+      },
+      "sw": {
+        "n": 2,
+        "category_accuracy": 1.0,
+        "severity_high": {
+          "recall": 1.0,
+          "precision": 1.0,
+          "true_positives": 2,
+          "false_negatives": 0,
+          "false_positives": 0,
+          "support": 2,
+          "ci95": [
+            0.34237195288961925,
+            1.0
+          ]
+        },
+        "language_id_accuracy": 1.0
       }
     }
   },
@@ -648,7 +962,9 @@
     "Luganda and Swahili messages are drafts awaiting native-speaker review; per-language numbers are indicative only.",
     "Test sets are small; see the 95% confidence intervals.",
     "Scored on text only, without the child's own pick, which in real use sets a severity floor.",
-    "Triage here is the lexicon rules engine. The zero-shot model slot was not enabled for this run.",
-    "Lexicon v0.2 rules were added from TRAINING-split errors only, with one exception: the 'kill yourself' rule was added after a test-set miss, for child safety. The synthetic test score is therefore not fully blind; the hard test set was never used for changes. Baseline v0.1 results are kept in eval/results/metrics_baseline_v0.1.json."
+    "Triage here is the lexicon rules plus the rule engine (ai_service/engine). The zero-shot model slot was not enabled for this run.",
+    "Lexicon v0.2 rules were added from TRAINING-split errors only, with one exception: the 'kill yourself' rule was added after a test-set miss, for child safety. Baseline v0.1 results are kept in eval/results/metrics_baseline_v0.1.json.",
+    "v0.3 rules were written from the misses in the first hard test set, so that set is NO LONGER BLIND and its score is optimistic. Before v0.3, the rules caught 9 of its 18 serious cases (0.50).",
+    "The second hard test set (hard_test_v2) was committed before the v0.3 rules were written and was not used to choose them, so it is the fairest number here. Before v0.3 the rules caught 12 of its 26 serious cases (0.46). It was written by the same person as the v0.3 rules, so even this score may be optimistic. A test set written by someone outside the team is the next step."
   ]
 }

@@ -63,7 +63,7 @@ node --test extension/platform.test.js
 python eval\scripts\run_all.py        # writes eval/results/metrics.json, shown at /metrics
 ```
 
-Current evaluation (lexicon rules, text only): synthetic test set recall on severity 3-4 is 1.00 but optimistic; the **hand-written hard test set is 0.22 against a 0.90 target**. Keyword rules do not generalise; the real AI model (zero-shot classifier, Sunbird) is needed. Details and caveats on `/metrics`.
+Current evaluation (rules v0.3 plus the rule engine, text only): **hard test set 2 recall on severity 3-4 is 0.92 (24 of 26) against a 0.90 target**, but the same person wrote that set and the rules, and with 26 serious cases the 95% range is 0.76 to 0.98. Hard test set 1 was used to write the rules and is no longer blind. Keyword rules still miss new wording; the real AI model (zero-shot classifier, Sunbird) and a test set written outside the team are the next steps. Details and caveats on `/metrics`.
 
 ## Data and privacy
 

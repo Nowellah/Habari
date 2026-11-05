@@ -41,9 +41,26 @@ LEXICON_RULES: tuple[LexiconRule, ...] = (
     _rule("sextortion_threat", Category.SEXTORTION, Severity.S3, (
         r"\bsextort\w*",
         r"\b(threat\w*|blackmail\w*|black mail)\b",
-        r"\b(will|going to|gonna|wants? to|said (he|she|they) will)\b.{0,20}\b(leak|post|share|expose|publish)\b",
-        r"\b(leak|post|share|publish|expose)\b.{0,40}\b(my|the|those)\b.{0,15}\b(nudes?|naked|photos?|pictures?|pics?|videos?|images?)\b",
-        r"\bor (else )?(he|she|they)\b.{0,20}\b(post|share|leak|send)\b",
+        r"\b(will|going to|gonna|wants? to|said (he|she|they) will)\b.{0,20}\b(leak|post|share|expose|publish|show)\b",
+        r"\b(leak|post|share|publish|expose|show|send)\b.{0,40}\b(my|the|those)\b.{0,15}\b(nudes?|naked|photos?|pictures?|pics?|videos?|images?)\b",
+        r"\bor (else )?(he|she|they)\b.{0,20}\b(post|share|leak|send|show)\b",
+        # v0.3: a condition on the child ("if I don't / if I stop ...") tied to their images
+        r"\bif i (dont|do not|wont|will not|stop|refuse|block)\b.{0,60}\b(nudes?|naked|photos?|pictures?|pics?|videos?)\b",
+    )),
+    # v0.3: an adult asking for images or for the child to undress is grooming at S3, not S2.
+    _rule("grooming_image_request", Category.GROOMING, Severity.S3, (
+        r"\b(ask|asks|asking|asked|wants?|begging|begs|beg|pressur\w*)\b (me )?(for|to (send|take))\b.{0,20}\b(nudes?|naked|pics?|pictures?|photos?|videos?|selfies?)\b",
+        r"\b(take|took|taking|takes) off (my|your) (clothes|shirt|dress|top|skirt|uniform|trousers)\b",
+        r"\b(our|this|the) (chats?|talks?|messages?|friendship|relationship) (is|are) (special|secret|just between us)\b",
+        r"\b(dont|do not|must not|mustnt|never) tell (your|my) (parents|mum|mom|dad|mother|father|family)\b.{0,20}\b(about )?(us|me|our|this|we)\b",
+        r"\b(parents|mum|mom|dad|mother|father|family) (would|will|wouldnt|wont) (not )?understand\b.{0,20}\b(us|our|this|we)\b",
+        r"\b(wants?|asked|asking|asks|told|tells?|invit\w*) (me )?to (come|go) to (his|her|their) (place|house|home|room|hotel|flat|apartment)\b",
+    )),
+    # v0.3: sexual or doctored images of the child being shared by peers.
+    _rule("image_based_abuse", Category.HARASSMENT, Severity.S3, (
+        r"\b(edit\w*|photoshop\w*|put|morph\w*|stuck) my (face|head|photo|picture)\b.{0,20}\b(on|onto|into)\b",
+        r"\b(fake|edited|dirty|naked|nude|sexy) (picture|photo|pic|video|image)s? of me\b",
+        r"\b(picture|photo|pic|video|image)s? of me (naked|undressed|in the (toilet|bathroom|shower))\b",
     )),
     _rule("grooming_request_for_images", Category.GROOMING, Severity.S2, (
         r"\b(asked|asking|wants?|told|tells?) me to send\b.{0,30}\b(photos?|pictures?|pics?|nudes?|videos?)\b",
@@ -83,6 +100,8 @@ LEXICON_RULES: tuple[LexiconRule, ...] = (
         r"\blost (my )?money\b",
         r"\bimpersonat\w*",
         r"\bwon a prize\b",
+        r"\b(double|triple) (my|your) (money|savings)\b",
+        r"\bsend (them|him|her) (all )?my (savings|money|pocket money)\b",
     )),
     _rule("exposure_harmful_content", Category.EXPOSURE, Severity.S1, (
         r"\bporn\w*",
@@ -91,6 +110,9 @@ LEXICON_RULES: tuple[LexiconRule, ...] = (
         r"\bgore\b",
         r"\bdisturbing\b",
         r"\binappropriate (video|content|pictures?|images?)\b",
+        r"\b(video|clip|picture|photo)s? of (someone|somebody|people|a (person|man|woman|child|boy|girl))\b.{0,15}\b(getting|being) (hurt|killed|beaten|stabbed|shot|cut)\b",
+        r"\b(cant|can not|cannot) stop (seeing|thinking about) (it|that video|the video|those pictures)\b",
+        r"\bkeep seeing it\b",
     )),
     _rule("distress_or_help_request", Category.OTHER, Severity.S2, (
         r"\bhelp me\b",
@@ -107,12 +129,17 @@ IMAGE_TERMS = re.compile(r"\b(nudes?|naked|photos?|pictures?|pics?|videos?|image
 PAYMENT_TERMS = re.compile(
     r"\b(money|pay|paid|paying|payment|airtime|momo|mobile money|ugx|shillings?|cash|bitcoin)\b|\$\s?\d+"
 )
-DEMAND_TERMS = re.compile(r"\b(asked|asking|wants?|demand\w*|forc\w+|telling me|told me|said|threat\w*|or else)\b")
+DEMAND_TERMS = re.compile(
+    r"\b(asked|asking|wants?|demand\w*|forc\w+|telling me|told me|said|says|threat\w*|or else|unless)\b"
+    r"|\bif i (dont|do not|wont|will not|refuse)\b"
+)
 
 TRUSTED_ROLES_FROM_CONTEXT = frozenset({"family", "teacher", "guardian"})
 TRUSTED_ROLE_TEXT = re.compile(
     r"\bmy (step ?)?(father|dad|daddy|mother|mom|mum|mummy|parents?|guardian|caretaker|uncle|aunt|auntie)\b"
-    r"|\bmy (class |head |games |form )?(teacher|headmaster|headmistress|matron|principal)\b"
+    r"|\bmy step(dad|father|mum|mom|mother)\b"
+    r"|\b(my|our|the) (class |head |games |form |football |sports )?(teacher|headmaster|headmistress|headteacher|matron|principal|coach|warden|patron)\b"
+    r"|\b(my|our|the) (pastor|priest|imam|sheikh|catechist)\b"
 )
 HARM_WORDS = re.compile(
     r"\b(touch\w*|beat\w*|hit|hits|slap\w*|abus\w*|threat\w*|hurt\w*|forc\w+|scared|afraid|naked|nude|"

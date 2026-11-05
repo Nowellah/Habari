@@ -44,7 +44,8 @@ def _text_signals(text: str) -> list[_Signal]:
         if rule.matches(text):
             signals.append(_Signal(rule.rule_id, rule.category, rule.severity, rule.weak))
     if IMAGE_TERMS.search(text) and PAYMENT_TERMS.search(text) and DEMAND_TERMS.search(text):
-        signals.append(_Signal("sextortion_payment_demand", Category.SEXTORTION, Severity.S3))
+        # v0.3: S4, matching the case engine's sextortion + money + threat combination.
+        signals.append(_Signal("sextortion_payment_demand", Category.SEXTORTION, Severity.S4))
     return signals
 
 
