@@ -1,0 +1,65 @@
+{% extends "channels/sim_phone_base.html" %}
+{% block title %}USSD simulator{% endblock %}
+{% block sim %}
+<h1>USSD simulator</h1>
+<div class="sim-wrap">
+  <div class="phone" aria-label="Simulated basic phone">
+    <div class="bar"><span>Basic phone</span><span>*384*1#</span></div>
+    <div class="screen"><div class="bubble them" id="ussd-screen">Press Dial to start.</div></div>
+    <form id="f" autocomplete="off">
+      <input id="reply" placeholder="Type a number" aria-label="USSD reply" disabled>
+      <button id="send" disabled>Send</button>
+    </form>
+    <form id="dial-form"><button id="dial" style="width:100%;margin-top:6px">Dial *384*1#</button></form>
+  </div>
+  <div class="side">
+    <p><label>Pretend phone number<br><input id="number" value="+256700000002"></label></p>
+    <p class="muted">Each reply goes to <code>/hooks/ussd</code> with the whole history, like Africa's Talking sends it (for example <code>1*2*1</code>). A reply starting <code>CON</code> keeps the menu open; <code>END</code> closes it.</p>
+    <h2 style="font-size:1rem">SMS inbox for this number</h2>
+    <div id="inbox" class="muted">No SMS yet.</div>
+  </div>
+</div>
+<script>
+  const screenEl = document.getElementById('ussd-screen');
+  const replyEl = document.getElementById('reply');
+  const sendEl = document.getElementById('send');
+  const numberEl = document.getElementById('number');
+  let history = [], session = null;
+
+  async function step() {
+    const body = new URLSearchParams({sessionId: session, phoneNumber: numberEl.value,
+                                      serviceCode: '*384*1#', text: history.join('*')});
+    const r = await fetch('/hooks/ussd', {method: 'POST', body});
+    const t = await r.text();
+    const open = t.startsWith('CON ');
+    screenEl.textContent = t.slice(4);
+    replyEl.disabled = sendEl.disabled = !open;
+    if (open) { replyEl.focus(); } else { session = null; loadInbox(); }
+  }
+
+  async function loadInbox() {
+    const r = await fetch('/sim/sms/outbox?number=' + encodeURIComponent(numberEl.value));
+    const data = await r.json();
+    const box = document.getElementById('inbox');
+    box.innerHTML = '';
+    if (!data.messages.length) { box.textContent = 'No SMS yet.'; return; }
+    for (const m of data.messages.slice(-5)) {
+      const p = document.createElement('p'); p.textContent = m.text; box.appendChild(p);
+    }
+  }
+
+  document.getElementById('dial-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    history = []; session = 'sim-' + Math.random().toString(36).slice(2);
+    step();
+  });
+  document.getElementById('f').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!replyEl.value.trim()) return;
+    history.push(replyEl.value.trim()); replyEl.value = '';
+    step();
+  });
+  numberEl.addEventListener('change', loadInbox);
+  loadInbox();
+</script>
+{% endblock %}

@@ -65,6 +65,9 @@ class Case(models.Model):
     summary = models.TextField(blank=True)
     flags = models.JSONField(default=list, blank=True)
     assigned_officer = models.ForeignKey("Officer", null=True, blank=True, on_delete=models.SET_NULL)
+    # How the current severity was decided: "rules", "ai" or "rules_ai_down".
+    triage_source = models.CharField(max_length=20, default="rules")
+    triaged_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     # SLA clock. ack_at and first_response_at belong to the current clock;
     # a reset clears them and the earlier times stay in SLAEvent.
@@ -133,6 +136,17 @@ class Referral(models.Model):
     sent_at = models.DateTimeField(default=timezone.now)
     ack_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, default="sent")
+
+
+class OutboundSMS(models.Model):
+    """Every SMS we send. Holds no phone number: the number comes from the vault
+    (or the incoming request) at send time. The SMS simulator shows these."""
+
+    reporter = models.ForeignKey(Reporter, null=True, on_delete=models.SET_NULL, related_name="outbound_sms")
+    text = models.TextField()
+    provider = models.CharField(max_length=20, default="simulator")
+    provider_status = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class SLAEvent(models.Model):

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Habari{% endblock %}
+{% block exit %}<button class="exit" id="quick-exit" type="button">Quick exit</button>{% endblock %}
+{% block content %}
+<style>
+  .chat { max-width: 560px; margin: 0 auto; display:flex; flex-direction:column; min-height: calc(100vh - 48px); }
+  .chat header h1 { font-size: 1.6rem; margin: 8px 0 4px; }
+  .log { flex:1; display:flex; flex-direction:column; gap:10px; padding: 12px 0; }
+  .b { max-width: 85%; padding: 10px 14px; border-radius: 16px; white-space: pre-wrap; line-height:1.4; }
+  .bot { align-self:flex-start; background: var(--line); }
+  .kid { align-self:flex-end; background: var(--accent); color: var(--bg); }
+  .opts { display:grid; gap:8px; }
+  .opt { text-align:left; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--accent); background: transparent; color: var(--fg); font-size: 1.05rem; cursor:pointer; }
+  .opt:hover, .opt:focus { background: var(--accent); color: var(--bg); }
+  .start { font-size: 1.2rem; padding: 18px; border-radius: 16px; border: 0; background: var(--accent); color: var(--bg); font-weight: 700; cursor:pointer; }
+  .call { display:inline-block; margin-top: 6px; padding: 10px 16px; border-radius: 999px; background: var(--s4); color: #fff; font-weight: 700; text-decoration: none; }
+  form.send { display:flex; gap:8px; position: sticky; bottom: 0; background: var(--bg); padding: 10px 0; }
+  form.send input { flex:1; min-width:0; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font-size: 1rem; }
+  form.send button { padding: 12px 18px; border-radius: 12px; border: 0; background: var(--accent); color: var(--bg); font-weight: 700; }
+  .help { font-size: .9rem; }
+  .exit { border: 0; cursor: pointer; }
+</style>
+<div class="chat">
+  <header>
+    <h1>Habari</h1>
+    <p class="muted help">You are not in trouble. Nothing is saved on this phone.
+      In danger now? <a href="tel:{{ helpline }}">Call {{ helpline }}</a>, it is free.</p>
+  </header>
+  <div class="log" id="log" aria-live="polite">
+    <button class="start" id="start" type="button">I need a friend</button>
+  </div>
+  <form class="send" id="send" autocomplete="off">
+    <input id="text" placeholder="Type here, any language" aria-label="Your message">
+    <button type="submit">Send</button>
+  </form>
+</div>
+<script>
+(() => {
+  // Anonymous mode: a one-time id kept only in this page's memory.
+  // Closing or refreshing the page forgets it. Nothing is written to the device.
+  const senderId = 'web-' + (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
+  const helpline = '{{ helpline|escapejs }}';
+  const log = document.getElementById('log');
+
+  function bubble(text, who) {
+    const d = document.createElement('div');
+    d.className = 'b ' + who;
+    d.textContent = text;
+    log.appendChild(d);
+    return d;
+  }
+
+  function clearOptions() { log.querySelectorAll('.opts').forEach(o => o.remove()); }
+
+  function showOptions(options) {
+    if (!options || !options.length) return;
+    const box = document.createElement('div');
+    box.className = 'opts';
+    for (const o of options) {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'opt';
+      btn.textContent = o.label;
+      btn.addEventListener('click', () => send(o.key, o.label));
+      box.appendChild(btn);
+    }
+    log.appendChild(box);
+  }
+
+  async function send(text, shown) {
+    clearOptions();
+    bubble(shown || text, 'kid');
+    let out;
+    try {
+      const r = await fetch('/api/channel/web', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, cache: 'no-store',
+        body: JSON.stringify({channel: 'web', sender_id: senderId, text})
+      });
+      out = await r.json();
+    } catch (e) {
+      bubble('We could not connect. If you are in danger, call ' + helpline + '. It is free.', 'bot');
+      return;
+    }
+    const b = bubble(out.reply_text, 'bot');
+    if (out.reply_text.startsWith('Call ')) {
+      const a = document.createElement('a');
+      a.className = 'call'; a.href = 'tel:' + helpline; a.textContent = 'Call ' + helpline + ' now';
+      b.appendChild(document.createElement('br')); b.appendChild(a);
+    }
+    showOptions(out.options);
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
+  document.getElementById('start').addEventListener('click', (e) => {
+    e.target.remove();
+    send('HELP', 'I need a friend');
+  });
+  document.getElementById('send').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('text');
+    const t = input.value.trim();
+    if (!t) return;
+    input.value = '';
+    const start = document.getElementById('start');
+    if (start) start.remove();
+    send(t);
+  });
+  // Quick exit: replace this page so Back does not return to it.
+  document.getElementById('quick-exit').addEventListener('click', () => {
+    log.innerHTML = '';
+    location.replace('https://www.google.com');
+  });
+})();
+</script>
+{% endblock %}

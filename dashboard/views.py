@@ -2,12 +2,18 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.cache import never_cache
 
 from core.harm import picks
 from core.messages import status_words
 from core.models import Case
 
 STAFF_GROUPS = {"officer", "supervisor", "safeguarding", "admin"}
+
+
+@never_cache  # nothing about the chat stays in the browser cache
+def chat_page(request):
+    return render(request, "dashboard/chat.html", {"helpline": settings.HELPLINE_NUMBER})
 
 
 def status_page(request, code):

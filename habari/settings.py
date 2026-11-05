@@ -150,3 +150,13 @@ LEXICON_PATH = BASE_DIR / "ai_service" / "lexicon.yaml"
 HMAC_SECRET = os.getenv("HMAC_SECRET", "dev-only-hmac-secret-change-me")
 # Sauti 116 child helpline. Number to be verified with the partner before the pitch.
 HELPLINE_NUMBER = os.getenv("HELPLINE_NUMBER", "116")
+
+# AI service (Phase 2). Triage runs in a background thread after the child's reply.
+AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://localhost:8001")
+AI_TIMEOUT = float(os.getenv("AI_TIMEOUT", "3"))
+AI_TRIAGE_INLINE = os.getenv("AI_TRIAGE_INLINE", "0") == "1"  # tests run it in-line
+# Simulator pages (/sim/sms, /sim/ussd) only exist while this is on.
+SIMULATORS_ENABLED = os.getenv("SIMULATORS_ENABLED", "1" if DEBUG else "0") == "1"
+AT_USERNAME = os.getenv("AT_USERNAME", "sandbox")
+AT_API_KEY = os.getenv("AT_API_KEY", "")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")

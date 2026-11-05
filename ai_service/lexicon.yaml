@@ -78,3 +78,11 @@ flags:
 combinations:
   - all_of: [sextortion, money_demand, threat]
     floor: 4
+
+# Common words used only to guess the language (DRAFT, needs native review).
+# A message with words from two languages counts as mixed, so the bot asks.
+language_markers:
+  en: [i, me, my, you, he, she, they, the, a, an, is, are, was, and, to, of, in, at, for, with, "on", want, wants, please, help, someone, man, woman, asking, asks, keeps, call, calls, names, every, day, said, says, what, about, from, this, that, not, will]
+  lg: [mu, nze, oli, ali, naye, era, nnyo, kati, ki, nga, nti, ssente, omusajja, omukazi, omuntu, ansaba, njagala, webale, bambi, kubanga, ate, wange, ebifaananyi, bifaananyi, byange, essomero, tasindika, okufa]
+  sw: [na, ya, wa, kwa, ni, mimi, wewe, yeye, nataka, sana, yangu, pesa, picha, shule, tafadhali, msaada, mtu, ananiomba, kwenye, kufa]
+  rn: [nyowe, kandi, munonga, ninyenda, nyoherereza, ebishushani, omwegyesa, wangye, kufa]
