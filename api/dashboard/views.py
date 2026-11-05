@@ -86,8 +86,12 @@ def metrics_page(request):
     data = json.loads(path.read_text(encoding="utf8")) if path.exists() else None
     sets = []
     if data:
-        for key, title in (("synthetic_test", "Synthetic test set"), ("hard_test", "Hard test set (no keywords)")):
-            s = data[key]
+        for key, title in (("hard_test_v2", "Hard test set 2 (written before the v0.3 rules)"),
+                           ("hard_test", "Hard test set 1 (used to write the v0.3 rules)"),
+                           ("synthetic_test", "Synthetic test set")):
+            s = data.get(key)
+            if not s:
+                continue
             labels = s["confusion"]["labels"]
             rows = [(labels[i], row) for i, row in enumerate(s["confusion"]["matrix"]) if any(row)]
             used = [j for j in range(len(labels)) if any(r[j] for _, r in rows)]

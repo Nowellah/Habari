@@ -2,6 +2,10 @@
 
 Each phase is tagged in git. Feature status lives in `shared/feature_status.json` (shown at `/about/status`).
 
+## Unreleased – triage rules v0.3 (5 Nov 2026)
+Broader rules for indirect self-harm, overdose, strangers near the child, sextortion with a payment demand (now severity 4), requests for images (now severity 3), doctored images, trusted adults (coach, pastor, step-parents) and unrecognised languages (now severity 3 for review). Second hard test set added before the rule changes.
+Evaluation: severity 3-4 recall 0.46 → 0.92 on hard test set 2 (written by the same person as the rules, so optimistic). Hard test set 1 was used to write the rules and is no longer blind (0.50 → 1.00).
+
 ## v0.5.0 – Phase 4b (5 Nov 2026)
 Duplicate and repeat-offender finder, knowledge base, WhatsApp adapter (simulated), simulated call with live transcript, Siri shortcut guide, README, feature status page, third-party list.
 

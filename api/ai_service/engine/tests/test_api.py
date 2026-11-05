@@ -134,7 +134,7 @@ def test_chat_has_no_guidance_for_danger(client):
 
 
 def test_chat_has_no_guidance_for_s3(client):
-    body = post(client, "/api/chat", message="he threatens to leak my nudes if I do not pay").json()
+    body = post(client, "/api/chat", message="he threatens to leak my nudes").json()
     assert body["severity"] == "S3"
     assert body["guidance"] is None
 

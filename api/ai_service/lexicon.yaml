@@ -1,10 +1,10 @@
-# Keyword escalator lexicon (version 0.1, starter set).
+# Keyword escalator lexicon (version 0.1 starter set; v0.3 additions from eval/data/hard_test.csv misses).
 # English terms are a starting point. Luganda (lg), Swahili (sw) and
 # Runyankore (rn) terms are DRAFTS that NEED NATIVE-SPEAKER REVIEW.
 # A match can only RAISE severity, never lower it.
 #
 # floor: minimum severity when the flag matches (0 = flag only, no floor).
-version: "0.2"
+version: "0.3"
 
 # Applied word by word before matching (SMS shorthand and spelling variants).
 shorthand:
@@ -28,15 +28,15 @@ flags:
     floor: 4
     terms:
       en: ["want to die", "kill myself", "end my life", "hurt myself", "suicide", "cut myself", "no reason to live"]
-      lg: ["njagala okufa", "njagala kufa", "nja kwetta", "okwetta"]
-      sw: ["nataka kufa", "kujiua", "nijiue"]
+      lg: ["njagala okufa", "njagala kufa", "nja kwetta", "okwetta", "saagala kuba mulamu"]
+      sw: ["nataka kufa", "kujiua", "nijiue", "sitaki kuishi"]
       rn: ["ninyenda kufa", "kwevuga"]
   imminent_danger:
     floor: 4
     terms:
       en: ["coming to my house", "wants to meet me", "waiting for me", "locked me", "he will kill me", "she will kill me", "going to kill me", "kidnap"]
       lg: ["ajja kunzita", "ansibye", "anninda"]
-      sw: ["ataniua", "amenifungia"]
+      sw: ["ataniua", "amenifungia", "atanisubiri", "ananisubiri"]
       rn: ["naija kunyita"]
   sextortion:
     floor: 3
@@ -63,14 +63,14 @@ flags:
   authority:
     floor: 3
     terms:
-      en: ["my teacher", "the teacher", "headteacher", "my father", "my dad", "my mother", "my mum", "my uncle", "my guardian", "my coach", "pastor", "imam"]
+      en: ["my teacher", "the teacher", "headteacher", "my father", "my dad", "my mother", "my mum", "my uncle", "my guardian", "my coach", "our coach", "the coach", "our teacher", "stepdad", "stepfather", "stepmother", "stepmum", "pastor", "imam"]
       lg: ["omusomesa", "taata wange", "maama wange", "kojja wange"]
       sw: ["mwalimu", "baba yangu", "mama yangu", "mjomba"]
       rn: ["omwegyesa", "taata wangye", "maama wangye"]
   gambling:
     floor: 2
     terms:
-      en: ["betting", "bet", "gamble", "gambling", "casino", "sportpesa", "jackpot"]
+      en: ["betting", "bet", "gamble", "gambling", "casino", "sportpesa", "jackpot", "pays cash", "win cash", "betting app"]
       lg: ["okubeetinga", "beetinga"]
       sw: ["kamari", "kubeti"]
       rn: ["okubeetinga"]
@@ -101,7 +101,7 @@ flags:
   impersonation:
     floor: 2
     terms:
-      en: ["fake account", "pretending to be me", "with my name", "as me", "using my photos"]
+      en: ["fake account", "pretending to be me", "with my name", "as me", "using my photos", "account using my", "page using my", "profile using my", "account with my", "using my school photo"]
       lg: ["akawunti ey'obulimba"]
       sw: ["akaunti bandia", "anajifanya mimi"]
       rn: []

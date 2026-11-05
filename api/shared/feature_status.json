@@ -6,7 +6,8 @@
     {"name": "Channel gateway (one entry for every channel)", "status": "Built", "note": "POST /api/channel/{name}."},
     {"name": "Five harm picks with severity 1 to 4", "status": "Built", "note": "One shared file used by every channel."},
     {"name": "Keyword escalator", "status": "Built", "note": "English list working; Luganda, Swahili and Runyankore terms are drafts awaiting native-speaker review."},
-    {"name": "AI triage", "status": "Built", "note": "Runs on lexicon rules. Hard test set recall on severity 3-4 is 0.22 against a 0.90 target. The zero-shot model slot is ready but not enabled (needs model download and GPU)."},
+    {"name": "AI triage", "status": "Built", "note": "Lexicon rules v0.3 plus the rule engine. Recall on severity 3-4 is 0.92 (24 of 26, 95% CI 0.76-0.98) on hard test set 2, against a 0.90 target; the same person wrote that set and the v0.3 rules, so treat it as optimistic. Hard test set 1 was used to write the rules and is no longer blind. The zero-shot model slot is ready but not enabled (needs model download and GPU)."},
+    {"name": "How do you feel? question", "status": "Built", "note": "Asked after every report on chat and USSD. The answer can only raise severity."},
     {"name": "Language detection and the language question", "status": "Built", "note": "Lexicon-based; uses Sunbird language ID when a token is set."},
     {"name": "Translation", "status": "Planned", "note": "Sunbird client written but not yet tested against the live API (needs a token)."},
     {"name": "Telegram bot", "status": "Simulated", "note": "Tested against a fake Telegram API. Goes live with TELEGRAM_TOKEN."},
@@ -27,12 +28,14 @@
     {"name": "Officer allocation", "status": "Built", "note": "Explainable ranking; supervisors can override."},
     {"name": "Follow-up loop and safety check-in", "status": "Built", "note": "Status messages, check-in after resolution, rating, reopen."},
     {"name": "Officer dashboard and partner board", "status": "Built", "note": "Reviewed replies only; close needs a reason."},
+    {"name": "Urgent case alerts to on-call officers", "status": "Simulated", "note": "Email and SMS for severity 3-4 or high-risk flags. Email prints to the console and SMS goes to the simulator outbox until real email and SMS are set up. If no officer is on call, every officer is alerted."},
     {"name": "Case summaries and key details", "status": "Built", "note": "Extractive summary from the child's own words."},
     {"name": "Duplicate and repeat-offender finder", "status": "Built", "note": "Hashed handles, numbers and links plus similar wording. Multilingual embeddings Planned."},
     {"name": "Knowledge base", "status": "Built", "note": "Articles are drafts awaiting review by a child-protection specialist."},
     {"name": "Evaluation and metrics page", "status": "Built", "note": "Synthetic and hard test sets; results and limits at /metrics."},
     {"name": "Keycloak roles", "status": "Planned", "note": "Django groups with the same roles are used for now."},
     {"name": "School mode, parent view, mood trend", "status": "Planned", "note": "Deferred from the original guideline."},
-    {"name": "PostgreSQL, task queue, Docker", "status": "Planned", "note": "SQLite (set up for several writers) and simple loops for the prototype."}
+    {"name": "PostgreSQL", "status": "Built", "note": "Used when DB_NAME is set, as in the README setup. Tests and CI run on SQLite."},
+    {"name": "Task queue, Docker", "status": "Planned", "note": "Simple loops for the prototype."}
   ]
 }

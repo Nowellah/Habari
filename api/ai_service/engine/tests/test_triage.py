@@ -119,10 +119,11 @@ def test_grooming_meetup_is_s3():
     assert result.severity == Severity.S3
 
 
-def test_grooming_images_request_is_s2():
+def test_grooming_images_request_is_s3():
+    # v0.3: an adult asking a child for pictures is S3 (it was S2).
     result = triage("he asked me to send pictures of me")
     assert result.category == Category.GROOMING
-    assert result.severity == Severity.S2
+    assert result.severity == Severity.S3
 
 
 def test_unclear_message_goes_one_level_up_with_question_and_review():
@@ -163,8 +164,8 @@ def test_hint_and_text_combine_and_higher_wins():
 
 
 def test_happening_now_raises_s2_to_s3():
-    calm = triage("he asked me to send pictures", happening_now=False)
-    urgent = triage("he asked me to send pictures", happening_now=True)
+    calm = triage("people keep laughing at me in the group chat", happening_now=False)
+    urgent = triage("people keep laughing at me in the group chat", happening_now=True)
     assert calm.severity == Severity.S2
     assert urgent.severity == Severity.S3
 
@@ -244,3 +245,45 @@ def test_common_bullying_phrasings_are_recognised(message):
 @pytest.mark.parametrize("message", HARMLESS_LOOKALIKES)
 def test_harmless_lookalikes_are_not_critical(message):
     assert triage(message).severity != Severity.S4
+
+
+# v0.3 rules. Wording here is deliberately different from both eval hard test sets.
+@pytest.mark.parametrize("message, category", [
+    ("whats the point of being alive anymore", Category.SELF_HARM),
+    ("i wish it all to end tonight", Category.SELF_HARM),
+    ("i swallowed too many panadol on purpose", Category.SELF_HARM),
+    ("i left a suicide note under my pillow", Category.SELF_HARM),
+    ("a stranger is standing outside my gate right now", Category.IMMEDIATE_DANGER),
+    ("he found out where i stay and keeps calling", Category.IMMEDIATE_DANGER),
+    ("that guy follows me from school every day", Category.IMMEDIATE_DANGER),
+    ("he paid me airtime and now says he will show my nudes unless i pay more", Category.SEXTORTION),
+])
+def test_v03_serious_wording_is_s4(message, category):
+    result = triage(message)
+    assert result.severity == Severity.S4
+    assert result.category == category
+
+
+@pytest.mark.parametrize("message, category", [
+    ("a man on snapchat keeps begging for selfies of me", Category.GROOMING),
+    ("he says our messages are just between us", Category.GROOMING),
+    ("he invited me to go to his flat after church", Category.GROOMING),
+    ("they photoshopped my face onto a rude picture", Category.HARASSMENT),
+    ("if i block him he will post my photos", Category.SEXTORTION),
+])
+def test_v03_harm_wording_is_at_least_s3(message, category):
+    result = triage(message)
+    assert result.severity.rank >= Severity.S3.rank
+    assert result.category == category
+
+
+@pytest.mark.parametrize("message", [
+    "I took my malaria tablets this morning like the doctor said",
+    "we went to his place for a birthday party with our class",
+    "I am tired of revising for exams",
+    "I want this lesson to end",
+    "I want to stop playing this game for good",
+    "the man at the shop gave me my change",
+])
+def test_v03_everyday_messages_are_not_raised(message):
+    assert triage(message).severity.rank <= Severity.S2.rank

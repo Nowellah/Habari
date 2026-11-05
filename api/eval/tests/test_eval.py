@@ -72,7 +72,7 @@ class RunAllTests(SimpleTestCase):
         out = Path(tempfile.mkdtemp())
         path = run_all.main(out_dir=out)
         data = json.loads(path.read_text(encoding="utf8"))
-        for key in ("synthetic_test", "hard_test", "generated_at", "caveats"):
+        for key in ("synthetic_test", "hard_test", "hard_test_v2", "generated_at", "caveats"):
             self.assertIn(key, data)
         sev = data["synthetic_test"]["severity_high"]
         self.assertIn("recall", sev)

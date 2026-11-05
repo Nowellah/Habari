@@ -23,6 +23,7 @@ from eval.scripts import make_synthetic  # noqa: E402
 
 RESULTS = ROOT / "eval" / "results"
 HARD = ROOT / "eval" / "data" / "hard_test.csv"
+HARD_V2 = ROOT / "eval" / "data" / "hard_test_v2.csv"
 
 CAVEATS = [
     "All data is synthetic. No real child data was used.",
@@ -31,11 +32,17 @@ CAVEATS = [
     "Luganda and Swahili messages are drafts awaiting native-speaker review; per-language numbers are indicative only.",
     "Test sets are small; see the 95% confidence intervals.",
     "Scored on text only, without the child's own pick, which in real use sets a severity floor.",
-    "Triage here is the lexicon rules engine. The zero-shot model slot was not enabled for this run.",
+    "Triage here is the lexicon rules plus the rule engine (ai_service/engine). The zero-shot model slot "
+    "was not enabled for this run.",
     "Lexicon v0.2 rules were added from TRAINING-split errors only, with one exception: the 'kill yourself' "
-    "rule was added after a test-set miss, for child safety. The synthetic test score is therefore not fully "
-    "blind; the hard test set was never used for changes. Baseline v0.1 results are kept in "
+    "rule was added after a test-set miss, for child safety. Baseline v0.1 results are kept in "
     "eval/results/metrics_baseline_v0.1.json.",
+    "v0.3 rules were written from the misses in the first hard test set, so that set is NO LONGER BLIND and "
+    "its score is optimistic. Before v0.3, the rules caught 9 of its 18 serious cases (0.50).",
+    "The second hard test set (hard_test_v2) was committed before the v0.3 rules were written and was not "
+    "used to choose them, so it is the fairest number here. Before v0.3 the rules caught 12 of its 26 "
+    "serious cases (0.46). It was written by the same person as the v0.3 rules, so even this score may be "
+    "optimistic. A test set written by someone outside the team is the next step.",
 ]
 
 
@@ -91,14 +98,18 @@ def main(out_dir=RESULTS):
     synthetic = [r for r in make_synthetic.generate() if r["split"] == "test"]
     with HARD.open(encoding="utf8") as f:
         hard = list(csv.DictReader(f))
+    with HARD_V2.open(encoding="utf8") as f:
+        hard_v2 = list(csv.DictReader(f))
     syn_scores, syn_errors = score(synthetic)
     hard_scores, hard_errors = score(hard)
+    hard_v2_scores, hard_v2_errors = score(hard_v2)
     data = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "method": "lexicon rules v0.2 (ai_service/triage.py), text only",
+        "method": "lexicon rules v0.3 + rule engine (ai_service/triage.py), text only",
         "target": "Recall of at least 0.90 on severity 3 and 4",
         "synthetic_test": syn_scores,
         "hard_test": hard_scores,
+        "hard_test_v2": hard_v2_scores,
         "caveats": CAVEATS,
     }
     path = out_dir / "metrics.json"
@@ -107,7 +118,8 @@ def main(out_dir=RESULTS):
         fields = ["set", "error", "language", "gold_category", "pred_category", "gold_severity", "pred_severity", "text"]
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
-        for name, errs in (("synthetic_test", syn_errors), ("hard_test", hard_errors)):
+        for name, errs in (("synthetic_test", syn_errors), ("hard_test", hard_errors),
+                           ("hard_test_v2", hard_v2_errors)):
             for e in errs:
                 w.writerow({"set": name, **e})
     return path
@@ -116,7 +128,7 @@ def main(out_dir=RESULTS):
 if __name__ == "__main__":
     p = main()
     d = json.loads(p.read_text(encoding="utf8"))
-    for name in ("synthetic_test", "hard_test"):
+    for name in ("synthetic_test", "hard_test", "hard_test_v2"):
         s = d[name]
         hi = s["severity_high"]
         print(f"{name}: n={s['n']}  severity 3-4 recall={hi['recall']:.2f} "

@@ -79,6 +79,10 @@ def triage(text: str, pick: str | None = None, language: str | None = None, clas
 
     lang = detect_language(text) if text.strip() else {"language": "unknown", "confidence": 0.0, "ask_language": True}
     spoken = language or (lang["language"] if lang["language"] != "unknown" else None)
+    # v0.3: a sentence in no language we recognise is not assumed to be English, so the
+    # engine's "cannot assess this language" rule (S3, human review) applies to it.
+    if spoken is None and len(text.split()) >= 3:
+        spoken = "unknown"
     engine = bridge.assess(text, spoken) if text.strip() else None
     if engine:
         method = "rules+engine"
