@@ -232,17 +232,29 @@ def _should_ask_language(case, text, reporter, language):
     return detect_language(text)["ask_language"]
 
 
+SEXTORTION_SIGNS = ("sextortion", "rule:sextortion_threat", "rule:sextortion_payment_demand")
+
+
+def _advice(case):
+    """What to do right now, for the harms where the first minutes matter."""
+    if case.category == "sextortion" or any(f in case.flags for f in SEXTORTION_SIGNS):
+        return msg("advice_sextortion")
+    return ""
+
+
 def _case_reply(case, conv, text="", language=None):
     if case.severity < 4 and _should_ask_language(case, text, case.reporter, language):
         conv.state, conv.case, conv.draft = "PICK_LANG", case, {}
         conv.save()
         options = [{"key": k, "label": name} for k, (_, name) in LANG_OPTIONS.items()]
-        return _reply(_join(msg("received", code=case.code), msg("lang_question")), "PICK_LANG", case, options)
+        return _reply(_join(msg("received", code=case.code), _advice(case), msg("lang_question")),
+                      "PICK_LANG", case, options)
     if case.severity >= 4:  # the helpline first, then what the danger is
-        return _start_danger_questions(conv, case, msg("danger", code=case.code))
+        return _start_danger_questions(conv, case, _join(msg("danger", code=case.code), _advice(case)))
     conv.state, conv.case, conv.draft = "CASE_OPEN", case, {"awaiting": "feeling"}
     conv.save()
-    return _reply(_join(msg("received", code=case.code), msg("feeling_ask")), "CASE_OPEN", case, _feeling_options())
+    return _reply(_join(msg("received", code=case.code), _advice(case), msg("feeling_ask")),
+                  "CASE_OPEN", case, _feeling_options())
 
 
 def _status(reporter, conv, args):

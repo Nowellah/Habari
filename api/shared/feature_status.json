@@ -28,7 +28,7 @@
     {"name": "Officer allocation", "status": "Built", "note": "Explainable ranking; supervisors can override."},
     {"name": "Follow-up loop and safety check-in", "status": "Built", "note": "Status messages, check-in after resolution, rating, reopen."},
     {"name": "Officer dashboard and partner board", "status": "Built", "note": "Reviewed replies only; close needs a reason."},
-    {"name": "Urgent case alerts to on-call officers", "status": "Simulated", "note": "Email and SMS for severity 3-4 or high-risk flags. Email prints to the console and SMS goes to the simulator outbox until real email and SMS are set up. If no officer is on call, every officer is alerted."},
+    {"name": "Urgent case alerts to on-call officers", "status": "Built", "note": "Severity 3-4 or high-risk cases show in the Alerts box on the officer dashboard for the on-call and assigned officers. Email and SMS copies are Simulated: email prints to the console and SMS needs officer phone numbers. If no officer is on call, every officer is alerted."},
     {"name": "Case summaries and key details", "status": "Built", "note": "Extractive summary from the child's own words."},
     {"name": "Duplicate and repeat-offender finder", "status": "Built", "note": "Hashed handles, numbers and links plus similar wording. Multilingual embeddings Planned."},
     {"name": "Knowledge base", "status": "Built", "note": "Articles are drafts awaiting review by a child-protection specialist."},

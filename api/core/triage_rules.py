@@ -7,6 +7,7 @@ so the web app and the AI service always agree.
 from dataclasses import dataclass, field
 
 from ai_service import lexicon_engine
+from ai_service.engine import bridge
 from ai_service.engine.danger import detect_danger, normalize as normalise_danger
 from core.harm import pick_severity
 
@@ -30,5 +31,14 @@ def apply_rules(text: str, pick=None) -> RuleResult:
         flag = f"rule:{hit.rule_id}"
         if flag not in flags:
             flags = flags + [flag]
+    # The rule engine is plain Python too, so its confident matches count for the
+    # first reply (a sextortion payment demand gets the helpline straight away,
+    # not after AI triage). Its "unclear message" fallback is left to AI triage.
+    engine = bridge.assess(text or "") if (text or "").strip() else None
+    if engine and engine.confident and engine.severity > severity:
+        severity = engine.severity
+        flags = flags + [f for f in engine.flags if f not in flags]
     role_hint = "authority" if lexicon_engine.authority_harm(flags) else None
+    if engine and engine.confident and engine.external_only:
+        role_hint = "authority"
     return RuleResult(severity=severity, flags=flags, role_hint=role_hint)

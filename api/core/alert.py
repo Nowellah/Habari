@@ -63,12 +63,33 @@ def _sms_text(case: Case, reason: str) -> str:
     )
 
 
+def _notify_dashboard(case: Case, reason: str, officers) -> None:
+    from core.models import Notification
+
+    labels = {4: "DANGER", 3: "HIGH"}
+    text = f"{labels.get(case.severity, 'Check')}: case {case.code} ({case.category or 'unclear'}), {reason}"
+    targets = [(o, "on_call") for o in officers]
+    if case.assigned_officer and case.assigned_officer not in officers:
+        targets.append((case.assigned_officer, "officer"))
+    for officer, audience in targets:
+        if not Notification.objects.filter(case=case, officer=officer, text=text).exists():
+            Notification.objects.create(case=case, audience=audience, officer=officer, text=text)
+
+
 def notify_officers(case: Case, reason: str = "new sensitive case") -> None:
     """Email (and optionally SMS) on-call officers. All exceptions are caught."""
     officers = _on_call_officers()
     if not officers:
         logger.warning("alert: no officers for case %s", case.code)
         return
+
+    # Dashboard: always works, even with no email or SMS set up. Shown in the
+    # Alerts box on /officer/ for the on-call officers, the assigned officer
+    # and supervisors.
+    try:
+        _notify_dashboard(case, reason, officers)
+    except Exception:
+        logger.exception("alert: dashboard notice failed for case %s", case.code)
 
     # Email
     emails = _officer_emails(officers)
