@@ -22,9 +22,28 @@ class WebWordingTests(GatewayTestCase):
         self.web("HELP")
         self.web("5")
         out = self.web("someone keeps sending me rude messages")
-        self.assertIn("How does this feel for you?", out["reply_text"])
+        self.assertIn("How big does this feel?", out["reply_text"])
         self.assertNotIn("1 A little", out["reply_text"])
         self.assertEqual(out["options"][0], {"key": "1", "label": "A little"})
+
+    def test_first_reply_is_short_parts_and_shows_the_code_once(self):
+        self.web("HELP")
+        self.web("5")
+        first = self.web("someone keeps sending me rude messages")
+        parts = first["reply_text"].split("\n\n")
+        self.assertGreaterEqual(len(parts), 3)
+        self.assertTrue(all(len(p) < 110 for p in parts))
+        self.assertEqual(first["reply_text"].count(first["case_code"]), 1)
+        self.assertNotIn("STATUS", first["reply_text"])
+        self.assertNotIn("STOP", first["reply_text"])
+        later = self.web("he also sent a picture")
+        self.assertNotIn(first["case_code"], later["reply_text"])
+
+    def test_danger_reply_has_the_helpline_first_and_the_code_once(self):
+        self.web("HELP")
+        out = self.web("1")
+        self.assertTrue(out["reply_text"].startswith("Call 116 now."))
+        self.assertEqual(out["reply_text"].count(out["case_code"]), 1)
 
     def test_sms_keeps_its_typed_list(self):
         out = self.send("HELP", sender="+256700000001", channel="sms")
