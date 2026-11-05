@@ -36,16 +36,24 @@ def _category_from_flags(flags, pick):
         return "self_harm"
     if "imminent_danger" in flags:
         return "threats"
-    if pick == "3":
+    if pick == "3" or "authority" in flags:
         return "exposure_by_authority"
     if "sextortion" in flags:
         return "sextortion"
+    if "grooming" in flags:
+        return "grooming"
+    if "self_harm_incitement" in flags or "bullying" in flags:
+        return "cyberbullying"
     if "threat" in flags:
         return "threats"
+    if "impersonation" in flags:
+        return "impersonation"
     if "gambling" in flags:
         return "gambling_or_betting"
     if "money_demand" in flags:
         return "scam"
+    if "upsetting_content" in flags:
+        return "inappropriate_content"
     return PICK_DEFAULT_CATEGORY.get(pick or "", "unclear")
 
 

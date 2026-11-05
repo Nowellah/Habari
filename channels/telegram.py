@@ -7,7 +7,9 @@ import time
 
 import requests
 
-from channels.gateway import handle
+from channels.gateway import handle, handle_voice_transcript
+from core import ai_client
+from core.messages import msg as msg_text
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +17,7 @@ log = logging.getLogger(__name__)
 class TelegramBot:
     def __init__(self, token, session=requests):
         self.api = f"https://api.telegram.org/bot{token}"
+        self.file_api = f"https://api.telegram.org/file/bot{token}"
         self.session = session
 
     def call(self, method, **payload):
@@ -39,10 +42,23 @@ class TelegramBot:
                 chat_id, text = cq["message"]["chat"]["id"], cq["data"]
             elif msg and msg.get("text"):
                 chat_id, text = msg["chat"]["id"], msg["text"]
+            elif msg and msg.get("location"):
+                chat_id = msg["chat"]["id"]
+                loc = msg["location"]
+                self.send(chat_id, handle(channel="telegram", sender_id=f"tg:{chat_id}", text="",
+                                          location={"lat": loc.get("latitude"), "lon": loc.get("longitude")}))
+                return next_offset
+            elif msg and (msg.get("voice") or msg.get("audio")):
+                chat_id = msg["chat"]["id"]
+                heard = self.transcribe(msg.get("voice") or msg.get("audio"))
+                if heard is None:  # never ignore a child silently
+                    self.call("sendMessage", chat_id=chat_id, text=msg_text("voice_failed"))
+                else:
+                    self.send(chat_id, handle_voice_transcript("telegram", f"tg:{chat_id}", heard["text"]))
+                return next_offset
             elif msg:
-                # Voice notes and locations arrive in Phase 4. Never ignore a child silently.
                 self.call("sendMessage", chat_id=msg["chat"]["id"],
-                          text="Thank you. Please type your message for now, or send /start.")
+                          text="Thank you. Please type your message, or send /start.")
                 return next_offset
             else:
                 return next_offset  # edited messages and other update types
@@ -50,6 +66,18 @@ class TelegramBot:
         except Exception:
             log.exception("telegram update %s failed", u.get("update_id"))
         return next_offset
+
+    def transcribe(self, voice):
+        """Download a voice note from Telegram and turn it into text. None on any failure."""
+        try:
+            info = self.call("getFile", file_id=voice["file_id"]).json()
+            path = info["result"]["file_path"]
+            r = self.session.get(f"{self.file_api}/{path}", timeout=30)
+            if r.status_code != 200 or not r.content:
+                return None
+            return ai_client.transcribe(r.content, path.rsplit("/", 1)[-1], None)
+        except Exception:
+            return None
 
     def run_forever(self):
         offset = None

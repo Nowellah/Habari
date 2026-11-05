@@ -51,3 +51,21 @@ def officer_list(request):
     ]
     return render(request, "dashboard/officer_list.html",
                   {"cases": cases, "notifications": _notifications_for(request.user)})
+
+
+def metrics_page(request):
+    """Evaluation results for judges and partners. Synthetic data only, so it is public."""
+    import json
+
+    path = settings.EVAL_RESULTS_DIR / "metrics.json"
+    data = json.loads(path.read_text(encoding="utf8")) if path.exists() else None
+    sets = []
+    if data:
+        for key, title in (("synthetic_test", "Synthetic test set"), ("hard_test", "Hard test set (no keywords)")):
+            s = data[key]
+            labels = s["confusion"]["labels"]
+            rows = [(labels[i], row) for i, row in enumerate(s["confusion"]["matrix"]) if any(row)]
+            used = [j for j in range(len(labels)) if any(r[j] for _, r in rows)]
+            sets.append({"title": title, "s": s, "cm_labels": [labels[j] for j in used],
+                         "cm_rows": [(name, [row[j] for j in used]) for name, row in rows]})
+    return render(request, "dashboard/metrics.html", {"data": data, "sets": sets})

@@ -20,6 +20,9 @@ class Reporter(models.Model):
     pin_hash = models.CharField(max_length=64, blank=True)
     basic_phone = models.BooleanField(default=False)
     opted_out = models.BooleanField(default=False)
+    poll_opt_in = models.BooleanField(default=False)
+    # Coarse location only: a district name, never coordinates.
+    district = models.CharField(max_length=60, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -80,6 +83,8 @@ class Case(models.Model):
     checkin_due_at = models.DateTimeField(null=True, blank=True)
     checkin_count = models.PositiveSmallIntegerField(default=0)
     rating = models.CharField(max_length=10, blank=True)
+    # Details pulled from the child's messages: handles, phones, links, amounts, dates, platforms.
+    entities = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     # SLA clock. ack_at and first_response_at belong to the current clock;
     # a reset clears them and the earlier times stay in SLAEvent.

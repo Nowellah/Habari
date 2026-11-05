@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Report map{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<p><a href="/officer/">&larr; Case queue</a></p>
+<h1>Reports by district</h1>
+<p class="muted">Counts only, never individual reports. A district with fewer than {{ minimum }} reports shows no number. Demo data is synthetic and labelled.</p>
+<div id="map" style="height:520px;border-radius:12px;border:1px solid var(--line)"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(async () => {
+  const map = L.map('map').setView([1.37, 32.29], 7);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 10, attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  const data = await (await fetch('/officer/map.json')).json();
+  for (const d of data.districts) {
+    const n = d.count;
+    const label = n === null ? `${d.district}: fewer than ${data.minimum}` : `${d.district}: ${n} reports`;
+    L.circleMarker([d.lat, d.lon], {
+      radius: n === null ? 6 : 6 + Math.sqrt(n) * 3,
+      color: n === null ? '#888' : '#b42318', fillOpacity: n === null ? 0.15 : 0.45, weight: 1
+    }).bindTooltip(label).addTo(map);
+  }
+})();
+</script>
+{% endblock %}

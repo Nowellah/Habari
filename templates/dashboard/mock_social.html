@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Mock social feed{% endblock %}
+{% block content %}
+<h1>Mock social app</h1>
+<p class="muted">A pretend feed showing how a platform could add a "Report to Habari" button. All posts are made up.</p>
+{% for p in posts %}
+<div class="card">
+  <p><strong>@{{ p.handle }}</strong> <span class="muted">on {{ p.src }}</span></p>
+  <p>{{ p.text }}</p>
+  <p><a href="{{ p.report }}" style="display:inline-block;padding:8px 14px;border-radius:999px;background:var(--accent);color:var(--bg);text-decoration:none;font-weight:700">I need a friend</a></p>
+</div>
+{% endfor %}
+{% endblock %}

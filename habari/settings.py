@@ -160,7 +160,9 @@ HMAC_SECRET = os.getenv("HMAC_SECRET", "dev-only-hmac-secret-change-me")
 HELPLINE_NUMBER = os.getenv("HELPLINE_NUMBER", "116")
 
 # AI service (Phase 2). Triage runs in a background thread after the child's reply.
-AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://localhost:8001")
+# 127.0.0.1, not "localhost": on Windows "localhost" tries IPv6 first and a
+# service bound to 127.0.0.1 then costs ~2 s per call before it connects.
+AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://127.0.0.1:8001")
 AI_TIMEOUT = float(os.getenv("AI_TIMEOUT", "3"))
 AI_TRIAGE_INLINE = os.getenv("AI_TRIAGE_INLINE", "0") == "1"  # tests run it in-line
 # Simulator pages (/sim/sms, /sim/ussd) only exist while this is on.
@@ -178,3 +180,15 @@ DEMO_SLOW_PARTNER = os.getenv("DEMO_SLOW_PARTNER", "")
 import sys  # noqa: E402
 if len(sys.argv) > 1 and sys.argv[1] == "test":
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+# Evidence files (screenshots), named by their SHA-256 hash. Never committed.
+MEDIA_ROOT = BASE_DIR / "media"
+# A report with a large screenshot must still arrive: allow bodies up to 6 MB and
+# let channels/meta_evidence.py drop screenshots over 3 MB instead of failing.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024
+
+# Evaluation results shown on /metrics (written by eval/scripts/run_all.py).
+EVAL_RESULTS_DIR = BASE_DIR / "eval" / "results"
+
+# Privacy: districts with fewer reports or poll answers than this show no number.
+HEATMAP_MIN = int(os.getenv("HEATMAP_MIN", "5"))

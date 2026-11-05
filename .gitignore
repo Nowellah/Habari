@@ -6,3 +6,4 @@ db.sqlite3
 .superpowers/
 db.sqlite3-wal
 db.sqlite3-shm
+media/

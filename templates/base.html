@@ -6,6 +6,7 @@
   <!-- same-origin: no referrer leaves the site, but our own forms keep a valid Origin for CSRF -->
   <meta name="referrer" content="same-origin">
   <title>{% block title %}Habari{% endblock %}</title>
+  {% block head %}{% endblock %}
   <style>
     :root { --bg:#fbfaf7; --fg:#1f2328; --muted:#5b6470; --line:#e3e0d8; --accent:#2f6f5e; --s4:#b42318; --s3:#c2410c; --s2:#a16207; --s1:#4b5563; }
     @media (prefers-color-scheme: dark) { :root { --bg:#16181b; --fg:#e8e6e1; --muted:#a3a9b1; --line:#2c3036; --accent:#6cc0a6; --s4:#f97066; --s3:#fb923c; --s2:#facc15; --s1:#9ca3af; } }

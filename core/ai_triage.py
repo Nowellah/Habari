@@ -36,9 +36,15 @@ def run(case_id: int):
     case = Case.objects.filter(pk=case_id).first()
     if not case:
         return
-    text = " ".join(case.messages.filter(direction="in").values_list("text", flat=True))
+    incoming = list(case.messages.filter(direction="in").order_by("created_at"))
+    text = " ".join(m.text for m in incoming)
     result = ai_client.triage(text, case.pick, case.language or None)
     apply(case_id, result)
+    if result is not None and incoming:
+        synthesis = ai_client.summarise([{"text": m.text, "at": m.created_at.isoformat()} for m in incoming])
+        if synthesis:
+            Case.objects.filter(pk=case_id).update(summary=synthesis["summary"][:2000],
+                                                   entities=synthesis.get("entities") or {})
 
 
 def apply(case_id: int, result: dict | None):

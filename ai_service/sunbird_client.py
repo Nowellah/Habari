@@ -47,6 +47,25 @@ def language_id(text):
     return {"language": TO_HABARI.get(code, code)} if code else None
 
 
+STT_PATH = os.getenv("SUNBIRD_STT_PATH", "/tasks/audio/transcriptions")
+
+
+def transcribe(audio: bytes, language):
+    """Speech to text. Untested against the live API: confirm the path and fields."""
+    if not _token():
+        return None
+    try:
+        r = requests.post(BASE + STT_PATH, timeout=60,
+                          headers={"Authorization": f"Bearer {_token()}"},
+                          files={"audio": ("voice.ogg", audio)},
+                          data={"language": TO_SUNBIRD.get(language or "", language or "")})
+        r.raise_for_status()
+        data = r.json()
+    except (requests.RequestException, ValueError):
+        return None
+    return data.get("audio_transcription") or data.get("text") or None
+
+
 def translate(text, source, target):
     data = _post(TRANSLATE_PATH, {
         "source_language": TO_SUNBIRD.get(source, source),

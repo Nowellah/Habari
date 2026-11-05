@@ -59,6 +59,15 @@
 </div>
 
 <div class="card">
+  <h2>Summary</h2>
+  {% if case.summary %}<p style="white-space:pre-line">{{ case.summary }}</p>
+  <p class="muted">Built only from the child's own sentences.</p>{% else %}<p class="muted">No summary yet (the AI service makes it after triage).</p>{% endif %}
+  {% if case.entities %}<dl>
+    {% for key, values in case.entities.items %}{% if values %}<dt>{{ key|cut:"_ugx"|capfirst }}</dt><dd>{{ values|join:", " }}</dd>{% endif %}{% endfor %}
+  </dl>{% endif %}
+</div>
+
+<div class="card">
   <h2>Routing</h2>
   <p><strong>{{ route_note }}</strong></p>
   <p class="muted">Planned partners: {% for p in planned %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% empty %}none{% endfor %}</p>
