@@ -1,10 +1,29 @@
-.venv/
-__pycache__/
-*.pyc
-db.sqlite3
-.env
+# ── Python / Django (api/) ─────────────────────────────────────────────────────
+api/venv/
+api/.venv/
+api/__pycache__/
+api/**/__pycache__/
+api/**/*.pyc
+api/db.sqlite3
+api/db.sqlite3-wal
+api/db.sqlite3-shm
+api/media/
+api/.env
+
+# ── Node / Vite (web/) ─────────────────────────────────────────────────────────
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo
+web/.env
+
+# ── Editors and OS ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+Thumbs.db
+.DS_Store
+
+# ── Misc ───────────────────────────────────────────────────────────────────────
+*.log
 .superpowers/
-db.sqlite3-wal
-db.sqlite3-shm
-media/
-venv/
