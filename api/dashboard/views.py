@@ -2,7 +2,7 @@ from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.static import serve
 
@@ -28,6 +28,15 @@ def chat_page(request):
     if index:
         return HttpResponse(index.read_text(encoding="utf8"), content_type="text/html; charset=utf-8")
     return render(request, "dashboard/chat.html", {"helpline": settings.HELPLINE_NUMBER})
+
+
+@never_cache
+def spa_page(request):
+    """Any screen of the React app. Without a build there is only the chat page to show."""
+    index = web_app_index()
+    if index:
+        return HttpResponse(index.read_text(encoding="utf8"), content_type="text/html; charset=utf-8")
+    return redirect("/chat")
 
 
 def web_asset(request, path):
