@@ -1,32 +1,42 @@
 import html
-from datetime import datetime
+from datetime import datetime, timezone
 from nicegui import ui
 
 
 def add_chat_bubble(container, role: str, text: str) -> None:
     """
-    Add a chat message bubble to a container.
+    Add a chat bubble to *container*.
 
-    Args:
-        container: A NiceGUI container element.
-        role: "child" or "bot"
-        text: The message text (will be HTML-escaped to prevent XSS).
+    role: "child" | "bot"
+    text: raw user/bot text — always HTML-escaped before rendering.
     """
-    escaped = html.escape(text)
-    timestamp = datetime.utcnow().strftime("%H:%M")
+    safe_text = html.escape(text).replace("\n", "<br>")
+    now = datetime.now(timezone.utc).strftime("%H:%M")
+
+    align = "flex-end" if role == "child" else "flex-start"
+    bubble_class = "child-bubble" if role == "child" else "bot-bubble"
 
     with container:
-        if role == "child":
-            with ui.row().style("justify-content: flex-end; width: 100%; margin: 4px 0;"):
-                with ui.column().style("align-items: flex-end; max-width: 80%;"):
-                    ui.html(f'<div class="child-bubble">{escaped}</div>')
-                    ui.label(timestamp).style(
-                        "font-size: 0.7rem; color: #888; margin-top: 2px;"
-                    )
-        else:
-            with ui.row().style("justify-content: flex-start; width: 100%; margin: 4px 0;"):
-                with ui.column().style("align-items: flex-start; max-width: 80%;"):
-                    ui.html(f'<div class="bot-bubble">{escaped}</div>')
-                    ui.label(timestamp).style(
-                        "font-size: 0.7rem; color: #888; margin-top: 2px;"
-                    )
+        ui.html(
+            f'<div class="bubble-row {role}" style="justify-content: {align};">'
+            f'  <div>'
+            f'    <div class="{bubble_class}">{safe_text}</div>'
+            f'    <div class="bubble-time">{now}</div>'
+            f'  </div>'
+            f'</div>'
+        )
+
+
+def add_typing_indicator(container) -> object:
+    """Add animated typing dots. Returns the element so caller can delete it."""
+    with container:
+        el = ui.html(
+            '<div class="bubble-row bot" style="justify-content: flex-start;">'
+            '  <div class="bot-bubble" style="padding: 12px 18px;">'
+            '    <span class="typing-dot"></span>'
+            '    <span class="typing-dot"></span>'
+            '    <span class="typing-dot"></span>'
+            '  </div>'
+            '</div>'
+        )
+    return el

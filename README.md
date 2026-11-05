@@ -1,111 +1,161 @@
 # HABARI — AI-Powered Child Online Safety Chatbot
 
-**Intelligent Reporting, Response and Referral for Child Online Safety**
-
-HABARI is a Python-first, browser-based chatbot that helps children safely report online threats, abuse, harassment, and exploitation. It is built for the UCC Testbed Hackathon 2026 and is designed to be friendly, trustworthy, accessible, and demonstrable without a live backend.
+**Intelligent Reporting, Response and Referral for Child Online Safety**  
+*UCC Testbed Hackathon 2026*
 
 ---
 
-## Setup (Windows PowerShell)
+## Quick Start (Windows PowerShell)
 
 ```powershell
 cd C:\Users\UESR\Desktop\UI
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-```
-
----
-
-## Running in Demo Mode
-
-Demo mode requires no backend. All AI and API calls fall back to built-in rule-based responses.
-
-```powershell
-# Ensure DEMO_MODE=true is set in .env (it is by default)
 python main.py
 ```
 
-Open your browser at: **http://127.0.0.1:8080**
+Open: **http://127.0.0.1:8080**
 
----
-
-## Running with Django Backend
-
-1. Start the Django backend on port 8000 (or your preferred port).
-2. Edit `.env`:
-   ```
-   DJANGO_API_URL=http://127.0.0.1:8000
-   DEMO_MODE=
-   ```
-3. Run `python main.py`.
-
----
-
-## Environment Variables
-
-| Variable          | Default                                      | Description                                              |
-|-------------------|----------------------------------------------|----------------------------------------------------------|
-| `DJANGO_API_URL`  | `http://127.0.0.1:8000`                      | URL of the Django REST API backend                       |
-| `AI_SERVICE_URL`  | `http://127.0.0.1:8001`                      | URL of the FastAPI AI service (future use)               |
-| `STORAGE_SECRET`  | `habari-dev-secret-change-in-production`     | Secret key for NiceGUI session storage — **change this in production** |
-| `DEMO_MODE`       | `true`                                       | Set to `true` to enable demo mode (no live backend needed) |
-
-Copy `.env.example` to `.env` and fill in your values.
-
----
-
-## Features
-
-### Implemented
-- Welcome screen with Start Chat, Get Help Now, and Quick Exit
-- Age selection (Under 10 through 16–17 / Prefer not to say)
-- Language selection (English, Luganda, Swahili, Runyankore)
-- Full chat interface with scrollable history, quick replies, and loading indicator
-- Keyword-based urgency detection (suicide, exploitation, physical danger, threats)
-- Emergency guidance with helpline 116
-- Demo mode rule-based conversation fallback
-- Age-appropriate language (simplified replies for Under 10)
-- Per-session isolation (thread-safe in-memory session store)
-- Report review screen
-- Report confirmation screen with case code display and copy
-- Case status look-up screen
-- Emergency help screen (116, police 999/112)
-- XSS protection via `html.escape()` on all user input before rendering
-- Quick Exit button on every screen (navigates to bbc.co.uk/cbbc)
-- DEMO MODE banner when env var is set
-
-### Simulated (Demo Mode)
-- AI conversation responses (rule-based fallback when backend unreachable)
-- Report submission (returns a generated case code)
-- Case status retrieval (returns a demo status message)
-
-### Not Yet Connected
-- Live Django backend AI responses
-- FastAPI AI service integration
-- Persistent case database
-- Safeguarding officer dashboard
-- Real-time notifications to officers
-- Full Luganda / Swahili / Runyankore translations
+Demo mode is on by default — no backend required.
 
 ---
 
 ## Running Tests
 
 ```powershell
-cd C:\Users\UESR\Desktop\UI
+.\venv\Scripts\Activate.ps1
 python -m pytest tests/ -v
+```
+
+Expected: **65 passed, 0 failed**
+
+---
+
+## Environment Variables
+
+Copy `.env.example` → `.env` and edit as needed.
+
+| Variable         | Default                                  | Description                                      |
+|------------------|------------------------------------------|--------------------------------------------------|
+| `DJANGO_API_URL` | `http://127.0.0.1:8000`                  | Django REST API backend URL                      |
+| `AI_SERVICE_URL` | `http://127.0.0.1:8001`                  | FastAPI AI service URL (future)                  |
+| `STORAGE_SECRET` | `habari-dev-secret-change-in-production` | NiceGUI session storage secret — **change this** |
+| `DEMO_MODE`      | `true`                                   | Enables demo mode (no live backend needed)       |
+
+---
+
+## Running with Django Backend
+
+1. Start Django on port 8000.
+2. Edit `.env`: set `DJANGO_API_URL=http://127.0.0.1:8000` and clear `DEMO_MODE`.
+3. Run `python main.py`.
+
+The API client (`services/api_client.py`) automatically detects the backend.  
+If the backend is unreachable it falls back to demo mode transparently.
+
+---
+
+## Application Screens
+
+| Route          | Screen              | Status        |
+|----------------|---------------------|---------------|
+| `/`            | Welcome             | ✅ Complete   |
+| `/age`         | Age Selection       | ✅ Complete   |
+| `/language`    | Language Selection  | ✅ Complete   |
+| `/chat`        | Chatbot Interface   | ✅ Complete   |
+| `/report`      | Report Review       | ✅ Complete   |
+| `/confirmation`| Confirmation        | ✅ Complete   |
+| `/status`      | Case Status         | ✅ Complete   |
+| `/help`        | Human Help          | ✅ Complete   |
+
+---
+
+## Features
+
+### Implemented and Tested
+- Official Habari branding (deep teal, golden yellow, warm white)
+- SVG logo (placeholder — replace with `assets/habari-logo.png` when available)
+- All 8 screens with full navigation
+- Full-height responsive chat interface — mobile and desktop
+- Scrollable message history with child / bot bubbles
+- Animated typing indicator
+- Five reporting category quick-replies
+- Multi-turn conversation state machine (10 states)
+- Age-appropriate language for Under 10
+- Keyword-based urgency detection (suicide, exploitation, physical danger, threats)
+- Emergency guidance banner with Uganda Child Helpline **116**
+- Report auto-built from conversation history
+- Editable report description before submission
+- Demo case code generation (format: `AB-7F3Q9X`)
+- Case status screen with 7 status levels and color-coded badges
+- Human help screen with clickable phone links (116, 999, 112)
+- Quick Exit button on all screens (navigates to bbc.co.uk/cbbc)
+- Session isolation — thread-safe in-memory store, no shared state
+- XSS protection — all user input HTML-escaped before rendering
+- DEMO MODE banner when env var is set
+- Timezone-aware UTC timestamps (no deprecated `utcnow`)
+- 65 automated tests — 0 failures
+
+### Simulated in Demo Mode
+- AI conversation replies (rule-based fallback)
+- Report submission (generates a random case code)
+- Case status lookup (returns a randomized demo status)
+
+### Not Yet Connected (Backend Integration Points)
+| Feature                        | Integration Point                            |
+|-------------------------------|----------------------------------------------|
+| Real report persistence        | `POST /api/channel/web`                      |
+| AI language detection          | FastAPI `/language` endpoint                 |
+| AI harm classification         | FastAPI `/triage` endpoint                   |
+| AI severity scoring            | FastAPI `/triage` endpoint                   |
+| AI-generated summaries         | FastAPI `/summarise` endpoint                |
+| Live case status               | `GET /api/cases/{code}/status`               |
+| Officer dashboard              | Separate Django admin interface              |
+| Real Luganda/Swahili/Runyankore| Backend translation service                 |
+| Voice/audio transcription      | FastAPI `/transcribe` endpoint               |
+
+---
+
+## Conversation Flow
+
+```
+Welcome → Age Selection → Language Selection → Chat
+                                                 │
+                              ┌──────────────────┤
+                              │                  │
+                         Pick Harm         Emergency Guidance
+                              │                  │
+                         Describe Problem   Human Help (/help)
+                              │
+                         Report Review (/report)
+                              │
+                         Confirmation (/confirmation)
+                              │
+                         Case Status (/status)
 ```
 
 ---
 
 ## Child Helpline Disclaimer
 
-> The helpline number **116** shown in this application is the Uganda Child Helpline.
-> Please verify this number is current and correct before deploying to production.
+> The helpline number **116** shown is the Uganda Child Helpline.  
+> **Verify this number is current and operational before deploying to production.**  
+> Emergency numbers **999** and **112** should also be verified for the target country.
+
+---
+
+## Privacy and Security Notes
+
+- No personal data is collected or required
+- Conversation content is held in server memory only (cleared on restart)
+- No sensitive data is placed in URLs or browser local storage
+- Quick Exit navigates away but does not erase browser history
+- Safeguarding records cannot be promised deleted — legal obligations may apply
+- Change `STORAGE_SECRET` before any production deployment
 
 ---
 
 ## License
 
-MIT License. Copyright (c) 2026 HABARI Project Contributors.
+MIT License. Copyright © 2026 HABARI Project Contributors.

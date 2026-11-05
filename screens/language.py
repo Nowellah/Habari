@@ -4,10 +4,10 @@ from services.session import session_manager
 
 
 _LANGUAGES = [
-    ("en", "English", False),
-    ("lg", "Luganda", True),
-    ("sw", "Swahili", True),
-    ("rn", "Runyankore", True),
+    ("en", "English",    "🇬🇧", False,  "Fully supported"),
+    ("lg", "Luganda",    "🇺🇬", True,   "Limited support"),
+    ("sw", "Swahili",    "🌍", True,   "Limited support"),
+    ("rn", "Runyankore", "🇺🇬", True,   "Limited support"),
 ]
 
 
@@ -15,28 +15,25 @@ def show() -> None:
     """Language selection screen."""
     create_header(show_exit=True)
 
-    with ui.column().style(
-        "max-width: 480px; margin: 0 auto; padding: 24px 16px; width: 100%;"
-    ):
-        ui.label("Which language would you like to use?").style(
-            "font-size: 1.3rem; font-weight: 700; color: #006463; margin-bottom: 8px;"
+    with ui.column().classes("page-wrap"):
+        ui.html(
+            '<h2 style="font-size: 1.3rem; font-weight: 800; color: #006463; '
+            'margin: 0 0 6px;">Which language would you like?</h2>'
         )
-        ui.label("You can change this at any time during your conversation.").style(
-            "font-size: 0.9rem; color: #555; margin-bottom: 20px;"
+        ui.html(
+            '<p style="font-size: 0.9rem; color: #4a5568; margin: 0 0 20px;">'
+            'You can change this at any time during your conversation.</p>'
         )
 
-        for code, name, limited in _LANGUAGES:
-            _language_card(code, name, limited)
+        for code, name, flag, limited, support_label in _LANGUAGES:
+            _language_card(code, name, flag, limited, support_label)
 
-        ui.separator().style("margin: 20px 0;")
+        ui.html('<hr class="section-divider">')
 
         ui.button(
-            "Continue in English",
+            "Continue in English →",
             on_click=lambda: _select_language("en"),
-        ).style(
-            "background-color: #006463; color: white; border-radius: 8px; "
-            "font-weight: 700; width: 100%; padding: 12px;"
-        )
+        ).classes("btn-primary").props("no-caps")
 
 
 def _select_language(code: str) -> None:
@@ -46,18 +43,25 @@ def _select_language(code: str) -> None:
     ui.navigate.to("/chat")
 
 
-def _language_card(code: str, name: str, limited: bool) -> None:
+def _language_card(code: str, name: str, flag: str, limited: bool, support_label: str) -> None:
     def select():
         _select_language(code)
 
-    with ui.card().style(
-        "width: 100%; cursor: pointer; margin-bottom: 10px; "
-        "border: 2px solid #006463; border-radius: 10px; padding: 16px;"
-    ).on("click", select):
-        with ui.row().style("align-items: center; gap: 8px;"):
-            ui.label(name).style("font-size: 1.1rem; font-weight: 600; color: #006463;")
-            if limited:
-                ui.label("limited support").style(
-                    "background: #FFC619; color: #003F40; font-size: 0.72rem; "
-                    "font-weight: 700; padding: 2px 8px; border-radius: 4px;"
-                )
+    with ui.element("div").classes("select-card").on("click", select):
+        ui.html(f'<span style="font-size: 1.8rem;">{flag}</span>')
+        with ui.row().style("align-items: center; gap: 10px; flex: 1;"):
+            ui.html(
+                f'<span style="font-size: 1.05rem; font-weight: 700; '
+                f'color: #006463;">{name}</span>'
+            )
+        # Support badge
+        badge_style = (
+            "background: #e8f5e9; color: #2e7d32;"
+            if not limited else
+            "background: #fff3e0; color: #e65100;"
+        )
+        ui.html(
+            f'<span style="margin-left: auto; font-size: 0.72rem; font-weight: 700; '
+            f'padding: 3px 10px; border-radius: 20px; white-space: nowrap; '
+            f'{badge_style}">{support_label}</span>'
+        )

@@ -12,3 +12,6 @@ class Session(BaseModel):
     messages: list[Message] = Field(default_factory=list)
     current_report: Optional[Report] = None
     case_code: Optional[str] = None
+    harm_category: Optional[str] = None   # selected reporting category
+
+    model_config = {"extra": "ignore"}  # silently drop unknown kwargs

@@ -13,76 +13,91 @@ def show() -> None:
     case_code = session.case_code if session else None
     demo_mode = bool(os.getenv("DEMO_MODE", "").strip())
 
-    with ui.column().style(
-        "max-width: 560px; margin: 0 auto; padding: 24px 16px; align-items: center; width: 100%;"
-    ):
-        # Success icon area
+    with ui.column().classes("page-wrap").style("align-items: center;"):
+
+        # ── Success icon ──────────────────────────────────────────────────────
         ui.html(
-            '<div style="font-size: 3rem; margin-bottom: 8px;">✅</div>'
+            '<div style="width: 72px; height: 72px; background: #e8f5e9; '
+            'border-radius: 50%; display: flex; align-items: center; '
+            'justify-content: center; font-size: 2rem; margin-bottom: 12px;">✅</div>'
         )
 
-        ui.label("Your report has been received.").style(
-            "font-size: 1.4rem; font-weight: 700; color: #006463; "
-            "text-align: center; margin-bottom: 12px;"
+        ui.html(
+            '<h2 style="font-size: 1.4rem; font-weight: 800; color: #006463; '
+            'text-align: center; margin: 0 0 10px;">Your report has been received.</h2>'
         )
 
+        # ── DEMO notice ───────────────────────────────────────────────────────
         if demo_mode:
             ui.html(
-                '<div class="emergency-banner" style="text-align:center; margin-bottom:12px;">'
-                "DEMO MODE — This is a simulated report. No real officer has been notified."
-                "</div>"
+                '<div class="emergency-banner" style="text-align: center; width: 100%; '
+                'margin-bottom: 14px;">'
+                '⚠️ <strong>DEMO MODE</strong> — This is a simulated report. '
+                'No real safeguarding officer has been notified.'
+                '</div>'
             )
 
+        # ── Case code card ────────────────────────────────────────────────────
         if case_code:
-            with ui.card().style(
-                "background: #FFF9F0; border: 2px solid #006463; border-radius: 10px; "
-                "padding: 16px; margin-bottom: 16px; text-align: center; width: 100%;"
+            with ui.element("div").style(
+                "background: #FFF9F0; border: 2px solid #006463; border-radius: 14px; "
+                "padding: 20px; margin-bottom: 16px; text-align: center; width: 100%; "
+                "box-shadow: 0 2px 12px rgba(0,100,99,0.12);"
             ):
-                ui.label("Your Case Code").style(
-                    "font-size: 0.9rem; color: #555; margin-bottom: 4px;"
+                ui.html(
+                    '<p style="font-size: 0.85rem; color: #718096; margin: 0 0 6px;">Your Case Code</p>'
                 )
-                ui.label(case_code).style(
-                    "font-size: 1.8rem; font-weight: 700; color: #006463; letter-spacing: 2px;"
+                ui.html(
+                    f'<p style="font-size: 2rem; font-weight: 800; color: #006463; '
+                    f'letter-spacing: 3px; margin: 0;">{case_code}</p>'
                 )
 
-            ui.label(
-                "Your case code is your reference number. Keep it safe — you can use it "
-                "to check the status of your report."
-            ).style(
-                "font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 20px;"
+            ui.html(
+                '<p style="font-size: 0.88rem; color: #4a5568; text-align: center; '
+                'margin: 0 0 20px; line-height: 1.6;">'
+                'Keep this code safe. You can use it to check the status of your report '
+                'at any time.'
+                '</p>'
             )
 
+            # Copy button
             ui.button(
-                "Copy Case Code",
+                "📋  Copy Case Code",
                 on_click=lambda: ui.run_javascript(
-                    f"navigator.clipboard.writeText('{case_code}')"
+                    f"navigator.clipboard.writeText('{case_code}').then(function(){{"
+                    f"  alert('Case code copied!');"
+                    f"}});"
                 ),
-            ).style(
-                "background-color: #FFC619; color: #003F40; border-radius: 8px; "
-                "font-weight: 700; width: 100%; padding: 10px; margin-bottom: 8px;"
-            )
+            ).classes("btn-accent").props("no-caps").style("margin-bottom: 10px;")
         else:
-            ui.label("Your report has been submitted.").style("color: #555; margin-bottom: 16px;")
+            ui.html(
+                '<p style="color: #4a5568; text-align: center; margin-bottom: 20px;">'
+                'Your report has been submitted successfully.</p>'
+            )
 
-        with ui.column().style("width: 100%; gap: 8px;"):
+        # ── Action buttons ────────────────────────────────────────────────────
+        with ui.column().style("width: 100%; gap: 10px;"):
             ui.button(
-                "Check Status",
+                "🔍  Check Report Status",
                 on_click=lambda: ui.navigate.to("/status"),
-            ).style(
-                "background-color: #006463; color: white; border-radius: 8px; "
-                "font-weight: 700; width: 100%; padding: 10px;"
-            )
+            ).classes("btn-primary").props("no-caps")
+
             ui.button(
-                "Continue Chatting",
+                "💬  Continue Chatting",
                 on_click=lambda: ui.navigate.to("/chat"),
-            ).style(
-                "background-color: #006463; color: white; border-radius: 8px; "
-                "font-weight: 700; width: 100%; padding: 10px;"
-            )
+            ).classes("btn-secondary").props("no-caps")
+
             ui.button(
-                "Get Human Help",
+                "🆘  Get Human Help",
                 on_click=lambda: ui.navigate.to("/help"),
-            ).style(
-                "background-color: #FFC619; color: #003F40; border-radius: 8px; "
-                "font-weight: 700; width: 100%; padding: 10px;"
-            )
+            ).classes("btn-accent").props("no-caps")
+
+        # ── Footer note ───────────────────────────────────────────────────────
+        ui.html(
+            '<p style="font-size: 0.78rem; color: #718096; text-align: center; '
+            'margin-top: 20px; line-height: 1.5;">'
+            'A trained safeguarding officer will review your report. '
+            'Nothing will be shared with a parent or guardian without your knowledge, '
+            'unless there is an immediate risk to your safety.'
+            '</p>'
+        )

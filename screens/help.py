@@ -7,61 +7,108 @@ def show() -> None:
     """Emergency help and human support screen."""
     create_header(show_exit=True)
 
-    with ui.column().style(
-        "max-width: 560px; margin: 0 auto; padding: 24px 16px; width: 100%;"
-    ):
-        ui.label("Get Help Now").style(
-            "font-size: 1.5rem; font-weight: 700; color: #006463; margin-bottom: 12px;"
+    with ui.column().classes("page-wrap"):
+        ui.html(
+            '<h2 style="font-size: 1.4rem; font-weight: 800; color: #006463; '
+            'margin: 0 0 10px;">Get Help Now</h2>'
+        )
+        ui.html(
+            '<p style="font-size: 0.95rem; color: #4a5568; margin: 0 0 20px; '
+            'line-height: 1.65;">'
+            'Habari helps you report concerns, but it is not a replacement for '
+            'emergency services or a trained safeguarding professional. '
+            'If you are in <strong>immediate danger</strong>, please call for help now.'
+            '</p>'
         )
 
-        ui.label(
-            "Habari helps you report concerns, but it is not a replacement for emergency services. "
-            "If you are in immediate danger, please call 999 or 112 now."
-        ).style(
-            "font-size: 1rem; color: #333; margin-bottom: 20px; line-height: 1.6;"
-        )
-
-        # Child Helpline card
-        with ui.card().style(
-            "width: 100%; background: #FFF9F0; border: 2px solid #FFC619; "
-            "border-radius: 10px; padding: 20px; margin-bottom: 16px; text-align: center;"
+        # ── Child Helpline ────────────────────────────────────────────────────
+        with ui.element("div").style(
+            "background: #FFF9F0; border: 2px solid #FFC619; border-radius: 14px; "
+            "padding: 20px; margin-bottom: 14px; text-align: center; width: 100%; "
+            "box-shadow: 0 2px 8px rgba(255,198,25,0.2);"
         ):
-            ui.label("Child Helpline Uganda").style(
-                "font-size: 1rem; font-weight: 600; color: #003F40; margin-bottom: 8px;"
+            ui.html(
+                '<p style="font-size: 0.9rem; font-weight: 700; color: #003F40; margin: 0 0 4px;">'
+                '📞 Child Helpline Uganda</p>'
             )
-            ui.label("116").style(
-                "font-size: 3rem; font-weight: 700; color: #006463;"
+            # Clickable phone link
+            ui.html(
+                '<a href="tel:116" style="font-size: 3rem; font-weight: 800; '
+                'color: #006463; text-decoration: none; display: block; '
+                'margin: 4px 0;">116</a>'
             )
-            ui.label(
-                "(Please verify this number before production deployment)"
-            ).style("font-size: 0.75rem; color: #888; margin-top: 6px;")
+            ui.html(
+                '<p style="font-size: 0.78rem; color: #718096; margin: 6px 0 0; '
+                'font-style: italic;">'
+                'Free call. Available 24 hours. '
+                '(Verify this number before production deployment.)'
+                '</p>'
+            )
 
-        # Emergency numbers
-        with ui.card().style(
-            "width: 100%; border: 2px solid #c0392b; border-radius: 10px; "
-            "padding: 16px; margin-bottom: 16px;"
+        # ── Emergency services ────────────────────────────────────────────────
+        with ui.element("div").style(
+            "background: #fdecea; border: 2px solid #c0392b; border-radius: 14px; "
+            "padding: 16px 20px; margin-bottom: 14px; width: 100%;"
         ):
-            ui.label("Emergency Services").style(
-                "font-weight: 700; color: #c0392b; margin-bottom: 8px;"
+            ui.html(
+                '<p style="font-weight: 700; color: #c0392b; margin: 0 0 8px; '
+                'font-size: 1rem;">🚨 Emergency Services</p>'
             )
-            ui.label("Police: 999 / 112").style("font-size: 1.1rem; color: #333;")
+            with ui.row().style("gap: 12px; flex-wrap: wrap;"):
+                ui.html(
+                    '<a href="tel:999" style="font-size: 1.3rem; font-weight: 800; '
+                    'color: #c0392b; text-decoration: none; '
+                    'background: white; border-radius: 8px; padding: 6px 18px; '
+                    'border: 2px solid #c0392b;">📱 999</a>'
+                )
+                ui.html(
+                    '<a href="tel:112" style="font-size: 1.3rem; font-weight: 800; '
+                    'color: #c0392b; text-decoration: none; '
+                    'background: white; border-radius: 8px; padding: 6px 18px; '
+                    'border: 2px solid #c0392b;">📱 112</a>'
+                )
 
-        # Talk to safeguarding officer
+        # ── Talk to officer ───────────────────────────────────────────────────
+        with ui.element("div").classes("info-card").style("margin-bottom: 14px;"):
+            ui.html(
+                '<p style="font-weight: 700; color: #006463; margin: 0 0 6px;">👤 Safeguarding Officer</p>'
+            )
+            ui.html(
+                '<p style="font-size: 0.88rem; color: #4a5568; margin: 0 0 12px; line-height:1.5;">'
+                'A trained safeguarding officer can review your conversation and '
+                'advise you. They will not share your information with a parent or '
+                'guardian without telling you first, unless there is an immediate risk to your safety.'
+                '</p>'
+            )
+            ui.html(
+                '<p style="font-size: 0.78rem; color: #a0aec0; margin: 0; font-style:italic;">'
+                'Note: In demo mode, officer connection is not live.'
+                '</p>'
+            )
+
+        # ── Important notice ──────────────────────────────────────────────────
+        with ui.element("div").style(
+            "background: #f0f4f8; border-radius: 10px; padding: 14px 16px; "
+            "margin-bottom: 20px; width: 100%;"
+        ):
+            ui.html(
+                '<p style="font-size: 0.82rem; color: #4a5568; margin: 0; line-height: 1.6;">'
+                '⚠️ <strong>Please note:</strong> Habari cannot guarantee immediate '
+                'rescue, instant confidentiality, or the deletion of reports. '
+                'Safeguarding records may be kept as required by law.'
+                '</p>'
+            )
+
+        # ── Action buttons ────────────────────────────────────────────────────
         ui.button(
-            "Talk to a Safeguarding Officer",
+            "💬  Talk to a Safeguarding Officer",
             on_click=_request_human_support,
-        ).style(
-            "background-color: #006463; color: white; border-radius: 8px; "
-            "font-weight: 700; width: 100%; padding: 12px; margin-bottom: 8px;"
-        )
+        ).classes("btn-primary").props("no-caps").style("margin-bottom: 10px;")
 
         ui.button(
-            "Back to Chat",
+            "← Back to Chat",
             on_click=lambda: ui.navigate.to("/chat"),
-        ).style(
-            "background-color: #FFC619; color: #003F40; border-radius: 8px; "
-            "font-weight: 700; width: 100%; padding: 12px;"
-        )
+        ).classes("btn-secondary").props("no-caps")
 
 
 def _request_human_support() -> None:
