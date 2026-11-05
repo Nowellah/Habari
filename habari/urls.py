@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path
+from django.views.generic import RedirectView
 
 from channels.sim_views import sim_sms, sim_sms_outbox, sim_ussd
 from channels.sms import sms_hook
@@ -15,6 +16,7 @@ from dashboard.views import chat_page, feature_status, metrics_page, officer_lis
 from partners_mock.views import referral_ack
 
 urlpatterns = [
+    path("", RedirectView.as_view(url="/login/", permanent=False)),
     path("admin/", admin.site.urls),
     path("api/channel/<str:name>", channel_api, name="channel_api"),
     path("hooks/sms", sms_hook, name="sms_hook"),
