@@ -7,11 +7,12 @@ from channels.sms import sms_hook
 from channels.ussd import ussd_hook
 from channels.whatsapp import whatsapp_hook
 from channels.views import channel_api
-from channels.voice_views import voice_shortcut, voice_transcribe
+from channels.voice_views import voice_note, voice_shortcut, voice_transcribe
 from dashboard import officer_views as ov
 from dashboard import pwa_views
 from kb import views as kb_views
-from dashboard.views import app_config, chat_page, feature_status, metrics_page, officer_list, status_page, web_asset
+from dashboard.views import (app_config, chat_page, feature_status, metrics_page, officer_list, spa_page,
+                             status_page, web_asset)
 from partners_mock.views import referral_ack
 
 urlpatterns = [
@@ -25,6 +26,13 @@ urlpatterns = [
     path("sim/sms/outbox", sim_sms_outbox, name="sim_sms_outbox"),
     path("sim/ussd", sim_ussd, name="sim_ussd"),
     path("chat", chat_page, name="chat"),
+    path("", spa_page, name="home"),
+    path("age", spa_page, name="age"),
+    path("language", spa_page, name="language"),
+    path("report", spa_page, name="report"),
+    path("confirmation", spa_page, name="confirmation"),
+    path("status", spa_page, name="status_lookup"),
+    path("help", spa_page, name="help"),
     path("kb", kb_views.kb_list, name="kb_list"),
     path("kb/<slug:slug>", kb_views.kb_article, name="kb_article"),
     path("manifest.webmanifest", pwa_views.manifest, name="manifest"),
@@ -36,6 +44,7 @@ urlpatterns = [
     path("about/status", feature_status, name="feature_status"),
     path("voice", voice_shortcut, name="voice"),
     path("api/voice/transcribe", voice_transcribe, name="voice_transcribe"),
+    path("api/voice-note", voice_note, name="voice_note"),
     path("status/<str:code>", status_page, name="status"),
     path("officer/", officer_list, name="officer_list"),
     path("officer/partners", ov.partner_board, name="partner_board"),
@@ -48,6 +57,7 @@ urlpatterns = [
     path("officer/map.json", ov.heat_map_data, name="heat_map_data"),
     path("officer/polls/<int:poll_id>/send", ov.poll_send, name="poll_send"),
     path("officer/case/<str:code>/", ov.case_detail, name="case_detail"),
+    path("officer/case/<str:code>/voice/<int:evidence_id>", ov.case_voice, name="case_voice"),
     path("officer/case/<str:code>/ack", ov.case_ack, name="case_ack"),
     path("officer/case/<str:code>/reply", ov.case_reply, name="case_reply"),
     path("officer/case/<str:code>/refer", ov.case_refer, name="case_refer"),
