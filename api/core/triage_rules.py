@@ -30,5 +30,5 @@ def apply_rules(text: str, pick=None) -> RuleResult:
         flag = f"rule:{hit.rule_id}"
         if flag not in flags:
             flags = flags + [flag]
-    role_hint = "authority" if "authority" in flags else None
+    role_hint = "authority" if lexicon_engine.authority_harm(flags) else None
     return RuleResult(severity=severity, flags=flags, role_hint=role_hint)

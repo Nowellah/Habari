@@ -7,6 +7,18 @@ import yaml
 
 LEXICON_PATH = Path(__file__).resolve().parent / "lexicon.yaml"
 
+# Flags that show harm. An adult in charge only changes the case (role, category,
+# referral) when one of these is also present.
+AUTHORITY_HARM_FLAGS = frozenset({
+    "harm_by_person", "threat", "imminent_danger", "sextortion", "grooming",
+    "self_harm_incitement", "bullying", "risk_context",
+})
+
+
+def authority_harm(flags) -> bool:
+    """True when an adult in charge is named together with a sign of harm."""
+    return "authority" in flags and any(f in AUTHORITY_HARM_FLAGS for f in flags)
+
 
 @lru_cache
 def load(path: str = str(LEXICON_PATH)) -> dict:

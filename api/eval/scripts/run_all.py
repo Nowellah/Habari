@@ -43,6 +43,10 @@ CAVEATS = [
     "used to choose them, so it is the fairest number here. Before v0.3 the rules caught 12 of its 26 "
     "serious cases (0.46). It was written by the same person as the v0.3 rules, so even this score may be "
     "optimistic. A test set written by someone outside the team is the next step.",
+    "v0.4 stopped treating any mention of a parent or teacher as severity 3 (it now needs a sign of harm or "
+    "a warning sign such as being alone with them). That change first lost 2 serious cases in hard_test_v2, "
+    "and the warning-sign list was chosen after looking at them, so hard_test_v2 is no longer fully blind "
+    "either. Its blind score, before v0.4, was 0.92.",
 ]
 
 
@@ -105,7 +109,7 @@ def main(out_dir=RESULTS):
     hard_v2_scores, hard_v2_errors = score(hard_v2)
     data = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "method": "lexicon rules v0.3 + rule engine (ai_service/triage.py), text only",
+        "method": "lexicon rules v0.4 + rule engine (ai_service/triage.py), text only",
         "target": "Recall of at least 0.90 on severity 3 and 4",
         "synthetic_test": syn_scores,
         "hard_test": hard_scores,
