@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <!-- Deep teal background -->
+  <rect width="200" height="60" rx="10" fill="#006463"/>
+  <!-- Golden yellow speech bubble -->
+  <path d="M20 10 L50 10 L50 35 L35 35 L30 45 L28 35 L20 35 Z" fill="#FFC619"/>
+  <!-- White text -->
+  <text x="62" y="38" font-family="Nunito, Arial, sans-serif" font-size="24" font-weight="700" fill="white">habari</text>
+</svg>
