@@ -4,3 +4,5 @@ __pycache__/
 db.sqlite3
 .env
 .superpowers/
+db.sqlite3-wal
+db.sqlite3-shm

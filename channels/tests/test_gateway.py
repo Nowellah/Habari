@@ -121,8 +121,9 @@ class IdentityTests(GatewayTestCase):
         self.assertNotIn("700000001", json.dumps({f.name: str(getattr(case, f.name)) for f in case._meta.fields}))
         self.assertNotIn("700000001", case.reporter.pseudo_id)
 
-    def test_chat_channels_have_no_vault_entry(self):
-        self.send("HELP", channel="telegram", sender="tg:42")
+    def test_web_channels_have_no_vault_entry(self):
+        for channel, sender in (("web", "web-1"), ("extension", "ext-1"), ("siri", "siri-1")):
+            self.send("HELP", channel=channel, sender=sender)
         self.assertFalse(ReporterVault.objects.exists())
 
     def test_sms_reporter_is_marked_basic_phone(self):

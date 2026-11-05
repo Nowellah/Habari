@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Partner board{% endblock %}
+{% block content %}
+<p><a href="/officer/">&larr; Case queue</a></p>
+<h1>Partner board</h1>
+<p class="muted">How quickly each partner acknowledges referrals. Times are SLA minutes. Partners are simulated in this prototype; windows are proposed targets.</p>
+<div class="wrap">
+<table>
+  <thead><tr><th>Partner</th><th>Window</th><th>Referrals</th><th>Acknowledged</th><th>Median time to acknowledge</th><th>Breach rate</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ r.partner.name }}</td>
+      <td>{{ r.window }} min</td>
+      <td>{{ r.sent }}</td>
+      <td>{{ r.acked }}</td>
+      <td>{% if r.median_sla_min is not None %}{{ r.median_sla_min }} min{% else %}-{% endif %}</td>
+      <td>{% if r.breach_pct is not None %}{{ r.breach_pct }}%{% else %}-{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

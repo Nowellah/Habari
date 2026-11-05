@@ -42,8 +42,11 @@ def run(case_id: int):
 
 
 def apply(case_id: int, result: dict | None):
+    from core import sla
+
     with transaction.atomic():
         case = Case.objects.select_for_update().get(pk=case_id)
+        was = case.severity
         flags = set(case.flags)
         if result is None:
             case.severity = max(case.severity, AI_DOWN_FLOOR)
@@ -66,3 +69,18 @@ def apply(case_id: int, result: dict | None):
         if case.status == Case.Status.RECEIVED:
             case.status = Case.Status.TRIAGED
         case.save()
+        if case.severity > was:
+            sla.reset_clock(case, f"AI raised severity {was} -> {case.severity}")
+            sla.once(case, "severity_raised", f"{was} -> {case.severity}: {case.triage_source}")
+    after_triage(case_id)
+
+
+def after_triage(case_id: int):
+    """Assign an officer; severity 4 is referred to the helpline and police at once."""
+    from core import allocation, router
+
+    case = Case.objects.get(pk=case_id)
+    if case.assigned_officer is None:
+        allocation.allocate(case)
+    if case.severity >= 4:
+        router.send_referrals(case)

@@ -3,24 +3,36 @@
 {% block content %}
 <form method="post" action="/logout/" style="float:right">{% csrf_token %}<button type="submit">Log out</button></form>
 <h1>Case queue</h1>
-<p class="muted">Most urgent first. No reporter identities are shown here.</p>
+<p class="muted">Most urgent first. No reporter identities are shown here. <a href="/officer/partners">Partner board</a></p>
+
+{% if notifications %}
+<div class="card" style="margin-bottom:16px">
+  <strong>Alerts</strong>
+  <ul style="margin:8px 0 0;padding-left:20px">
+  {% for n in notifications %}<li><a href="/officer/case/{{ n.case.code }}/">{{ n.text }}</a> <span class="muted">{{ n.created_at|date:"H:i" }}</span></li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 <div class="wrap">
 <table>
-  <thead><tr><th>Case</th><th>Severity</th><th>Pick</th><th>Channel</th><th>Status</th><th>Flags</th><th>Triage</th><th>Received</th></tr></thead>
+  <thead><tr><th>Case</th><th>Severity</th><th>Pick</th><th>Channel</th><th>Status</th><th>SLA clock</th><th>Officer</th><th>Flags</th><th>Triage</th><th>Received</th></tr></thead>
   <tbody>
   {% for row in cases %}
     <tr>
-      <td>{{ row.case.code }}</td>
+      <td><a href="/officer/case/{{ row.case.code }}/">{{ row.case.code }}</a></td>
       <td class="sev sev-{{ row.case.severity }}">{{ row.case.severity }}</td>
       <td>{{ row.pick_label }}</td>
       <td>{{ row.case.channel }}</td>
       <td>{{ row.case.get_status_display }}</td>
+      <td><span class="clock clock-{{ row.clock.colour }}">{{ row.clock.label }}</span></td>
+      <td>{{ row.case.assigned_officer.user.username|default:"-" }}</td>
       <td>{{ row.case.flags|join:", " }}</td>
       <td>{% if row.case.triage_source == "ai" %}AI{% elif row.case.triage_source == "rules_ai_down" %}Rules (AI down){% else %}Rules{% endif %}</td>
       <td>{{ row.case.created_at|date:"j M, H:i" }}</td>
     </tr>
   {% empty %}
-    <tr><td colspan="8" class="muted">No cases yet.</td></tr>
+    <tr><td colspan="10" class="muted">No cases yet.</td></tr>
   {% endfor %}
   </tbody>
 </table>

@@ -16,7 +16,7 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 
 from ai_service.language import detect_language
-from core import ai_triage
+from core import ai_triage, followup, sla
 from core.harm import pick_severity, picks
 from core.messages import msg, status_words
 from core.models import Case, Conversation, Message, Reporter, ReporterVault
@@ -24,6 +24,7 @@ from core.triage_rules import apply_rules
 from core.utils import PHONE_CHANNELS, new_case_code, normalise_msisdn, pseudo_id
 
 MENU_WORDS = {"HELP", "MENU", "START", "/START", "HI", "HELLO"}
+RATINGS = {"1": "good", "2": "ok", "3": "not_good", "😀": "good", "🙂": "good", "😐": "ok", "😞": "not_good"}
 LANG_OPTIONS = {"1": ("lg", "Luganda"), "2": ("rn", "Runyankore"), "3": ("sw", "Swahili"), "4": ("en", "English")}
 
 
@@ -49,6 +50,8 @@ def get_reporter(channel, sender_id, language):
         rep.save()
     if channel in PHONE_CHANNELS:
         ReporterVault.objects.update_or_create(reporter=rep, defaults={"raw_contact": normalise_msisdn(sender_id)})
+    elif channel == "telegram":  # needed to send follow-ups; web channels have no address to keep
+        ReporterVault.objects.update_or_create(reporter=rep, defaults={"raw_contact": sender_id})
     return rep
 
 
@@ -167,9 +170,40 @@ def _route(channel, reporter, text, language):
         conv.state = "CASE_OPEN"  # they wrote something else: treat it as more information
         conv.save()
 
+    if conv.state == "CHECKIN" and conv.case:
+        case = conv.case
+        if text == "1":
+            conv.state = "RATE"
+            conv.save()
+            return _reply(msg("checkin_rate"), "RATE", case,
+                          [{"key": "1", "label": "Good"}, {"key": "2", "label": "OK"}, {"key": "3", "label": "Not good"}])
+        if text in ("2", "3"):
+            Message.objects.create(case=case, direction="in", text=f"Check-in answer: {text} (not safe)", channel=channel)
+            case.flags = sorted(set(case.flags) | {"child_not_safe"})
+            was = case.severity
+            case.severity = max(case.severity, 3)
+            case.save(update_fields=["flags", "severity"])
+            followup.reopen(case, "child said they are not safe")
+            if case.severity > was:
+                sla.once(case, "severity_raised", f"{was} -> {case.severity}: child not safe")
+            conv.state = "CASE_OPEN"
+            conv.save()
+            return _reply(msg("not_safe"), "CASE_OPEN", case)
+        conv.state = "CASE_OPEN"  # anything else is more information
+
+    if conv.state == "RATE" and conv.case:
+        conv.state = "CASE_OPEN"
+        conv.save()
+        if text in RATINGS:
+            conv.case.rating = RATINGS[text]
+            conv.case.save(update_fields=["rating"])
+            return _reply(msg("rating_saved"), "CASE_OPEN", conv.case)
+
     if conv.state == "CASE_OPEN" and conv.case:
         case = conv.case
         Message.objects.create(case=case, direction="in", text=text, channel=channel)
+        if case.status in followup.CLOSED or case.status in (Case.Status.RESOLVED, Case.Status.SAFETY_CHECK):
+            followup.reopen(case, "child sent new information")
         rules = apply_rules(text, case.pick)
         was = case.severity
         case.severity = max(case.severity, rules.severity)
@@ -177,8 +211,10 @@ def _route(channel, reporter, text, language):
         if rules.role_hint and not case.alleged_role:
             case.alleged_role = rules.role_hint
         case.save()
+        if case.severity > was:
+            sla.reset_clock(case, f"severity raised {was} -> {case.severity}")
+            sla.once(case, "severity_raised", f"{was} -> {case.severity}: new message")
         ai_triage.schedule(case.id)
-        # Phase 3: a severity rise resets the SLA clock here.
         if case.severity >= 4 and was < 4:
             return _reply(msg("danger", code=case.code), "CASE_OPEN", case)
         return _reply(msg("added", code=case.code), "CASE_OPEN", case)
