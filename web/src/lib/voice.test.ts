@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RATE, toWav } from "./voice";
+import { CueMeter, RATE, toWav } from "./voice";
 
 async function bytes(blob: Blob): Promise<DataView> {
   return new DataView(await blob.arrayBuffer());
@@ -25,5 +25,20 @@ describe("toWav", () => {
   });
   it("handles an empty recording", async () => {
     expect((await bytes(toWav([], 48000))).getUint32(40, true)).toBe(0);
+  });
+});
+
+describe("CueMeter", () => {
+  it("reports length, volume and long pauses", () => {
+    const m = new CueMeter();
+    m.add(0.2, 500); m.add(0.2, 500);      // speaking
+    m.add(0, 1500);                         // a long pause
+    m.add(0.3, 500);                        // speaking again
+    expect(m.result()).toEqual({ seconds: 3, level: 23, peak: 30, pauses: 1 });
+  });
+  it("counts nothing for silence", () => {
+    const m = new CueMeter();
+    m.add(0, 2000);
+    expect(m.result()).toEqual({ seconds: 2, level: 0, peak: 0, pauses: 0 });
   });
 });
