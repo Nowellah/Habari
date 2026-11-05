@@ -12,6 +12,7 @@ import hashlib
 import hmac
 import re
 import time
+from contextvars import ContextVar
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
@@ -19,7 +20,9 @@ from django.db import IntegrityError, transaction
 from ai_service.language import detect_language
 from core import ai_triage, followup, sla
 from core.harm import pick_severity, picks
-from core.messages import msg, status_words
+from core.messages import _messages
+from core.messages import msg as _msg
+from core.messages import status_words
 from core.models import Case, Conversation, Message, Reporter, ReporterVault
 from core.triage_rules import apply_rules
 from core.utils import PHONE_CHANNELS, new_case_code, normalise_msisdn, pseudo_id
@@ -30,7 +33,26 @@ FEELINGS = {"1": "little", "2": "lot", "3": "scared", "4": "danger"}
 # What the child says they feel is a floor: it can raise severity, never lower it.
 FEELING_FLOOR = {"little": 1, "lot": 2, "scared": 3, "danger": 4}
 FEELING_LABELS = {"1": "A little", "2": "A lot", "3": "Scared", "4": "In danger", "0": "Skip"}
+SAFE_OPTIONS = {"1": "Yes, I am safe", "2": "No, I am not safe", "3": "Not sure"}
+SOURCE_OPTIONS = {"1": "Someone I know", "2": "Someone online", "3": "An adult in charge", "4": "Myself", "5": "Not sure"}
+SOURCE_FLAGS = {"1": "danger_from_known", "2": "danger_from_online", "3": "danger_from_authority",
+                "4": "danger_from_self", "5": "danger_from_unsure"}
 LANG_OPTIONS = {"1": ("lg", "Luganda"), "2": ("rn", "Runyankore"), "3": ("sw", "Swahili"), "4": ("en", "English")}
+
+
+_channel = ContextVar("channel", default="")
+
+
+def msg(key, lang="en", **kw):
+    """The wording for the channel being served. The web chat has its own short, child-friendly version."""
+    if _channel.get() == "web" and f"{key}_web" in _messages(lang):
+        key = f"{key}_web"
+    return _msg(key, lang, **kw)
+
+
+def _join(*parts):
+    """SMS keeps one running text. The web chat shows each part as its own bubble."""
+    return ("\n\n" if _channel.get() == "web" else " ").join(p for p in parts if p)
 
 
 def _reply(text, state, case=None, options=None):
@@ -56,6 +78,21 @@ def _for_buttons(out):
     return out
 
 
+AGE_BRACKETS = {"under_10", "10_12", "13_15", "16_17"}
+
+
+def _record_age(case_code, meta):
+    """Keep the age group the child chose as a flag on the case. Skipping it is fine."""
+    age = meta.get("age_bracket") if isinstance(meta, dict) else None
+    if age not in AGE_BRACKETS:
+        return
+    case = Case.objects.get(code=case_code)
+    flag = f"age_{age}"
+    if flag not in case.flags:
+        case.flags = sorted(set(case.flags) | {flag})
+        case.save(update_fields=["flags"])
+
+
 def _menu_options():
     return [{"key": k, "label": p["short_en"]} for k, p in picks().items()]
 
@@ -77,6 +114,52 @@ def apply_feeling(case, feeling):
     return was
 
 
+def _danger_options(labels):
+    return [{"key": k, "label": label} for k, label in labels.items()]
+
+
+def _start_danger_questions(conv, case, lead):
+    """The helpline comes first. Then, where there is room for it, ask what the danger is.
+
+    Severity is already the highest, so the answers only add detail for the helper.
+    Basic phones (SMS, USSD) are not asked, to keep their messages short.
+    """
+    if case.channel in ("sms", "ussd"):
+        conv.state, conv.case, conv.draft = "CASE_OPEN", case, {}
+        conv.save()
+        return _reply(lead, "CASE_OPEN", case)
+    conv.state, conv.case, conv.draft = "CASE_OPEN", case, {"awaiting": "danger", "step": 1}
+    conv.save()
+    return _reply(_join(lead, msg("danger_q_safe")), "CASE_OPEN", case, _danger_options(SAFE_OPTIONS))
+
+
+def _answer_danger(conv, text):
+    """Handle the follow-up questions after a danger report. None means it was more information instead."""
+    case, step = conv.case, (conv.draft or {}).get("step", 1)
+    if step == 1 and text in SAFE_OPTIONS:
+        lead = ""
+        if text == "2":
+            case.flags = sorted(set(case.flags) | {"child_not_safe"})
+            case.save(update_fields=["flags"])
+            lead = msg("danger_unsafe")
+        conv.draft = {"awaiting": "danger", "step": 2}
+        conv.save()
+        return _reply(_join(lead, msg("danger_q_from")), "CASE_OPEN", case, _danger_options(SOURCE_OPTIONS))
+    if step == 2 and text in SOURCE_OPTIONS:
+        case.flags = sorted(set(case.flags) | {SOURCE_FLAGS[text]})
+        if text == "3" and not case.alleged_role:
+            case.alleged_role = "authority"
+        case.save(update_fields=["flags", "alleged_role"])
+        conv.draft = {"awaiting": "danger", "step": 3}
+        conv.save()
+        return _reply(msg("danger_q_tell"), "CASE_OPEN", case, [{"key": "0", "label": "Skip"}])
+    conv.draft = {}
+    conv.save()
+    if step == 3 and text == "0":
+        return _reply(msg("danger_thanks"), "CASE_OPEN", case)
+    return None
+
+
 def _answer_feeling(conv, text):
     """Handle the reply to the feeling question. None means it was more information instead."""
     conv.draft = {}
@@ -89,7 +172,7 @@ def _answer_feeling(conv, text):
     case = conv.case
     apply_feeling(case, feeling)
     if case.severity >= 4:
-        return _reply(msg("danger", code=case.code), "CASE_OPEN", case)
+        return _start_danger_questions(conv, case, msg("danger", code=case.code))
     if feeling == "little" and case.severity >= 3:
         return _reply(msg("feeling_higher"), "CASE_OPEN", case)
     return _reply(msg("feeling_thanks"), "CASE_OPEN", case)
@@ -154,14 +237,12 @@ def _case_reply(case, conv, text="", language=None):
         conv.state, conv.case, conv.draft = "PICK_LANG", case, {}
         conv.save()
         options = [{"key": k, "label": name} for k, (_, name) in LANG_OPTIONS.items()]
-        return _reply(msg("received", code=case.code) + " " + msg("lang_question"), "PICK_LANG", case, options)
-    if case.severity >= 4:  # already in danger: no more questions
-        conv.state, conv.case, conv.draft = "CASE_OPEN", case, {}
-        conv.save()
-        return _reply(msg("danger", code=case.code), "CASE_OPEN", case)
+        return _reply(_join(msg("received", code=case.code), msg("lang_question")), "PICK_LANG", case, options)
+    if case.severity >= 4:  # the helpline first, then what the danger is
+        return _start_danger_questions(conv, case, msg("danger", code=case.code))
     conv.state, conv.case, conv.draft = "CASE_OPEN", case, {"awaiting": "feeling"}
     conv.save()
-    return _reply(msg("received", code=case.code) + " " + msg("feeling_ask"), "CASE_OPEN", case, _feeling_options())
+    return _reply(_join(msg("received", code=case.code), msg("feeling_ask")), "CASE_OPEN", case, _feeling_options())
 
 
 def _status(reporter, conv, args):
@@ -275,13 +356,18 @@ def _route(channel, reporter, text, language):
             reporter.save(update_fields=["language"])
             conv.state, conv.draft = "CASE_OPEN", {"awaiting": "feeling"}
             conv.save()
-            return _reply(msg("lang_saved", language=name) + " " + msg("feeling_ask"), "CASE_OPEN", case,
+            return _reply(_join(msg("lang_saved", language=name), msg("feeling_ask")), "CASE_OPEN", case,
                           _feeling_options())
         conv.state = "CASE_OPEN"  # they wrote something else: treat it as more information
         conv.save()
 
     if conv.state == "CASE_OPEN" and conv.case and (conv.draft or {}).get("awaiting") == "feeling":
         answered = _answer_feeling(conv, text)
+        if answered:
+            return answered
+
+    if conv.state == "CASE_OPEN" and conv.case and (conv.draft or {}).get("awaiting") == "danger":
+        answered = _answer_danger(conv, text)
         if answered:
             return answered
 
@@ -331,7 +417,7 @@ def _route(channel, reporter, text, language):
             sla.once(case, "severity_raised", f"{was} -> {case.severity}: new message")
         ai_triage.schedule(case.id)
         if case.severity >= 4 and was < 4:
-            return _reply(msg("danger", code=case.code), "CASE_OPEN", case)
+            return _start_danger_questions(conv, case, msg("danger", code=case.code))
         return _reply(msg("added", code=case.code), "CASE_OPEN", case)
 
     if conv.state == "DESCRIBE":
@@ -364,9 +450,27 @@ def _route(channel, reporter, text, language):
     return open_menu("menu_retry" if conv.state == "PICK_HARM" else "menu")
 
 
-def handle(channel, sender_id, text="", language=None, attachments=None, location=None, meta=None) -> dict:
+def _keep_voice_notes(reporter, channel, out, notes):
+    """Attach voice notes to the case once it exists. Until then they wait in the conversation."""
+    from channels import voice_notes
+    if out.get("case_code"):
+        voice_notes.attach(Case.objects.get(code=out["case_code"]), notes)
+        notes = []
+    conv = reporter.conversations.filter(channel=channel).order_by("-updated_at").first()
+    if conv is not None:
+        draft = {k: v for k, v in (conv.draft or {}).items() if k != "voice_pending"}
+        if notes:
+            draft["voice_pending"] = notes
+        if draft != (conv.draft or {}):
+            conv.draft = draft
+            conv.save()
+
+
+def handle(channel, sender_id, text="", language=None, attachments=None, location=None, meta=None,
+           voice_note=None) -> dict:
     """Single entry point for every channel adapter. Returns the gateway response contract."""
     started = time.perf_counter()
+    _channel.set(channel)
     with transaction.atomic():
         reporter = get_reporter(channel, str(sender_id), language)
         text = (text or "").strip()
@@ -382,10 +486,15 @@ def handle(channel, sender_id, text="", language=None, attachments=None, locatio
                              conv.case if conv else None)
                 out["first_reply_ms"] = round((time.perf_counter() - started) * 1000)
                 return out
+        prior = reporter.conversations.filter(channel=channel).order_by("-updated_at").first()
+        waiting_notes = list((prior.draft or {}).get("voice_pending", [])) if prior else []
         out = _route(channel, reporter, text, language)
+        if voice_note or waiting_notes:
+            _keep_voice_notes(reporter, channel, out, waiting_notes + ([voice_note] if voice_note else []))
         if channel == "web":
             out = _for_buttons(out)
         if out.get("case_code") and meta:
+            _record_age(out["case_code"], meta)
             from channels.meta_evidence import attach_meta
             attach_meta(Case.objects.get(code=out["case_code"]), meta)
     out["first_reply_ms"] = round((time.perf_counter() - started) * 1000)

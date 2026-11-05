@@ -1,3 +1,6 @@
+import type { SpokenLanguage } from "./choices";
+import type { Cues } from "./voice";
+
 export interface Option { key: string; label: string }
 export interface Reply { reply_text: string; options: Option[]; case_code: string | null; state: string }
 export type SharedMeta = Record<string, string>;
@@ -17,8 +20,8 @@ async function post(body: unknown): Promise<Reply> {
   return (await r.json()) as Reply;
 }
 
-export function sendMessage(senderId: string, text: string, meta: SharedMeta): Promise<Reply> {
-  return post({ channel: "web", sender_id: senderId, text, meta });
+export function sendMessage(senderId: string, text: string, meta: SharedMeta, language?: string): Promise<Reply> {
+  return post({ channel: "web", sender_id: senderId, text, meta, ...(language ? { language } : {}) });
 }
 
 /** Only a district is kept by the server; the coordinates end there. */
@@ -39,21 +42,23 @@ export async function getConfig(): Promise<AppConfig> {
   }
 }
 
-export type SpokenLanguage = "en" | "lg";
-
-export type Transcript = { ok: true; text: string } | { ok: false; message: string };
-
-export async function transcribe(wav: Blob, language: SpokenLanguage): Promise<Transcript> {
+/**
+ * Sends a voice note. The server keeps the recording for the person who follows up,
+ * and the bot answers it like a typed message.
+ */
+export async function sendVoiceNote(
+  senderId: string, wav: Blob, spoken: SpokenLanguage, cues: Cues, meta: SharedMeta, language?: string,
+): Promise<Reply> {
   const form = new FormData();
+  form.append("sender_id", senderId);
   form.append("audio", wav, "voice.wav");
-  form.append("language", language);
-  try {
-    const r = await fetch(`${BASE}/api/voice/transcribe`, { method: "POST", body: form, cache: "no-store" });
-    const data = await r.json();
-    return r.ok ? { ok: true, text: data.text as string } : { ok: false, message: data.message as string };
-  } catch {
-    return { ok: false, message: "We could not connect. Please type instead." };
-  }
+  form.append("spoken", spoken);
+  form.append("cues", JSON.stringify(cues));
+  form.append("meta", JSON.stringify(meta));
+  if (language) form.append("language", language);
+  const r = await fetch(`${BASE}/api/voice-note`, { method: "POST", body: form, cache: "no-store" });
+  if (!r.ok) throw new Error(String(r.status));
+  return (await r.json()) as Reply;
 }
 
 export function newSenderId(): string {

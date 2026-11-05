@@ -94,6 +94,14 @@
   <ul>{% for e in events %}<li>{{ e.at|date:"H:i:s" }} · {{ e.kind }} {% if e.detail %}<span class="muted">({{ e.detail }})</span>{% endif %}</li>{% empty %}<li class="muted">None yet.</li>{% endfor %}</ul>
 </div>
 
+{% if voice_notes %}
+<div class="card">
+  <h2>Voice notes</h2>
+  <p class="muted">The child's own recordings. Listen for how they sound; the notes under each are rough hints measured from the audio, not a diagnosis.</p>
+  {% for v in voice_notes %}<p><span class="muted">{{ v.at|date:"H:i" }}</span><br><audio controls preload="none" src="{% url 'case_voice' case.code v.id %}"></audio>{% if v.cues %}<br><span class="muted">{{ v.cues }}</span>{% endif %}</p>{% endfor %}
+</div>
+{% endif %}
+
 <div class="card">
   <details>
     <summary>Messages ({{ messages|length }}). Open only if you need to read the child's words.</summary>
