@@ -73,3 +73,32 @@ class FreeTextTests(GatewayTestCase):
         self.assertEqual(out["state"], "PICK_HARM")
         self.assertIsNone(out["case_code"])
         self.assertFalse(Case.objects.exists())
+
+
+class SextortionFirstReplyTests(GatewayTestCase):
+    """The demo story: a payment demand with a threat to post photos."""
+
+    REPORT = "a man I met online says if I dont send him money on mobile money he will post my photos"
+
+    def report(self, channel, sender):
+        self.send("HELP", sender=sender, channel=channel)
+        self.send("2", sender=sender, channel=channel)
+        return self.send(self.REPORT, sender=sender, channel=channel)
+
+    def test_web_gets_the_helpline_first_then_what_to_do_now(self):
+        out = self.report("web", "web-sx")
+        text = out["reply_text"]
+        self.assertTrue(text.startswith("Call "))
+        self.assertIn("do not pay", text)
+        self.assertLess(text.index("Call "), text.index("do not pay"))
+        self.assertEqual(Case.objects.get(code=out["case_code"]).severity, 4)
+
+    def test_sms_advice_is_short(self):
+        out = self.report("sms", "+256700000123")
+        self.assertIn("Do not pay", out["reply_text"])
+
+    def test_other_harms_get_no_sextortion_advice(self):
+        self.send("HELP", sender="web-b", channel="web")
+        self.send("4", sender="web-b", channel="web")
+        out = self.send("people in my class keep laughing at me", sender="web-b", channel="web")
+        self.assertNotIn("do not pay", out["reply_text"])

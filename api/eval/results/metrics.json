@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T20:02:02+00:00",
+  "generated_at": "2026-11-05T20:21:54+00:00",
   "method": "lexicon rules v0.3 + rule engine (ai_service/triage.py), text only",
   "target": "Recall of at least 0.90 on severity 3 and 4",
   "synthetic_test": {
@@ -325,8 +325,8 @@
   "hard_test": {
     "n": 23,
     "category": {
-      "macro_f1": 1.0,
-      "accuracy": 1.0,
+      "macro_f1": 0.9857142857142858,
+      "accuracy": 0.9565217391304348,
       "per_class": {
         "self_harm": {
           "precision": 1.0,
@@ -354,8 +354,8 @@
         },
         "exposure_by_authority": {
           "precision": 1.0,
-          "recall": 1.0,
-          "f1": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571428571428571,
           "support": 4
         },
         "cyberbullying": {
@@ -387,6 +387,12 @@
           "recall": 1.0,
           "f1": 1.0,
           "support": 1
+        },
+        "unclear": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
         }
       }
     },
@@ -462,13 +468,13 @@
           0,
           0,
           0,
-          4,
+          3,
           0,
           0,
           0,
           0,
           0,
-          0
+          1
         ],
         [
           0,
@@ -575,11 +581,11 @@
       ]
     },
     "authority_role": {
-      "recall": 1.0,
+      "recall": 0.75,
       "support": 4,
       "ci95": [
-        0.5100999795960008,
-        1.0
+        0.3006360524426366,
+        0.9544139373553637
       ]
     },
     "per_language": {
@@ -602,7 +608,7 @@
       },
       "lg": {
         "n": 3,
-        "category_accuracy": 1.0,
+        "category_accuracy": 0.6666666666666666,
         "severity_high": {
           "recall": 1.0,
           "precision": 1.0,
@@ -639,8 +645,8 @@
   "hard_test_v2": {
     "n": 36,
     "category": {
-      "macro_f1": 0.5997619047619047,
-      "accuracy": 0.6111111111111112,
+      "macro_f1": 0.6530952380952381,
+      "accuracy": 0.6666666666666666,
       "per_class": {
         "self_harm": {
           "precision": 0.8571428571428571,
@@ -656,20 +662,20 @@
         },
         "grooming": {
           "precision": 1.0,
-          "recall": 0.5,
-          "f1": 0.6666666666666666,
-          "support": 4
-        },
-        "sextortion": {
-          "precision": 1.0,
           "recall": 0.75,
           "f1": 0.8571428571428571,
           "support": 4
         },
-        "exposure_by_authority": {
-          "precision": 0.6666666666666666,
+        "sextortion": {
+          "precision": 1.0,
           "recall": 1.0,
-          "f1": 0.8,
+          "f1": 1.0,
+          "support": 4
+        },
+        "exposure_by_authority": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
           "support": 4
         },
         "cyberbullying": {
@@ -754,9 +760,9 @@
         [
           0,
           0,
-          2,
+          3,
           0,
-          1,
+          0,
           0,
           0,
           0,
@@ -768,8 +774,8 @@
           0,
           0,
           0,
-          3,
-          1,
+          4,
+          0,
           0,
           0,
           0,
@@ -905,7 +911,7 @@
     "per_language": {
       "en": {
         "n": 32,
-        "category_accuracy": 0.625,
+        "category_accuracy": 0.6875,
         "severity_high": {
           "recall": 0.9090909090909091,
           "precision": 1.0,

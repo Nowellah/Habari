@@ -83,3 +83,41 @@ class AutoReferralTests(TestCase):
         case = make_case(severity=3, pick="2")
         ai_triage.apply(case.id, None)
         self.assertFalse(Referral.objects.filter(case=case).exists())
+
+
+class ReferralStatusTests(TestCase):
+    """The child's status words follow the referral: sent -> referred, partner ack -> acknowledged."""
+
+    def setUp(self):
+        from core.tests.helpers import seed
+        seed()
+
+    def test_sending_referrals_marks_the_case_referred(self):
+        from core.models import Case
+        from core.router import send_referrals
+        from core.tests.helpers import make_case
+        case = make_case(severity=4, status=Case.Status.ASSIGNED)
+        send_referrals(case)
+        case.refresh_from_db()
+        self.assertEqual(case.status, Case.Status.REFERRED)
+
+    def test_partner_ack_marks_the_case_acknowledged(self):
+        from core.models import Case
+        from core.router import acknowledge_referral, send_referrals
+        from core.tests.helpers import make_case
+        case = make_case(severity=4)
+        ref = send_referrals(case)[0]
+        acknowledge_referral(ref)
+        case.refresh_from_db()
+        self.assertEqual(case.status, Case.Status.ACKNOWLEDGED)
+
+    def test_a_late_ack_never_moves_a_resolved_case_back(self):
+        from core.models import Case
+        from core.router import acknowledge_referral, send_referrals
+        from core.tests.helpers import make_case
+        case = make_case(severity=4)
+        ref = send_referrals(case)[0]
+        Case.objects.filter(pk=case.pk).update(status=Case.Status.RESOLVED)
+        acknowledge_referral(ref)
+        case.refresh_from_db()
+        self.assertEqual(case.status, Case.Status.RESOLVED)
