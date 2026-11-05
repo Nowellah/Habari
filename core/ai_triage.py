@@ -83,10 +83,11 @@ def apply(case_id: int, result: dict | None):
 
 def after_triage(case_id: int):
     """Assign an officer; severity 4 is referred to the helpline and police at once."""
-    from core import allocation, router
+    from core import allocation, alert, router
 
     case = Case.objects.get(pk=case_id)
     if case.assigned_officer is None:
         allocation.allocate(case)
     if case.severity >= 4:
         router.send_referrals(case)
+    alert.maybe_escalate(case, reason="case triaged")

@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}Case {{ case.code }}{% endblock %}
+{% block content %}
+
+<style>
+  .back { color: var(--accent); text-decoration: none; font-size: .9rem; }
+  .back:hover { text-decoration: underline; }
+  .alert-banner { background: #fde8e8; border: 1px solid var(--s4); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; color: var(--s4); font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+  .meta-item { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+  .meta-item .label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .meta-item .value { font-weight: 600; margin-top: 2px; }
+  .sev-4 { color: var(--s4); } .sev-3 { color: var(--s3); } .sev-2 { color: var(--s2); } .sev-1 { color: var(--s1); }
+  .thread { display: flex; flex-direction: column; gap: 10px; margin: 24px 0; }
+  .bubble { max-width: 72%; padding: 10px 14px; border-radius: 12px; font-size: .95rem; line-height: 1.5; }
+  .bubble-in  { align-self: flex-start; background: var(--line); border-bottom-left-radius: 2px; }
+  .bubble-out { align-self: flex-end;   background: var(--accent); color: #fff; border-bottom-right-radius: 2px; }
+  .bubble-time { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+  .no-messages { color: var(--muted); font-style: italic; }
+  .panel { border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-top: 16px; }
+  .panel h2 { font-size: 1rem; margin: 0 0 12px; }
+  .panel select, .panel input[type=text] { padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font-size: .95rem; }
+  .panel select { width: 100%; max-width: 320px; }
+  .panel input[type=text] { width: 100%; max-width: 400px; margin-top: 8px; }
+  .btn { padding: 8px 20px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: .95rem; margin-top: 12px; }
+  .btn:hover { opacity: .88; }
+  .flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .flag { background: var(--line); border-radius: 999px; padding: 2px 10px; font-size: .8rem; color: var(--muted); }
+  .danger-flag { background: #fde8e8; color: var(--s4); }
+  .section-title { font-size: .85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 24px 0 8px; }
+  .referral-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .referral-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: .9rem; }
+  .badge { border-radius: 999px; padding: 2px 10px; font-size: .78rem; font-weight: 600; }
+  .badge-sent { background: #dbeafe; color: #1d4ed8; }
+  .badge-delivered { background: #d1fae5; color: #065f46; }
+  .badge-acknowledged { background: #d1fae5; color: #065f46; }
+  .badge-error { background: #fde8e8; color: var(--s4); }
+</style>
+
+<a class="back" href="/officer/">&larr; Case queue</a>
+
+{% if case.severity >= 4 %}
+<div class="alert-banner" style="margin-top:14px">
+  ⚠ Severity 4 — immediate danger. Call {{ helpline }} if child is at risk now.
+</div>
+{% endif %}
+
+<h1 style="margin-top:{% if case.severity >= 4 %}4{% else %}12{% endif %}px">Case {{ case.code }}</h1>
+
+<div class="meta-grid">
+  <div class="meta-item">
+    <div class="label">Severity</div>
+    <div class="value sev-{{ case.severity }}">{{ case.severity }} / 4</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Category</div>
+    <div class="value">{{ pick_label|default:"—" }}</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Channel</div>
+    <div class="value">{{ case.channel }}</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Status</div>
+    <div class="value">{{ case.get_status_display }}</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Assigned to</div>
+    <div class="value">
+      {% if case.assigned_officer %}
+        {{ case.assigned_officer.user.get_full_name|default:case.assigned_officer.user.username }}
+      {% else %}
+        <span style="color:var(--muted)">Unassigned</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Language</div>
+    <div class="value">{{ case.language|default:"—" }}</div>
+  </div>
+  <div class="meta-item">
+    <div class="label">Received</div>
+    <div class="value">{{ case.created_at|date:"j M Y, H:i" }}</div>
+  </div>
+  {% if case.alleged_role %}
+  <div class="meta-item">
+    <div class="label">Alleged role</div>
+    <div class="value">{{ case.alleged_role }}</div>
+  </div>
+  {% endif %}
+  {% if case.district %}
+  <div class="meta-item">
+    <div class="label">District</div>
+    <div class="value">{{ case.district }}</div>
+  </div>
+  {% endif %}
+</div>
+
+{% if case.flags %}
+<div class="section-title">Flags</div>
+<div class="flags">
+  {% for f in case.flags %}
+    <span class="flag {% if f == 'danger' or f == 'threat' or f == 'sextortion' or f == 'self_harm' %}danger-flag{% endif %}">{{ f }}</span>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if case.summary %}
+<div class="section-title">AI Summary</div>
+<p>{{ case.summary }}</p>
+{% endif %}
+
+<div class="section-title">Message thread</div>
+<div class="thread">
+  {% for m in messages %}
+    <div>
+      <div class="bubble bubble-{{ m.direction }}">{{ m.text }}</div>
+      <div class="bubble-time" style="text-align:{% if m.direction == 'out' %}right{% else %}left{% endif %}">
+        {{ m.channel }} &middot; {{ m.created_at|date:"j M, H:i" }}
+      </div>
+    </div>
+  {% empty %}
+    <p class="no-messages">No messages on record for this case.</p>
+  {% endfor %}
+</div>
+
+<!-- ── Referrals ─────────────────────────────────────────────────────── -->
+<div class="section-title">Referrals</div>
+{% if referrals %}
+<ul class="referral-list">
+  {% for r in referrals %}
+  <li class="referral-item">
+    <div>
+      <strong>{{ r.partner.name }}</strong>
+      <span class="muted" style="font-size:.8rem;margin-left:8px">sent {{ r.sent_at|date:"j M, H:i" }}</span>
+      {% if r.ack_at %}<span class="muted" style="font-size:.8rem;margin-left:8px">· acked {{ r.ack_at|date:"j M, H:i" }}</span>{% endif %}
+    </div>
+    <span class="badge badge-{{ r.status }}">{{ r.status }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted" style="font-size:.9rem">No referrals dispatched yet for this case.</p>
+{% endif %}
+
+<!-- ── Dispatch referrals manually ───────────────────────────────────── -->
+<div class="panel">
+  <h2>Dispatch referrals</h2>
+  <p class="muted" style="font-size:.875rem;margin:0 0 12px">
+    Send this case to partners mapped to this pick. Safe to re-run — already-sent referrals are skipped.
+  </p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="dispatch_referrals">
+    <button class="btn" type="submit">Send to mapped partners</button>
+  </form>
+</div>
+
+<!-- ── Status update ─────────────────────────────────────────────────── -->
+<div class="panel">
+  <h2>Update status</h2>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="status">
+    <label style="display:block;font-size:.9rem;margin-bottom:6px">New status</label>
+    <select name="status">
+      {% for value, label in transitions %}
+        <option value="{{ value }}" {% if case.status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <div id="close-reason-wrap" style="display:{% if case.status|slice:':6' == 'closed' %}block{% else %}none{% endif %}">
+      <label style="display:block;font-size:.9rem;margin:10px 0 4px">Close reason <span class="muted">(optional)</span></label>
+      <input type="text" name="close_reason" value="{{ case.close_reason }}" placeholder="e.g. resolved by partner, unfounded after review">
+    </div>
+    <br>
+    <button class="btn" type="submit">Save</button>
+  </form>
+</div>
+
+<!-- ── SMS reply ─────────────────────────────────────────────────────── -->
+{% if can_sms %}
+<div class="panel">
+  <h2>Send SMS to reporter</h2>
+  <p class="muted" style="font-size:.875rem;margin:0 0 12px">
+    Sent via Africa's Talking to the reporter's phone. Keep it brief — no case details, no identifiers.
+  </p>
+  {% if sms_error %}
+    <p style="color:var(--s4);font-size:.9rem">&#9888; {{ sms_error }}</p>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="sms_reply">
+    <textarea name="reply_text" rows="3" maxlength="160"
+      placeholder="e.g. We received your report. A helper will contact you soon. Call 116 if you are in danger."
+      style="width:100%;max-width:480px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-size:.95rem;resize:vertical"></textarea>
+    <br>
+    <button class="btn" type="submit" style="margin-top:10px">Send SMS</button>
+  </form>
+</div>
+{% else %}
+<div class="panel" style="opacity:.55">
+  <h2>Send SMS to reporter</h2>
+  <p class="muted" style="font-size:.875rem">Not available — this case came via {{ case.channel }}, which has no stored phone number.</p>
+</div>
+{% endif %}
+
+<script>
+  const sel = document.querySelector('select[name=status]');
+  const wrap = document.getElementById('close-reason-wrap');
+  sel.addEventListener('change', () => {
+    wrap.style.display = sel.value.startsWith('closed') ? 'block' : 'none';
+  });
+</script>
+
+{% endblock %}
