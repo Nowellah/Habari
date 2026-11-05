@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Call {{ session.case.code }}{% endblock %}
+{% block content %}
+<p><a href="/officer/calls">&larr; Calls</a></p>
+<h1>Call · case <a href="/officer/case/{{ session.case.code }}/">{{ session.case.code }}</a> <span class="clock clock-amber">Simulated</span></h1>
+<p>Severity <strong id="sev" class="sev">-</strong> · <span id="flags" class="muted"></span> · <span id="state" class="muted">listening…</span></p>
+<div class="card"><h2>Transcript</h2><div id="lines" class="muted">Waiting for the first words…</div></div>
+<script>
+(() => {
+  const url = location.pathname.replace(/\/$/, '') + '.json';
+  async function tick() {
+    const d = await (await fetch(url, {cache: 'no-store'})).json();
+    const sev = document.getElementById('sev');
+    sev.textContent = d.severity; sev.className = 'sev sev-' + d.severity;
+    document.getElementById('flags').textContent = d.flags.join(', ');
+    const box = document.getElementById('lines');
+    if (d.segments.length) box.className = '';
+    box.innerHTML = '';
+    for (const s of d.segments) {
+      const p = document.createElement('p');
+      const time = document.createElement('span'); time.className = 'muted'; time.textContent = `${s.start}–${s.end}s  `;
+      p.appendChild(time); p.appendChild(document.createTextNode(s.text));
+      if (s.text_en && s.text_en !== s.text) { const t = document.createElement('div'); t.className = 'muted'; t.textContent = 'English: ' + s.text_en; p.appendChild(t); }
+      if (s.flags.length) { const f = document.createElement('div'); f.className = 'sev sev-4'; f.textContent = 'Flags: ' + s.flags.join(', '); p.appendChild(f); }
+      box.appendChild(p);
+    }
+    if (d.done) { document.getElementById('state').textContent = 'call ended'; return; }
+    setTimeout(tick, 3000);
+  }
+  tick();
+})();
+</script>
+{% endblock %}

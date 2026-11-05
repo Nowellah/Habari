@@ -32,6 +32,11 @@ def send_to_child(case, text):
     if case.channel in ("sms", "ussd"):
         from channels.sms import send_sms
         send_sms(reporter, text)
+    elif case.channel == "whatsapp":
+        vault = ReporterVault.objects.filter(reporter=reporter).first()
+        if vault:
+            from channels.whatsapp import send_whatsapp
+            send_whatsapp(reporter, vault.raw_contact.lstrip("+"), text)
     elif case.channel == "telegram" and settings.TELEGRAM_TOKEN:
         vault = ReporterVault.objects.filter(reporter=reporter).first()
         if vault and vault.raw_contact.startswith("tg:"):

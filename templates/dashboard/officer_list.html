@@ -3,7 +3,7 @@
 {% block content %}
 <form method="post" action="/logout/" style="float:right">{% csrf_token %}<button type="submit">Log out</button></form>
 <h1>Case queue</h1>
-<p class="muted">Most urgent first. No reporter identities are shown here. <a href="/officer/partners">Partner board</a> · <a href="/officer/polls">Polls</a> · <a href="/officer/map">Map</a> · <a href="/metrics">Evaluation</a></p>
+<p class="muted">Most urgent first. No reporter identities are shown here. <a href="/officer/partners">Partner board</a> · <a href="/officer/polls">Polls</a> · <a href="/officer/map">Map</a> · <a href="/officer/calls">Calls</a> · <a href="/kb">Knowledge base</a> · <a href="/metrics">Evaluation</a></p>
 
 {% if notifications %}
 <div class="card" style="margin-bottom:16px">

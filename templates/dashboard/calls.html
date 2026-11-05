@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Calls{% endblock %}
+{% block content %}
+<p><a href="/officer/">&larr; Case queue</a></p>
+<h1>Calls with live transcript <span class="clock clock-amber">Simulated</span></h1>
+<p class="muted">A synthetic call plays out over about a minute, as if each 10-second piece of audio had just been turned into words. Real calls need a voice provider, the partner's agreement and the caller's consent (Planned). In an emergency the child is always offered a direct call to 116.</p>
+<div class="card">
+  {% for key, s in scripts.items %}
+  <form method="post" action="/officer/calls/start">{% csrf_token %}<input type="hidden" name="script" value="{{ key }}"><button>Start: {{ s.title }}</button></form>
+  {% endfor %}
+</div>
+<div class="card"><h2>Recent calls</h2>
+  {% for s in sessions %}<p><a href="/officer/calls/{{ s.id }}/">{{ s.started_at|date:"j M H:i:s" }}</a> · case <a href="/officer/case/{{ s.case.code }}/">{{ s.case.code }}</a> · {{ s.language }}</p>
+  {% empty %}<p class="muted">None yet.</p>{% endfor %}
+</div>
+{% endblock %}

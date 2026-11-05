@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from core import allocation, followup, router, sla
+from core import allocation, followup, linking, router, sla
 from core.harm import picks
 from core.messages import _messages
 from core.models import Case, Officer, Partner
@@ -50,6 +50,7 @@ def case_detail(request, code):
         "close_reasons": CLOSE_REASONS,
         "officers": Officer.objects.select_related("user").order_by("user__username"),
         "supervisor": is_supervisor(request.user),
+        "links": linking.linked_cases(case),
     })
 
 
@@ -202,3 +203,52 @@ def heat_map_data(request):
         rows.append({"district": row["district"], "lat": point[0], "lon": point[1],
                      "count": row["n"] if shown else None})
     return JsonResponse({"minimum": settings.HEATMAP_MIN, "districts": rows})
+
+
+@login_required
+def call_list(request):
+    from core.calls import SCRIPTS
+    from core.models import CallSession
+
+    require_staff_role(request.user)
+    return render(request, "dashboard/calls.html", {
+        "scripts": SCRIPTS, "sessions": CallSession.objects.select_related("case").order_by("-started_at")[:20]})
+
+
+@login_required
+@require_POST
+def call_start(request):
+    from core.calls import SCRIPTS, start_call
+
+    require_staff_role(request.user)
+    name = request.POST.get("script", "")
+    if name not in SCRIPTS:
+        return HttpResponseBadRequest("Unknown call script.")
+    session = start_call(name)
+    return redirect(f"/officer/calls/{session.id}/")
+
+
+@login_required
+def call_detail(request, session_id):
+    from core.models import CallSession
+
+    require_staff_role(request.user)
+    session = get_object_or_404(CallSession.objects.select_related("case"), pk=session_id)
+    return render(request, "dashboard/call_detail.html", {"session": session})
+
+
+@login_required
+def call_data(request, session_id):
+    from django.http import JsonResponse
+
+    from core.calls import reveal_due
+    from core.models import CallSession
+
+    require_staff_role(request.user)
+    session = get_object_or_404(CallSession.objects.select_related("case"), pk=session_id)
+    reveal_due(session)
+    case = Case.objects.get(pk=session.case_id)
+    segments = [{"start": s.start_s, "end": s.end_s, "text": s.text, "text_en": s.text_en, "flags": s.flags}
+                for s in session.segments.filter(revealed_at__isnull=False).order_by("seq")]
+    return JsonResponse({"case_code": case.code, "severity": case.severity, "flags": case.flags,
+                         "segments": segments, "done": len(segments) == session.segments.count()})

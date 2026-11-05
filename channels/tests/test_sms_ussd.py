@@ -84,14 +84,40 @@ class UssdTests(TestCase):
 
     def test_t2_5_full_report_and_confirmation_sms(self):
         self.assertIn("Language", self.ussd("1*2"))
-        self.assertIn("Send now", self.ussd("1*2*1"))
-        body = self.ussd("1*2*1*1")
+        self.assertIn("How does it feel", self.ussd("1*2*1"))
+        self.assertIn("Send now", self.ussd("1*2*1*1"))
+        body = self.ussd("1*2*1*1*1")
         case = Case.objects.get()
         self.assertTrue(body.startswith("END "))
         self.assertIn(case.code, body)
         self.assertEqual(case.language, "lg")
         self.assertEqual(case.channel, "ussd")
         self.assertIn(case.code, OutboundSMS.objects.get().text)
+
+    def test_ussd_feeling_scared_raises_the_case_to_severity_three(self):
+        self.ussd("1*5*4*3*1")
+        case = Case.objects.get()
+        self.assertGreaterEqual(case.severity, 3)
+        self.assertIn("child_feels_scared", case.flags)
+
+    def test_ussd_feeling_a_little_never_lowers_severity(self):
+        self.ussd("1*2*1*1*1")
+        case = Case.objects.get()
+        self.assertGreaterEqual(case.severity, 3)  # pick 2 starts at 3
+        self.assertIn("child_feels_little", case.flags)
+
+    def test_ussd_feeling_danger_ends_with_the_helpline(self):
+        body = self.ussd("1*5*4*4*1")
+        self.assertTrue(body.startswith("END Call 116"))
+        self.assertEqual(Case.objects.get().severity, 4)
+
+    def test_ussd_feeling_can_be_skipped(self):
+        self.ussd("1*5*4*0*1")
+        case = Case.objects.get()
+        self.assertFalse(any(f.startswith("child_feels_") for f in case.flags))
+
+    def test_ussd_invalid_feeling_ends_politely(self):
+        self.assertTrue(self.ussd("1*5*4*9").startswith("END Sorry"))
 
     def test_invalid_pick_ends_politely(self):
         self.assertTrue(self.ussd("1*9").startswith("END Sorry"))

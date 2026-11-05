@@ -1,0 +1,5 @@
+# Store text with LF line endings everywhere (avoids CRLF/LF noise between Windows and Linux).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary

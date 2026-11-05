@@ -168,6 +168,37 @@ class OutboundSMS(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class CallSession(models.Model):
+    """A (simulated) call with a near-live transcript for the officer."""
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="calls")
+    script = models.CharField(max_length=40)
+    language = models.CharField(max_length=8)
+    started_at = models.DateTimeField(default=timezone.now)
+
+
+class CallSegment(models.Model):
+    session = models.ForeignKey(CallSession, on_delete=models.CASCADE, related_name="segments")
+    seq = models.PositiveIntegerField()
+    start_s = models.PositiveIntegerField()
+    end_s = models.PositiveIntegerField()
+    text = models.TextField()
+    text_en = models.TextField(blank=True)
+    flags = models.JSONField(default=list)
+    revealed_at = models.DateTimeField(null=True, blank=True)
+
+
+class CaseIdentifier(models.Model):
+    """A handle, phone number or link from a case, stored only as an HMAC hash."""
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="identifiers")
+    kind = models.CharField(max_length=10)  # handle, phone, url
+    hashed = models.CharField(max_length=64, db_index=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["case", "kind", "hashed"], name="one_identifier_per_case")]
+
+
 class Notification(models.Model):
     """A message for staff: the assigned officer, supervisors, the on-call responder or a partner."""
 

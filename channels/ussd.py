@@ -11,7 +11,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from channels.gateway import _pin_hash, create_case, get_reporter
+from channels.gateway import FEELINGS, _pin_hash, apply_feeling, create_case, get_reporter
 from channels.sms import send_sms
 from core.messages import msg, status_words
 from core.models import Case
@@ -22,6 +22,7 @@ PICKS = {"1", "2", "3", "4", "5"}
 MAIN = "Habari. You are not in trouble.\n1 Report\n2 Talk to someone\n3 Check my case\n4 Safety tips"
 WHAT = "What happened?\n1 Danger/self-harm\n2 Asked for pics/money\n3 Adult hurting me\n4 Mean or fake\n5 Upsetting online"
 LANGUAGE = "Language?\n1 Luganda 2 Runyankore\n3 Swahili 4 English"
+HOW = "How does it feel?\n1 A little\n2 A lot\n3 Scared\n4 In danger\n0 Skip"
 CONFIRM = "1 Send now\n2 Add a few words by SMS later"
 SORRY = "Sorry, that was not an option. Please dial again."
 TIPS = "Stop replying. Do not pay. Do not delete messages. Save the username. Tell a trusted adult or call {helpline}."
@@ -54,13 +55,23 @@ def _report(steps, phone):
     if steps[2] not in LANGS:
         return END(SORRY)
     if len(steps) == 3:
+        return CON(HOW)
+    if steps[3] not in FEELINGS and steps[3] != "0":
+        return END(SORRY)
+    if len(steps) == 4:
         return CON(CONFIRM)
-    if steps[3] not in ("1", "2"):
+    if steps[4] not in ("1", "2"):
         return END(SORRY)
     case = create_case(reporter, "ussd", pick, "", LANGS[steps[2]])
+    if steps[3] in FEELINGS:
+        apply_feeling(case, FEELINGS[steps[3]])
+    if case.severity >= 4:  # the child said they are in danger: helpline first, as for pick 1
+        send_sms(reporter, f"Habari: case {case.code}. Call {helpline} now, free. A person is coming to help.",
+                 to_number=phone, reply=True)
+        return END(f"Call {helpline} now, it is free. A person is coming to help. Case {case.code}.")
     send_sms(reporter, f"Habari: case {case.code}. A person will help. Text STATUS {case.code} to check.",
              to_number=phone, reply=True)
-    if steps[3] == "2":
+    if steps[4] == "2":
         return END(f"Thank you. Case {case.code}. SMS us your words and the code.")
     return END(f"Thank you. Not your fault. Case {case.code}. We sent you an SMS.")
 

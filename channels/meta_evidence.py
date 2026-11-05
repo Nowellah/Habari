@@ -84,4 +84,7 @@ def attach_meta(case, meta):
         if value is None or (kind, _sha(value)) in have:
             continue
         added.append(add_evidence(case, kind, value))
+    if added:
+        from core import linking
+        linking.index_case(case)
     return added

@@ -45,6 +45,8 @@ def run(case_id: int):
         if synthesis:
             Case.objects.filter(pk=case_id).update(summary=synthesis["summary"][:2000],
                                                    entities=synthesis.get("entities") or {})
+            from core import linking
+            linking.index_case(Case.objects.get(pk=case_id))
 
 
 def apply(case_id: int, result: dict | None):

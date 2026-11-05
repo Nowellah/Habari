@@ -5,11 +5,13 @@ from django.urls import path
 from channels.sim_views import sim_sms, sim_sms_outbox, sim_ussd
 from channels.sms import sms_hook
 from channels.ussd import ussd_hook
+from channels.whatsapp import whatsapp_hook
 from channels.views import channel_api
 from channels.voice_views import voice_shortcut, voice_transcribe
 from dashboard import officer_views as ov
 from dashboard import pwa_views
-from dashboard.views import chat_page, metrics_page, officer_list, status_page
+from kb import views as kb_views
+from dashboard.views import chat_page, feature_status, metrics_page, officer_list, status_page
 from partners_mock.views import referral_ack
 
 urlpatterns = [
@@ -17,16 +19,20 @@ urlpatterns = [
     path("api/channel/<str:name>", channel_api, name="channel_api"),
     path("hooks/sms", sms_hook, name="sms_hook"),
     path("hooks/ussd", ussd_hook, name="ussd_hook"),
+    path("hooks/whatsapp", whatsapp_hook, name="whatsapp_hook"),
     path("sim/sms", sim_sms, name="sim_sms"),
     path("sim/sms/outbox", sim_sms_outbox, name="sim_sms_outbox"),
     path("sim/ussd", sim_ussd, name="sim_ussd"),
     path("chat", chat_page, name="chat"),
+    path("kb", kb_views.kb_list, name="kb_list"),
+    path("kb/<slug:slug>", kb_views.kb_article, name="kb_article"),
     path("manifest.webmanifest", pwa_views.manifest, name="manifest"),
     path("sw.js", pwa_views.service_worker, name="service_worker"),
     path("share", pwa_views.share, name="share"),
     path("r", pwa_views.report_link, name="report_link"),
     path("mock/social", pwa_views.mock_social, name="mock_social"),
     path("metrics", metrics_page, name="metrics"),
+    path("about/status", feature_status, name="feature_status"),
     path("voice", voice_shortcut, name="voice"),
     path("api/voice/transcribe", voice_transcribe, name="voice_transcribe"),
     path("status/<str:code>", status_page, name="status"),
@@ -34,6 +40,10 @@ urlpatterns = [
     path("officer/partners", ov.partner_board, name="partner_board"),
     path("officer/polls", ov.poll_list, name="poll_list"),
     path("officer/map", ov.heat_map, name="heat_map"),
+    path("officer/calls", ov.call_list, name="call_list"),
+    path("officer/calls/start", ov.call_start, name="call_start"),
+    path("officer/calls/<int:session_id>/", ov.call_detail, name="call_detail"),
+    path("officer/calls/<int:session_id>.json", ov.call_data, name="call_data"),
     path("officer/map.json", ov.heat_map_data, name="heat_map_data"),
     path("officer/polls/<int:poll_id>/send", ov.poll_send, name="poll_send"),
     path("officer/case/<str:code>/", ov.case_detail, name="case_detail"),
