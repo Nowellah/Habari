@@ -3,40 +3,129 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- same-origin: no referrer leaves the site, but our own forms keep a valid Origin for CSRF -->
   <meta name="referrer" content="same-origin">
   <title>{% block title %}Habari{% endblock %}</title>
   {% block head %}{% endblock %}
   <style>
-    :root { --bg:#fbfaf7; --fg:#1f2328; --muted:#5b6470; --line:#e3e0d8; --accent:#2f6f5e; --s4:#b42318; --s3:#c2410c; --s2:#a16207; --s1:#4b5563; }
-    @media (prefers-color-scheme: dark) { :root { --bg:#16181b; --fg:#e8e6e1; --muted:#a3a9b1; --line:#2c3036; --accent:#6cc0a6; --s4:#f97066; --s3:#fb923c; --s2:#facc15; --s1:#9ca3af; } }
-    * { box-sizing: border-box; }
-    body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
-    main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
-    h1 { font-size: 1.4rem; margin: 0 0 16px; }
-    .muted { color: var(--muted); }
-    .exit { position: fixed; top: 12px; right: 12px; background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 999px; text-decoration: none; font-weight: 600; }
-    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
-    th { color: var(--muted); font-weight: 600; }
-    .sev { font-weight: 700; }
-    .sev-4 { color: var(--s4); } .sev-3 { color: var(--s3); } .sev-2 { color: var(--s2); } .sev-1 { color: var(--s1); }
-    .card { border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
-    .wrap { overflow-x: auto; }
-    .clock { padding: 2px 8px; border-radius: 999px; font-size: .85rem; white-space: nowrap; }
-    .clock-green { background: #dcfce7; color: #14532d; } .clock-amber { background: #fef3c7; color: #78350f; }
-    .clock-red { background: #fee2e2; color: #7f1d1d; font-weight: 700; } .clock-done { color: var(--muted); }
-    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px; }
-    .card + .card { margin-top: 16px; }
-    h2 { font-size: 1.1rem; margin: 0 0 10px; }
-    dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
-    dt { color: var(--muted); } dd { margin: 0; }
-    .card form { margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: end; }
-    select, input, button { font: inherit; padding: 6px 10px; }
+    /* ── Design tokens ──────────────────────────────────────────── */
+    :root {
+      --bg: #f9f8f5;
+      --bg2: #ffffff;
+      --fg: #1a1d21;
+      --muted: #596170;
+      --line: #e8e5dc;
+      --accent: #1e7a5c;
+      --accent-l: #e8f5f0;
+      --accent-d: #155f47;
+      --warm: #fdf6ec;
+      --s4: #c0251a; --s4-l: #fee2e2;
+      --s3: #c2410c; --s3-l: #ffedd5;
+      --s2: #92600a; --s2-l: #fef3c7;
+      --s1: #4b5563; --s1-l: #f3f4f6;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #13151a; --bg2: #1c1f26;
+        --fg: #e8e6e1; --muted: #9ca3af; --line: #282d35;
+        --accent: #3aaa80; --accent-l: #0d2e22; --accent-d: #50c998;
+        --warm: #1e1c18;
+        --s4: #f87171; --s4-l: #2d1515;
+        --s3: #fb923c; --s3-l: #2d1a0d;
+        --s2: #facc15; --s2-l: #2a230a;
+        --s1: #9ca3af; --s1-l: #1f2128;
+      }
+    }
+    /* ── Reset & base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--fg); font: 15px/1.6 system-ui, -apple-system, sans-serif; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    main { max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 1.45rem; font-weight: 700; letter-spacing: -.01em; margin-bottom: 16px; }
+    h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 10px; }
+    p { margin-bottom: 8px; }
+    /* ── Utilities ──────────────────────────────────────────────── */
+    .muted { color: var(--muted); font-size: .9rem; }
+    .small { font-size: .82rem; }
+    /* ── Quick exit ─────────────────────────────────────────────── */
+    .exit {
+      position: fixed; top: 12px; right: 12px; z-index: 999;
+      background: var(--fg); color: var(--bg);
+      padding: 7px 16px; border-radius: 999px;
+      font-size: .85rem; font-weight: 700;
+      border: none; cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    /* ── Card ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg2); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card + .card { margin-top: 14px; }
+    /* ── Tables ─────────────────────────────────────────────────── */
+    .wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th { text-align: left; padding: 8px 12px; color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--line); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--warm); }
+    /* ── Severity badges ────────────────────────────────────────── */
+    .sev { display: inline-block; font-weight: 700; font-size: .82rem; padding: 2px 8px; border-radius: 999px; }
+    .sev-4 { color: var(--s4); background: var(--s4-l); }
+    .sev-3 { color: var(--s3); background: var(--s3-l); }
+    .sev-2 { color: var(--s2); background: var(--s2-l); }
+    .sev-1 { color: var(--s1); background: var(--s1-l); }
+    /* ── SLA clock badges ───────────────────────────────────────── */
+    .clock { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .8rem; white-space: nowrap; font-weight: 600; }
+    .clock-green  { background: #dcfce7; color: #14532d; }
+    .clock-amber  { background: #fef3c7; color: #78350f; }
+    .clock-red    { background: #fee2e2; color: #7f1d1d; }
+    .clock-done   { color: var(--muted); }
+    /* ── Two-column grid ────────────────────────────────────────── */
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px; }
+    /* ── Definition list ────────────────────────────────────────── */
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; }
+    dt { color: var(--muted); font-size: .85rem; }
+    dd { font-size: .9rem; }
+    /* ── Forms ──────────────────────────────────────────────────── */
+    .card form { display: flex; flex-wrap: wrap; gap: 6px; align-items: end; margin: 8px 0; }
+    select, input[type=text], input[type=password], textarea {
+      font: inherit; padding: 7px 11px;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: var(--bg); color: var(--fg);
+    }
+    select:focus, input:focus, textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    button, .btn {
+      font: inherit; padding: 7px 16px;
+      border-radius: 8px; border: none;
+      background: var(--accent); color: #fff;
+      font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    button:hover, .btn:hover { background: var(--accent-d); }
+    button.secondary { background: transparent; border: 1.5px solid var(--accent); color: var(--accent); }
+    button.secondary:hover { background: var(--accent-l); }
+    button.danger { background: var(--s4); }
+    /* ── Nav top bar (officer) ──────────────────────────────────── */
+    .topbar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 10px 16px; background: var(--bg2);
+      border-bottom: 1px solid var(--line);
+      font-size: .88rem;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar .brand { font-weight: 800; color: var(--accent); font-size: 1.05rem; letter-spacing: -.02em; }
+    .topbar a { color: var(--muted); }
+    .topbar a:hover { color: var(--accent); text-decoration: none; }
+    .topbar .spacer { flex: 1; }
   </style>
 </head>
 <body>
   {% block exit %}{% endblock %}
+  {% block topbar %}{% endblock %}
   <main>{% block content %}{% endblock %}</main>
 </body>
 </html>
