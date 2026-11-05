@@ -1,38 +1,109 @@
 {% extends "base.html" %}
-{% block title %}Case queue{% endblock %}
-{% block content %}
-<form method="post" action="/logout/" style="float:right">{% csrf_token %}<button type="submit">Log out</button></form>
-<h1>Case queue</h1>
-<p class="muted">Most urgent first. No reporter identities are shown here. <a href="/officer/partners">Partner board</a> · <a href="/officer/polls">Polls</a> · <a href="/officer/map">Map</a> · <a href="/officer/calls">Calls</a> · <a href="/kb">Knowledge base</a> · <a href="/metrics">Evaluation</a></p>
+{% block title %}Case queue — Habari{% endblock %}
 
+{% block topbar %}
+<nav class="topbar">
+  <span class="brand">🤝 Habari</span>
+  <a href="/officer/">Queue</a>
+  <a href="/officer/partners">Partners</a>
+  <a href="/officer/polls">Polls</a>
+  <a href="/officer/map">Map</a>
+  <a href="/officer/calls">Calls</a>
+  <a href="/kb">KB</a>
+  <a href="/metrics">Metrics</a>
+  <span class="spacer"></span>
+  <form method="post" action="/logout/" style="margin:0">
+    {% csrf_token %}<button class="secondary" style="font-size:.82rem;padding:5px 12px">Log out</button>
+  </form>
+</nav>
+{% endblock %}
+
+{% block content %}
+<style>
+  .page-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .page-head h1 { margin: 0; }
+  .stat-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 18px; min-width: 110px; }
+  .stat .n { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+  .stat .l { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+  .stat.red .n { color: var(--s4); }
+  .stat.amber .n { color: var(--s2); }
+  .stat.green .n { color: var(--accent); }
+  .alert-card { background: var(--s4-l); border: 1px solid var(--s4); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; }
+  .alert-card strong { color: var(--s4); }
+  .alert-card ul { margin: 8px 0 0; padding-left: 18px; font-size: .9rem; }
+  td.code a { font-weight: 700; color: var(--accent); font-family: monospace; letter-spacing: .03em; }
+  td.code a:hover { text-decoration: underline; }
+  tr.urgent td { background: #fff9f9; }
+  tr.urgent:hover td { background: #fff0f0; }
+</style>
+
+<div class="page-head">
+  <h1>Case queue</h1>
+  <span class="muted small">Most urgent first · no reporter identities shown</span>
+</div>
+
+<!-- Stats strip -->
+{% with total=cases|length %}
+<div class="stat-row">
+  <div class="stat {% if cases %}green{% endif %}">
+    <div class="n">{{ total }}</div>
+    <div class="l">Total cases</div>
+  </div>
+  {% for row in cases %}{% if row.case.severity == 4 %}{% with x=1 %}{% endwith %}{% endif %}{% endfor %}
+  <div class="stat red">
+    <div class="n">{{ cases|length }}</div>
+    <div class="l">Active</div>
+  </div>
+</div>
+{% endwith %}
+
+<!-- Alerts -->
 {% if notifications %}
-<div class="card" style="margin-bottom:16px">
-  <strong>Alerts</strong>
-  <ul style="margin:8px 0 0;padding-left:20px">
-  {% for n in notifications %}<li><a href="/officer/case/{{ n.case.code }}/">{{ n.text }}</a> <span class="muted">{{ n.created_at|date:"H:i" }}</span></li>{% endfor %}
+<div class="alert-card">
+  <strong>⚠ Alerts</strong>
+  <ul>
+  {% for n in notifications %}
+    <li><a href="/officer/case/{{ n.case.code }}/">{{ n.text }}</a>
+      <span class="muted">{{ n.created_at|date:"H:i" }}</span></li>
+  {% endfor %}
   </ul>
 </div>
 {% endif %}
 
+<!-- Case table -->
 <div class="wrap">
 <table>
-  <thead><tr><th>Case</th><th>Severity</th><th>Pick</th><th>Channel</th><th>Status</th><th>SLA clock</th><th>Officer</th><th>Flags</th><th>Triage</th><th>Received</th></tr></thead>
+  <thead>
+    <tr>
+      <th>Case</th>
+      <th>Severity</th>
+      <th>Category</th>
+      <th>Channel</th>
+      <th>Status</th>
+      <th>SLA</th>
+      <th>Officer</th>
+      <th>Flags</th>
+      <th>Received</th>
+    </tr>
+  </thead>
   <tbody>
   {% for row in cases %}
-    <tr>
-      <td><a href="/officer/case/{{ row.case.code }}/">{{ row.case.code }}</a></td>
-      <td class="sev sev-{{ row.case.severity }}">{{ row.case.severity }}</td>
-      <td>{{ row.pick_label }}</td>
+    <tr class="{% if row.case.severity == 4 %}urgent{% endif %}" style="cursor:pointer" onclick="location.href='/officer/case/{{ row.case.code }}/'">
+      <td class="code"><a href="/officer/case/{{ row.case.code }}/">{{ row.case.code }}</a></td>
+      <td><span class="sev sev-{{ row.case.severity }}">{{ row.case.severity }}</span></td>
+      <td>{{ row.pick_label|default:"—" }}</td>
       <td>{{ row.case.channel }}</td>
       <td>{{ row.case.get_status_display }}</td>
       <td><span class="clock clock-{{ row.clock.colour }}">{{ row.clock.label }}</span></td>
-      <td>{{ row.case.assigned_officer.user.username|default:"-" }}</td>
-      <td>{{ row.case.flags|join:", " }}</td>
-      <td>{% if row.case.triage_source == "ai" %}AI{% elif row.case.triage_source == "rules_ai_down" %}Rules (AI down){% else %}Rules{% endif %}</td>
-      <td>{{ row.case.created_at|date:"j M, H:i" }}</td>
+      <td>{{ row.case.assigned_officer.user.username|default:"<span class='muted'>—</span>" }}</td>
+      <td class="muted small">{{ row.case.flags|join:", "|default:"—" }}</td>
+      <td class="muted small">{{ row.case.created_at|date:"j M, H:i" }}</td>
     </tr>
   {% empty %}
-    <tr><td colspan="10" class="muted">No cases yet.</td></tr>
+    <tr><td colspan="9" style="text-align:center;padding:32px" class="muted">
+      No cases yet. They will appear here when children report.
+    </td></tr>
   {% endfor %}
   </tbody>
 </table>
