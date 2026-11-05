@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Mukwano{% endblock %}
+{% block exit %}<a class="exit" href="https://www.google.com" rel="noreferrer">Quick exit</a>{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Your case</h1>
+  <p>{{ words }}</p>
+  <p class="muted">If you are in danger now, call {{ helpline }}. It is free.</p>
+</div>
+{% endblock %}

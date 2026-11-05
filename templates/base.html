@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- same-origin: no referrer leaves the site, but our own forms keep a valid Origin for CSRF -->
+  <meta name="referrer" content="same-origin">
+  <title>{% block title %}Mukwano{% endblock %}</title>
+  <style>
+    :root { --bg:#fbfaf7; --fg:#1f2328; --muted:#5b6470; --line:#e3e0d8; --accent:#2f6f5e; --s4:#b42318; --s3:#c2410c; --s2:#a16207; --s1:#4b5563; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#16181b; --fg:#e8e6e1; --muted:#a3a9b1; --line:#2c3036; --accent:#6cc0a6; --s4:#f97066; --s3:#fb923c; --s2:#facc15; --s1:#9ca3af; } }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 1.4rem; margin: 0 0 16px; }
+    .muted { color: var(--muted); }
+    .exit { position: fixed; top: 12px; right: 12px; background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 999px; text-decoration: none; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; }
+    .sev { font-weight: 700; }
+    .sev-4 { color: var(--s4); } .sev-3 { color: var(--s3); } .sev-2 { color: var(--s2); } .sev-1 { color: var(--s1); }
+    .card { border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+    .wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  {% block exit %}{% endblock %}
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

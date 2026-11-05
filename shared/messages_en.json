@@ -1,0 +1,28 @@
+{
+  "_note": "Child-facing replies. Plain words, never case details. Luganda version (messages_lg.json) needs a native-speaker review before use.",
+  "menu": "Mukwano: you are not in trouble. Reply 1 Danger 2 Asked for pics or money 3 Adult hurting me 4 Mean or fake 5 Upsetting online",
+  "menu_retry": "Please reply with a number from 1 to 5. 1 Danger 2 Asked for pics or money 3 Adult hurting me 4 Mean or fake 5 Upsetting online",
+  "describe": "Tell us what happened in one message, any language. Reply 0 to skip.",
+  "received": "Thank you. It is not your fault. Case {code}. A person will help. STATUS {code} to check. STOP to erase.",
+  "danger": "Call {helpline} now, it is free. You are not in trouble. A person is coming to help. Case {code}. STATUS {code} to check.",
+  "added": "Thank you. We added this to case {code}. A person will see it.",
+  "status_unknown": "We could not find that code. Please check it and try again.",
+  "status_need_code": "Send STATUS and your case code, for example STATUS MK-ABC234.",
+  "status_need_pin": "Please send STATUS {code} and your word.",
+  "pin_saved": "Your word is saved. Next time send STATUS, your code and your word.",
+  "pin_need_word": "Send PIN and a secret word, for example PIN mango.",
+  "stopped": "Done. We will not message you again. Please delete these messages on your phone. Your report stays with our helpers. Send STATUS and your code any time.",
+  "status": {
+    "received": "We got your report. A person will look at it soon.",
+    "triaged": "A person is looking at your report.",
+    "assigned": "A person is looking at your report.",
+    "referred": "A helper is working on your report.",
+    "acknowledged": "A helper is working on your report.",
+    "in_progress": "A helper is working on your report.",
+    "resolved": "Your report has been handled. We will check that you are safe.",
+    "safety_check": "Your report has been handled. We will check that you are safe.",
+    "closed": "Your report is closed. Send HELP any time if you need us again.",
+    "closed_unfounded": "Your report is closed. Send HELP any time if you need us again.",
+    "closed_child_stop": "Your report is closed. Send HELP any time if you need us again."
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "_note": "One file used by every channel. Luganda (lg) labels are DRAFTS and must be checked by a native speaker before EN+LG coverage is claimed.",
+  "picks": [
+    {
+      "id": "1",
+      "label_en": "I am in danger or I want to hurt myself",
+      "short_en": "Danger",
+      "label_lg": "Ndi mu kabi oba njagala okwetuusaako obulabe",
+      "default_severity": 4,
+      "floor_rule": "Always 4",
+      "routes": ["human_responder", "sauti_116", "police_cfpu"]
+    },
+    {
+      "id": "2",
+      "label_en": "Someone is asking for pictures, money or secrets",
+      "short_en": "Asked for pics/money",
+      "label_lg": "Omuntu ansaba ebifaananyi, ssente oba ebyama",
+      "default_severity": 3,
+      "floor_rule": "4 if payment demand and threat",
+      "routes": ["police_cfpu", "ucc", "sauti_116", "counsellor"]
+    },
+    {
+      "id": "3",
+      "label_en": "An adult in charge is hurting me",
+      "short_en": "Adult hurting me",
+      "label_lg": "Omukulu antunuulira ankola obubi",
+      "default_severity": 3,
+      "floor_rule": "Always external route",
+      "routes": ["sauti_116", "counsellor", "police_cfpu"]
+    },
+    {
+      "id": "4",
+      "label_en": "Someone is being mean or fake",
+      "short_en": "Mean or fake",
+      "label_lg": "Omuntu ankola bubi oba mulimba",
+      "default_severity": 2,
+      "floor_rule": "3 if repeated or private images",
+      "routes": ["counsellor", "ucc", "school_focal_if_child_chooses"]
+    },
+    {
+      "id": "5",
+      "label_en": "Something upsetting or risky online",
+      "short_en": "Upsetting online",
+      "label_lg": "Waliwo ekintu ekinnakuwazizza ku mutimbagano",
+      "default_severity": 1,
+      "floor_rule": "2 if gambling or money",
+      "routes": ["companion", "trusted_adult_guide", "ucc"]
+    }
+  ],
+  "category_to_pick": {
+    "self_harm": "1",
+    "threats": "1_or_4",
+    "grooming": "2",
+    "sextortion": "2",
+    "exposure_by_authority": "3",
+    "cyberbullying": "4",
+    "impersonation": "4",
+    "inappropriate_content": "5",
+    "gambling_or_betting": "5",
+    "scam": "5"
+  }
+}

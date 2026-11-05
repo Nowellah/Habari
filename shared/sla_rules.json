@@ -1,0 +1,7 @@
+{
+  "_note": "Proposed targets in minutes, to be agreed with each partner. ack = acknowledge, first_response = first human response.",
+  "4": {"ack": 15, "first_response": 30},
+  "3": {"ack": 120, "first_response": 240},
+  "2": {"ack": 1440, "first_response": 2880},
+  "1": {"ack": 4320, "first_response": 7200}
+}

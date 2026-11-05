@@ -1,0 +1,80 @@
+# Keyword escalator lexicon (version 0.1, starter set).
+# English terms are a starting point. Luganda (lg), Swahili (sw) and
+# Runyankore (rn) terms are DRAFTS that NEED NATIVE-SPEAKER REVIEW.
+# A match can only RAISE severity, never lower it.
+#
+# floor: minimum severity when the flag matches (0 = flag only, no floor).
+version: "0.1"
+
+# Applied word by word before matching (SMS shorthand and spelling variants).
+shorthand:
+  wanna: want to
+  gonna: going to
+  pls: please
+  plz: please
+  pliz: please
+  u: you
+  ur: your
+  pix: pictures
+  pics: pictures
+  nudez: nudes
+  sente: ssente
+  im: i am
+  dont: do not
+  cant: can not
+
+flags:
+  self_harm:
+    floor: 4
+    terms:
+      en: ["want to die", "kill myself", "end my life", "hurt myself", "suicide", "cut myself", "no reason to live"]
+      lg: ["njagala okufa", "njagala kufa", "nja kwetta", "okwetta"]
+      sw: ["nataka kufa", "kujiua", "nijiue"]
+      rn: ["ninyenda kufa", "kwevuga"]
+  imminent_danger:
+    floor: 4
+    terms:
+      en: ["coming to my house", "wants to meet me", "waiting for me", "locked me", "he will kill me", "she will kill me", "going to kill me", "kidnap"]
+      lg: ["ajja kunzita", "ansibye", "anninda"]
+      sw: ["ataniua", "amenifungia"]
+      rn: ["naija kunyita"]
+  sextortion:
+    floor: 3
+    terms:
+      en: ["nude pictures", "nudes", "naked pictures", "send pictures", "post my pictures", "share my pictures", "leak my pictures", "private pictures"]
+      lg: ["ebifaananyi byange", "bifaananyi byange", "ebifaananyi ebyobwereere"]
+      sw: ["picha za uchi", "picha zangu"]
+      rn: ["ebishushani byangye"]
+  money_demand:
+    floor: 0
+    terms:
+      en: ["send money", "pay me", "give me money", "mobile money", "airtime", "ssente"]
+      lg: ["ssente", "mpeereza ssente", "nsasula"]
+      sw: ["pesa", "nitumie pesa", "nilipe"]
+      rn: ["sente", "nyoherereza sente"]
+  threat:
+    floor: 0
+    terms:
+      en: ["or else", "i will post", "i will share", "i will tell everyone", "i will hurt you", "kill yourself"]
+      lg: ["nja kubitadde", "nja kukola obubi"]
+      sw: ["nitaweka", "nitakuumiza"]
+      rn: ["ndaakuteera"]
+  authority:
+    floor: 0
+    terms:
+      en: ["my teacher", "the teacher", "headteacher", "my father", "my dad", "my mother", "my mum", "my uncle", "my guardian", "my coach", "pastor", "imam"]
+      lg: ["omusomesa", "taata wange", "maama wange", "kojja wange"]
+      sw: ["mwalimu", "baba yangu", "mama yangu", "mjomba"]
+      rn: ["omwegyesa", "taata wangye", "maama wangye"]
+  gambling:
+    floor: 2
+    terms:
+      en: ["betting", "bet", "gamble", "gambling", "casino", "sportpesa", "jackpot"]
+      lg: ["okubeetinga", "beetinga"]
+      sw: ["kamari", "kubeti"]
+      rn: ["okubeetinga"]
+
+# Combination rule: sextortion + money_demand + threat => severity 4.
+combinations:
+  - all_of: [sextortion, money_demand, threat]
+    floor: 4
