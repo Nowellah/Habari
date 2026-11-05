@@ -1,6 +1,7 @@
 export const RATE = 16000;          // samples per second sent for transcription
 const QUIET_LEVEL = 0.015;          // below this the microphone counts as quiet
-const QUIET_MS = 1800;              // stop after this much quiet once the child has spoken
+const QUIET_MS = 4000;              // stop after this much quiet once the child has spoken (children pause)
+const PAUSE_MS = 1000;              // a quiet gap this long counts as a pause
 const NO_SPEECH_MS = 8000;          // give up if nothing is said
 const MAX_MS = 60000;               // longest single recording
 
@@ -42,6 +43,31 @@ export function toWav(chunks: Float32Array[], inRate: number): Blob {
   return new Blob([buf], { type: "audio/wav" });
 }
 
+/** Rough hints measured from the recording itself, for the officer. Not a diagnosis. */
+export interface Cues { seconds: number; level: number; peak: number; pauses: number }
+
+/** Collects loudness and pauses frame by frame while recording. */
+export class CueMeter {
+  private heard = 0; private sum = 0; private peak = 0; private quiet = 0; private pauses = 0; private ms = 0;
+  add(rms: number, ms: number): void {
+    this.ms += ms;
+    if (rms >= QUIET_LEVEL) {
+      if (this.heard > 0 && this.quiet >= PAUSE_MS) this.pauses++;
+      this.quiet = 0; this.heard++; this.sum += rms; this.peak = Math.max(this.peak, rms);
+    } else {
+      this.quiet += ms;
+    }
+  }
+  result(): Cues {
+    return {
+      seconds: Math.round(this.ms / 1000),
+      level: this.heard ? Math.round((this.sum / this.heard) * 100) : 0,
+      peak: Math.round(this.peak * 100),
+      pauses: this.pauses,
+    };
+  }
+}
+
 export interface Listening {
   /** Stop now and use what was heard. */
   finish(): void;
@@ -50,7 +76,7 @@ export interface Listening {
 }
 
 export interface ListenHandlers {
-  onAudio(wav: Blob): void;
+  onAudio(wav: Blob, cues: Cues): void;
   onSilence(): void;
   onEnd(): void;
 }
@@ -65,6 +91,7 @@ export async function listen(handlers: ListenHandlers): Promise<Listening> {
   const source = ctx.createMediaStreamSource(stream);
   const node = ctx.createScriptProcessor(4096, 1, 1);
   const chunks: Float32Array[] = [];
+  const meter = new CueMeter();
   let heard = false, quiet = 0, elapsed = 0, finished = false, keep = true;
 
   function finish() {
@@ -80,7 +107,7 @@ export async function listen(handlers: ListenHandlers): Promise<Listening> {
     if (!heard) { handlers.onSilence(); return; }
     const wav = toWav(chunks, rate);
     chunks.length = 0;
-    handlers.onAudio(wav);
+    handlers.onAudio(wav, meter.result());
   }
 
   node.onaudioprocess = (ev) => {
@@ -90,7 +117,9 @@ export async function listen(handlers: ListenHandlers): Promise<Listening> {
     elapsed += ms;
     let sum = 0;
     for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
-    if (Math.sqrt(sum / data.length) >= QUIET_LEVEL) { heard = true; quiet = 0; } else { quiet += ms; }
+    const rms = Math.sqrt(sum / data.length);
+    meter.add(rms, ms);
+    if (rms >= QUIET_LEVEL) { heard = true; quiet = 0; } else { quiet += ms; }
     if ((heard && quiet >= QUIET_MS) || (!heard && elapsed >= NO_SPEECH_MS) || elapsed >= MAX_MS) finish();
   };
   source.connect(node);
