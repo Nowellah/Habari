@@ -54,3 +54,29 @@ class BuiltWebAppTests(TestCase):
 
     def test_assets_are_not_served_when_there_is_no_build(self):
         self.assertEqual(self.client.get("/assets/app.js").status_code, 404)
+
+
+class AllScreensTests(TestCase):
+    ROUTES = ["/", "/age", "/language", "/report", "/confirmation", "/status", "/help", "/chat"]
+
+    def setUp(self):
+        self.dist = Path(tempfile.mkdtemp())
+        (self.dist / "index.html").write_text("<div id=root>React app</div>", encoding="utf8")
+
+    def test_every_screen_serves_the_app_when_it_is_built(self):
+        with override_settings(WEB_DIST=self.dist):
+            for route in self.ROUTES:
+                with self.subTest(route):
+                    r = self.client.get(route)
+                    self.assertContains(r, "React app")
+                    self.assertIn("no-store", r["Cache-Control"])
+                    self.assertEqual(len(r.cookies), 0)
+
+    def test_without_a_build_the_other_screens_lead_to_the_chat_page(self):
+        for route in ["/", "/age", "/language", "/report", "/confirmation", "/status", "/help"]:
+            with self.subTest(route):
+                r = self.client.get(route)
+                self.assertEqual((r.status_code, r["Location"]), (302, "/chat"))
+
+    def test_the_old_status_page_with_a_code_still_works(self):
+        self.assertEqual(self.client.get("/status/HB-NOPE12").status_code, 404)
