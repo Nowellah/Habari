@@ -14,6 +14,19 @@
   "stopped": "Done. We will not message you again. Please delete these messages on your phone. Your report stays with our helpers. Send STATUS and your code any time.",
   "lang_question": "Which language is easiest? 1 Luganda 2 Runyankore 3 Swahili 4 English",
   "lang_saved": "Thank you. We will use {language} when we can.",
+  "danger_again": "Call {helpline} now, it is free. A person is coming to help. Case {code}.",
+  "checkin": "Habari: case {code}. Are you safe now? Reply 1 Yes 2 No 3 I need help",
+  "checkin_again": "Habari: we are still here for you. Are you safe? Reply 1 Yes 2 No",
+  "checkin_rate": "We are glad you are safe. How did we do? Reply 1 Good 2 OK 3 Not good",
+  "rating_saved": "Thank you for telling us. Send HELP any time.",
+  "not_safe": "Thank you for telling us. A person will contact you soon. If you are in danger call {helpline}, it is free.",
+  "status_update": "Habari: case {code}. {words}",
+  "replies": {
+    "read": "We have read your message. A helper is with you. You are not in trouble.",
+    "safe_actions": "Please stop replying to them, do not pay anything, and do not delete the messages. Save the username.",
+    "counsellor": "A counsellor will contact you today. If you are in danger call {helpline}, it is free.",
+    "more_info": "Thank you. If you can, tell us the username or number of the person, and when it started."
+  },
   "status": {
     "received": "We got your report. A person will look at it soon.",
     "triaged": "A person is looking at your report.",

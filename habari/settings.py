@@ -88,6 +88,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        # Web app, SLA watcher and AI threads write at the same time: wait for the
+        # lock (timeout), take it at transaction start (IMMEDIATE), and use WAL so
+        # reads never block. Without this SQLite says "database is locked".
+        'OPTIONS': {
+            'timeout': 20,
+            'transaction_mode': 'IMMEDIATE',
+            'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;',
+        },
     }
 }
 
@@ -160,3 +168,13 @@ SIMULATORS_ENABLED = os.getenv("SIMULATORS_ENABLED", "1" if DEBUG else "0") == "
 AT_USERNAME = os.getenv("AT_USERNAME", "sandbox")
 AT_API_KEY = os.getenv("AT_API_KEY", "")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
+
+# SLA clock (Phase 3). 1 = real time. 180 for demos: 1 real minute = 3 SLA hours.
+SLA_TIME_SCALE = float(os.getenv("SLA_TIME_SCALE", "1"))
+# This mock partner never answers in time, to show escalation in the demo.
+DEMO_SLOW_PARTNER = os.getenv("DEMO_SLOW_PARTNER", "")
+
+# Tests only: a fast password hasher (real logins keep the slow, safe default).
+import sys  # noqa: E402
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

@@ -16,6 +16,10 @@ PARTNERS = [
     ("counsellor", "Outside counsellor (simulated)", ["self_harm", "sextortion", "grooming", "exposure_by_authority", "cyberbullying", "inappropriate_content"], [], 240),
 ]
 
+# Officers paged for severity 4 cases, and supervisors who can reassign.
+ON_CALL = {"peter"}
+SUPERVISORS = ["esther"]
+
 OFFICERS = [
     ("sarah", ["lg", "en"], ["child_protection"], "Kampala"),
     ("joseph", ["en", "sw"], ["cyber"], "Kampala"),
@@ -47,10 +51,19 @@ class Command(BaseCommand):
                 user.save()
             user.groups.add(officer_group)
             Officer.objects.update_or_create(
-                user=user, defaults={"languages": langs, "skills": skills, "district": district}
+                user=user, defaults={"languages": langs, "skills": skills, "district": district,
+                                     "on_call": username in ON_CALL}
             )
 
+        supervisor_group = Group.objects.get(name="supervisor")
+        for username in SUPERVISORS:
+            user, created = User.objects.get_or_create(username=username)
+            if created:
+                user.set_password(password)
+                user.save()
+            user.groups.add(supervisor_group)
+
         self.stdout.write(self.style.SUCCESS(
-            f"Seeded {len(PARTNERS)} partners and {len(OFFICERS)} officers. "
+            f"Seeded {len(PARTNERS)} partners, {len(OFFICERS)} officers and {len(SUPERVISORS)} supervisor. "
             f"Demo officer password: set by DEMO_OFFICER_PASSWORD (default for local demo only)."
         ))

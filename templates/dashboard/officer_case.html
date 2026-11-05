@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ case.code }}{% endblock %}
+{% block content %}
+<p><a href="/officer/">&larr; Case queue</a></p>
+<h1>{{ case.code }} <span class="sev sev-{{ case.severity }}">severity {{ case.severity }}</span></h1>
+
+<div class="grid2">
+<div class="card">
+  <h2>Case</h2>
+  <dl>
+    <dt>Status</dt><dd>{{ case.get_status_display }}</dd>
+    <dt>SLA clock</dt><dd><span class="clock clock-{{ clock.colour }}">{{ clock.label }}</span></dd>
+    <dt>Child's pick</dt><dd>{{ pick.label_en|default:"-" }}</dd>
+    <dt>Category</dt><dd>{{ case.category|default:"-" }}</dd>
+    <dt>Alleged person</dt><dd>{{ case.alleged_role|default:"not known" }}</dd>
+    <dt>Flags</dt><dd>{{ case.flags|join:", "|default:"-" }}</dd>
+    <dt>Language</dt><dd>{{ case.language|default:"-" }}</dd>
+    <dt>Channel</dt><dd>{{ case.channel }}</dd>
+    <dt>Triage</dt><dd>{% if case.triage_source == "ai" %}AI{% elif case.triage_source == "rules_ai_down" %}Rules (AI down){% else %}Rules{% endif %}</dd>
+    <dt>Received</dt><dd>{{ case.created_at|date:"j M Y, H:i" }}</dd>
+    <dt>Officer</dt><dd>{{ case.assigned_officer.user.username|default:"not assigned" }}<br><span class="muted">{{ case.assignment_reason }}</span></dd>
+    {% if case.rating %}<dt>Child's rating</dt><dd>{{ case.rating }}</dd>{% endif %}
+  </dl>
+</div>
+
+<div class="card">
+  <h2>Actions</h2>
+  {% if not case.ack_at %}
+  <form method="post" action="ack">{% csrf_token %}<button>Acknowledge</button></form>
+  {% else %}<p class="muted">Acknowledged {{ case.ack_at|date:"H:i" }}</p>{% endif %}
+
+  <form method="post" action="reply">{% csrf_token %}
+    <label>Send a reviewed reply<br>
+    <select name="template">{% for key, text in replies.items %}<option value="{{ key }}">{{ text|truncatechars:70 }}</option>{% endfor %}</select></label>
+    <button>Send to child</button>
+  </form>
+
+  <form method="post" action="refer">{% csrf_token %}<button>Send referrals</button></form>
+
+  <form method="post" action="status">{% csrf_token %}
+    <select name="status"><option value="in_progress">In progress</option><option value="resolved">Resolved</option></select>
+    <button>Set status</button>
+  </form>
+
+  <form method="post" action="close">{% csrf_token %}
+    <select name="reason" required><option value="">Close with reason…</option>
+      {% for key in close_reasons %}<option value="{{ key }}">{{ key|cut:"_"|capfirst }}</option>{% endfor %}</select>
+    <input name="note" placeholder="Short note" maxlength="150">
+    <button>Close case</button>
+  </form>
+
+  {% if supervisor %}
+  <form method="post" action="reassign">{% csrf_token %}
+    <select name="officer">{% for o in officers %}<option value="{{ o.id }}">{{ o.user.username }}</option>{% endfor %}</select>
+    <button>Reassign</button>
+  </form>
+  {% endif %}
+</div>
+</div>
+
+<div class="card">
+  <h2>Routing</h2>
+  <p><strong>{{ route_note }}</strong></p>
+  <p class="muted">Planned partners: {% for p in planned %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% empty %}none{% endfor %}</p>
+  <table>
+    <thead><tr><th>Partner</th><th>Sent</th><th>Acknowledged</th></tr></thead>
+    <tbody>
+    {% for r in referrals %}<tr><td>{{ r.partner.name }}</td><td>{{ r.sent_at|date:"H:i:s" }}</td><td>{{ r.ack_at|date:"H:i:s"|default:"waiting" }}</td></tr>
+    {% empty %}<tr><td colspan="3" class="muted">No referrals sent yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>SLA events</h2>
+  <ul>{% for e in events %}<li>{{ e.at|date:"H:i:s" }} · {{ e.kind }} {% if e.detail %}<span class="muted">({{ e.detail }})</span>{% endif %}</li>{% empty %}<li class="muted">None yet.</li>{% endfor %}</ul>
+</div>
+
+<div class="card">
+  <details>
+    <summary>Messages ({{ messages|length }}). Open only if you need to read the child's words.</summary>
+    {% for m in messages %}<p><strong>{% if m.direction == "in" %}Child{% else %}Habari{% endif %}</strong> <span class="muted">{{ m.created_at|date:"H:i" }}</span><br>{{ m.text }}</p>{% endfor %}
+  </details>
+</div>
+{% endblock %}

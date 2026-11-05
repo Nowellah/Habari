@@ -1,8 +1,14 @@
+import secrets
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
 CHANNELS = [(c, c) for c in ("sms", "ussd", "telegram", "whatsapp", "web", "extension", "voice", "siri")]
+
+
+def _new_key():
+    return secrets.token_hex(24)
 
 
 class Reporter(models.Model):
@@ -68,6 +74,12 @@ class Case(models.Model):
     # How the current severity was decided: "rules", "ai" or "rules_ai_down".
     triage_source = models.CharField(max_length=20, default="rules")
     triaged_at = models.DateTimeField(null=True, blank=True)
+    assignment_reason = models.CharField(max_length=300, blank=True)
+    routing_note = models.CharField(max_length=300, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    checkin_due_at = models.DateTimeField(null=True, blank=True)
+    checkin_count = models.PositiveSmallIntegerField(default=0)
+    rating = models.CharField(max_length=10, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     # SLA clock. ack_at and first_response_at belong to the current clock;
     # a reset clears them and the earlier times stay in SLAEvent.
@@ -124,6 +136,8 @@ class Partner(models.Model):
     districts = models.JSONField(default=list)
     ack_minutes = models.PositiveIntegerField(default=120)
     slow_mode = models.BooleanField(default=False)
+    # Key the partner sends in X-Partner-Key when acknowledging a referral.
+    api_key = models.CharField(max_length=64, default=_new_key)
 
     def __str__(self):
         return self.name
@@ -147,6 +161,19 @@ class OutboundSMS(models.Model):
     provider = models.CharField(max_length=20, default="simulator")
     provider_status = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Notification(models.Model):
+    """A message for staff: the assigned officer, supervisors, the on-call responder or a partner."""
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="notifications")
+    audience = models.CharField(max_length=20)  # officer, supervisor, on_call, partner
+    officer = models.ForeignKey(Officer, null=True, blank=True, on_delete=models.SET_NULL)
+    text = models.CharField(max_length=300)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at"]
 
 
 class SLAEvent(models.Model):

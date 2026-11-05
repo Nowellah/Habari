@@ -22,6 +22,16 @@
     .sev-4 { color: var(--s4); } .sev-3 { color: var(--s3); } .sev-2 { color: var(--s2); } .sev-1 { color: var(--s1); }
     .card { border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
     .wrap { overflow-x: auto; }
+    .clock { padding: 2px 8px; border-radius: 999px; font-size: .85rem; white-space: nowrap; }
+    .clock-green { background: #dcfce7; color: #14532d; } .clock-amber { background: #fef3c7; color: #78350f; }
+    .clock-red { background: #fee2e2; color: #7f1d1d; font-weight: 700; } .clock-done { color: var(--muted); }
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .card + .card { margin-top: 16px; }
+    h2 { font-size: 1.1rem; margin: 0 0 10px; }
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
+    dt { color: var(--muted); } dd { margin: 0; }
+    .card form { margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: end; }
+    select, input, button { font: inherit; padding: 6px 10px; }
   </style>
 </head>
 <body>

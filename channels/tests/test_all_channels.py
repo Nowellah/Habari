@@ -32,7 +32,8 @@ class EveryChannelTests(TestCase):
                 code = self.send(channel, "someone wants my pictures")["case_code"]
                 self.assertEqual(Case.objects.get(code=code).channel, channel)
 
-    def test_only_phone_channels_store_a_number(self):
+    def test_only_reachable_channels_store_a_contact(self):
+        # Phone channels keep the number; Telegram keeps the chat id for follow-ups.
         for channel in SENDERS:
             self.send(channel, "HELP")
-        self.assertEqual(ReporterVault.objects.count(), 4)
+        self.assertEqual(ReporterVault.objects.count(), 5)
