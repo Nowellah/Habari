@@ -69,3 +69,12 @@ def metrics_page(request):
             sets.append({"title": title, "s": s, "cm_labels": [labels[j] for j in used],
                          "cm_rows": [(name, [row[j] for j in used]) for name, row in rows]})
     return render(request, "dashboard/metrics.html", {"data": data, "sets": sets})
+
+
+def feature_status(request):
+    """Every feature with an honest label: Built, Simulated or Planned."""
+    import json
+
+    data = json.loads((settings.SHARED_DIR / "feature_status.json").read_text(encoding="utf8"))
+    counts = {s: sum(1 for f in data["features"] if f["status"] == s) for s in ("Built", "Simulated", "Planned")}
+    return render(request, "dashboard/feature_status.html", {"data": data, "counts": counts})

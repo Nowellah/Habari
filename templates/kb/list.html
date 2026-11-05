@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Safety tips{% endblock %}
+{% block exit %}<a class="exit" href="https://www.google.com" rel="noreferrer">Quick exit</a>{% endblock %}
+{% block content %}
+<h1>Safety tips and guides</h1>
+<form method="get" style="display:flex;gap:8px;margin-bottom:16px">
+  <input name="q" value="{{ q }}" placeholder="Search, for example: pictures, teacher, 116" style="flex:1" aria-label="Search">
+  <button>Search</button>
+</form>
+{% for a in results %}
+<div class="card">
+  <h2><a href="/kb/{{ a.slug }}">{% if a.audience == "officer" %}Officer procedure: {% endif %}{{ a.title|cut:"Officer procedure: " }}</a></h2>
+  <p class="muted">For {{ a.audience }}{% if a.audience == "adult" %}s{% elif a.audience == "child" %}ren{% else %}s{% endif %} · {{ a.status }}</p>
+</div>
+{% empty %}<p class="muted">Nothing found. Try another word, or call 116.</p>{% endfor %}
+<p><a href="/chat">Talk to Habari</a></p>
+{% endblock %}

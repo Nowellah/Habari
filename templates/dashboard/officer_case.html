@@ -68,6 +68,15 @@
 </div>
 
 <div class="card">
+  <h2>Linked cases</h2>
+  {% for l in links %}<p><a href="/officer/case/{{ l.case.code }}/">{{ l.case.code }}</a>
+    <span class="clock {% if l.strength == 'strong' %}clock-red{% else %}clock-amber{% endif %}">{{ l.strength }}</span>
+    <span class="muted">{{ l.reason }} · severity {{ l.case.severity }} · {{ l.case.created_at|date:"j M" }}</span></p>
+  {% empty %}<p class="muted">No linked cases found.</p>{% endfor %}
+  <p class="muted">Strong: same handle, number or link (stored as hashes). Weak: similar wording; check before acting.</p>
+</div>
+
+<div class="card">
   <h2>Routing</h2>
   <p><strong>{{ route_note }}</strong></p>
   <p class="muted">Planned partners: {% for p in planned %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% empty %}none{% endfor %}</p>

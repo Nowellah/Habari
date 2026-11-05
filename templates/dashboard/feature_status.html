@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Feature status{% endblock %}
+{% block content %}
+<h1>What works today</h1>
+<p class="muted">{{ data.legend }} Updated {{ data.updated }}.</p>
+<p>{% for s, n in counts.items %}<span class="clock {% if s == 'Built' %}clock-green{% elif s == 'Simulated' %}clock-amber{% else %}clock-done{% endif %}">{{ s }}: {{ n }}</span> {% endfor %}</p>
+<div class="wrap"><table>
+  <thead><tr><th>Feature</th><th>Status</th><th>Notes</th></tr></thead>
+  <tbody>
+  {% for f in data.features %}
+    <tr><td>{{ f.name }}</td>
+        <td><span class="clock {% if f.status == 'Built' %}clock-green{% elif f.status == 'Simulated' %}clock-amber{% else %}clock-done{% endif %}">{{ f.status }}</span></td>
+        <td class="muted">{{ f.note }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+<p class="muted">See also the <a href="/metrics">evaluation results</a>.</p>
+{% endblock %}

@@ -192,3 +192,10 @@ EVAL_RESULTS_DIR = BASE_DIR / "eval" / "results"
 
 # Privacy: districts with fewer reports or poll answers than this show no number.
 HEATMAP_MIN = int(os.getenv("HEATMAP_MIN", "5"))
+
+# WhatsApp Cloud API (Phase 4b). Empty = simulated (replies kept in the outbox).
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
+WHATSAPP_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID", "")
+WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "")
+WHATSAPP_APP_SECRET = os.getenv("WHATSAPP_APP_SECRET", "")
+WHATSAPP_API_VERSION = os.getenv("WHATSAPP_API_VERSION", "v21.0")
