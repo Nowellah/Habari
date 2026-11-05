@@ -11,7 +11,7 @@ class CaseCodeTests(SimpleTestCase):
     def test_case_code_has_prefix_and_six_unambiguous_characters(self):
         for _ in range(200):
             code = new_case_code()
-            self.assertRegex(code, r"^MK-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$")
+            self.assertRegex(code, r"^HB-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$")
 
     def test_case_code_never_uses_confusable_characters(self):
         codes = "".join(new_case_code()[3:] for _ in range(500))

@@ -39,7 +39,7 @@ class Command(BaseCommand):
                 slug=slug, defaults={"name": name, "categories": cats, "districts": districts, "ack_minutes": ack}
             )
 
-        password = os.getenv("DEMO_OFFICER_PASSWORD", "mukwano-demo")
+        password = os.getenv("DEMO_OFFICER_PASSWORD", "habari-demo")
         for username, langs, skills, district in OFFICERS:
             user, created = User.objects.get_or_create(username=username)
             if created:

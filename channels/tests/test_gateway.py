@@ -25,6 +25,7 @@ class MenuTests(GatewayTestCase):
         out = self.send("HELP")
         self.assertEqual(out["state"], "PICK_HARM")
         self.assertEqual([o["key"] for o in out["options"]], ["1", "2", "3", "4", "5"])
+        self.assertTrue(out["reply_text"].startswith("Habari:"))
         self.assertIn("not in trouble", out["reply_text"])
         self.assertIsNone(out["case_code"])
 
@@ -131,7 +132,7 @@ class CommandTests(GatewayTestCase):
         self.assertEqual(out["case_code"], code)
 
     def test_status_unknown_code(self):
-        self.assertIn("could not find", self.send("STATUS MK-ZZZZZZ")["reply_text"])
+        self.assertIn("could not find", self.send("STATUS HB-ZZZZZZ")["reply_text"])
 
     def test_stop_erases_thread_but_keeps_case(self):
         code = self.report()["case_code"]

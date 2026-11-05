@@ -12,7 +12,7 @@ PHONE_CHANNELS = {"sms", "ussd", "voice", "whatsapp"}
 
 
 def new_case_code() -> str:
-    return "MK-" + "".join(secrets.choice(ALPHABET) for _ in range(6))
+    return "HB-" + "".join(secrets.choice(ALPHABET) for _ in range(6))
 
 
 def normalise_msisdn(n: str) -> str:

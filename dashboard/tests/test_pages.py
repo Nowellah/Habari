@@ -7,29 +7,32 @@ from core.models import Case, Officer, Partner, Reporter
 
 class StatusPageTests(TestCase):
     def setUp(self):
-        self.case = Case.objects.create(code="MK-ABCDEF", channel="sms", pick="2", severity=3)
+        self.case = Case.objects.create(code="HB-ABCDEF", channel="sms", pick="2", severity=3)
         self.case.messages.create(direction="in", text="he wants my nude pictures", channel="sms")
 
     def test_status_page_shows_plain_words_and_helpline(self):
-        r = self.client.get("/status/MK-ABCDEF")
+        r = self.client.get("/status/HB-ABCDEF")
         self.assertContains(r, "We got your report")
         self.assertContains(r, "116")
 
+    def test_pages_use_the_habari_name(self):
+        self.assertContains(self.client.get("/status/HB-ABCDEF"), "<title>Habari</title>")
+
     def test_status_page_never_shows_details(self):
-        self.assertNotContains(self.client.get("/status/MK-ABCDEF"), "nude")
+        self.assertNotContains(self.client.get("/status/HB-ABCDEF"), "nude")
 
     def test_unknown_code_is_404(self):
-        self.assertEqual(self.client.get("/status/MK-ZZZZZZ").status_code, 404)
+        self.assertEqual(self.client.get("/status/HB-ZZZZZZ").status_code, 404)
 
     def test_code_lookup_ignores_case(self):
-        self.assertEqual(self.client.get("/status/mk-abcdef").status_code, 200)
+        self.assertEqual(self.client.get("/status/hb-abcdef").status_code, 200)
 
 
 class OfficerListTests(TestCase):
     def setUp(self):
         reporter = Reporter.objects.create(pseudo_id="abc123secretpseudo0", channel="sms")
-        Case.objects.create(code="MK-LOWLOW", channel="web", pick="5", severity=1)
-        Case.objects.create(code="MK-HIGHHI", channel="sms", pick="1", severity=4, reporter=reporter)
+        Case.objects.create(code="HB-LOWLOW", channel="web", pick="5", severity=1)
+        Case.objects.create(code="HB-HIGHHI", channel="sms", pick="1", severity=4, reporter=reporter)
         self.officer = User.objects.create_user("sarah", password="pw")
         self.officer.groups.add(Group.objects.get_or_create(name="officer")[0])
 
@@ -42,7 +45,7 @@ class OfficerListTests(TestCase):
         r = self.client.post("/login/", {"username": "sarah", "password": "pw"})
         self.assertEqual(r.status_code, 302)
         self.assertEqual(r["Location"], "/officer/")
-        self.assertContains(self.client.get("/officer/"), "MK-HIGHHI")
+        self.assertContains(self.client.get("/officer/"), "HB-HIGHHI")
 
     def test_pages_do_not_use_no_referrer_policy(self):
         # With "no-referrer", browsers send "Origin: null" on form posts and
@@ -75,7 +78,7 @@ class OfficerListTests(TestCase):
     def test_officer_sees_most_urgent_first(self):
         self.client.login(username="sarah", password="pw")
         html = self.client.get("/officer/").content.decode()
-        self.assertLess(html.index("MK-HIGHHI"), html.index("MK-LOWLOW"))
+        self.assertLess(html.index("HB-HIGHHI"), html.index("HB-LOWLOW"))
 
     def test_officer_list_shows_no_identities(self):
         self.client.login(username="sarah", password="pw")

@@ -8,7 +8,7 @@ from core.models import Case, Evidence
 
 class EvidenceChainTests(TestCase):
     def setUp(self):
-        self.case = Case.objects.create(code="MK-AAAAAA", channel="sms", pick="2", severity=3)
+        self.case = Case.objects.create(code="HB-AAAAAA", channel="sms", pick="2", severity=3)
 
     def test_first_entry_chains_from_zero_hash(self):
         e = add_evidence(self.case, "handle", "@stranger")
@@ -32,7 +32,7 @@ class EvidenceChainTests(TestCase):
         self.assertFalse(verify_chain(self.case))
 
     def test_chains_are_separate_per_case(self):
-        other = Case.objects.create(code="MK-BBBBBB", channel="sms", pick="4", severity=2)
+        other = Case.objects.create(code="HB-BBBBBB", channel="sms", pick="4", severity=2)
         add_evidence(self.case, "handle", "@a")
         e = add_evidence(other, "handle", "@b")
         self.assertEqual(e.prev_hash, "0" * 64)

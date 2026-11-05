@@ -1,4 +1,4 @@
-# Send one message to the Mukwano gateway, as if a child sent it on a channel.
+# Send one message to the Habari gateway, as if a child sent it on a channel.
 # Usage:
 #   .\tools\send.ps1 sms HELP
 #   .\tools\send.ps1 telegram "someone wants my pictures"
