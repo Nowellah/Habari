@@ -1,0 +1,351 @@
+{
+  "meta": {
+    "language": "en",
+    "review_status": "draft"
+  },
+  "entries": [
+    {
+      "id": "sextortion-what-to-do",
+      "title": "Someone is threatening to share my private photos",
+      "examples": [
+        "someone is threatening to share my nude photos",
+        "he is blackmailing me with my pictures",
+        "she says she will post my private video",
+        "they will leak my photos unless I do what they say",
+        "he says he will post my nudes",
+        "threatening to post my nude pictures",
+        "she will send my private pictures to everyone"
+      ],
+      "answer": "This is blackmail, and it is not your fault. Stop replying, don't send anything more, and keep the messages. Block them only after you have saved proof. A trained person can help you stop it."
+    },
+    {
+      "id": "sextortion-should-i-pay",
+      "title": "Should I pay or send what they ask for",
+      "examples": [
+        "should I send the money they ask for",
+        "he wants airtime or he will post my photos",
+        "do I pay the blackmailer",
+        "they asked for mobile money to delete my pictures",
+        "he says he will post my nudes if I do not pay",
+        "they want money or they share my pictures"
+      ],
+      "answer": "Please don't pay. Paying usually leads to more demands, not to the end of it. Stop replying, keep the messages as proof, and talk to a trained person about what to do next."
+    },
+    {
+      "id": "sent-private-photo",
+      "title": "I sent a private photo and now I am scared",
+      "examples": [
+        "I sent a nude photo and now I am scared",
+        "I shared a naked picture and regret it",
+        "I sent my picture to someone and I am worried",
+        "I made a mistake and sent a private video"
+      ],
+      "answer": "Many young people have been in this place, and it is not your fault. Don't send anything more. Keep the messages and tell someone you trust, or a trained person, so they can help you take the next steps."
+    },
+    {
+      "id": "keep-evidence",
+      "title": "How to keep proof safely",
+      "examples": [
+        "how do I save proof of the messages",
+        "should I delete the chat",
+        "can I take screenshots as evidence",
+        "what should I keep for a report"
+      ],
+      "answer": "Don't delete the messages. Take screenshots that show the name, the dates and the words, and keep them in a safe place. Proof helps people stop the person who is hurting you."
+    },
+    {
+      "id": "grooming-signs",
+      "title": "Signs that someone is grooming you",
+      "examples": [
+        "how do I know if someone is grooming me",
+        "an older person is being too friendly with me",
+        "an adult online wants to be my special friend",
+        "what are the warning signs of an online predator"
+      ],
+      "answer": "Warning signs include an adult who gives lots of attention or gifts, asks you to keep secrets, moves the chat to a private app, or asks for photos. These are not okay and not your fault. You can stop replying and tell someone."
+    },
+    {
+      "id": "asked-for-photos",
+      "title": "Someone asked me to send photos of my body",
+      "examples": [
+        "someone asked me to send photos of my body",
+        "he asked for pictures of me without clothes",
+        "an online friend wants me to send nudes",
+        "she keeps asking me for private pictures"
+      ],
+      "answer": "You can say no, and you never have to send photos. An adult asking a child for these is not okay. Stop replying, keep the messages, and tell a trusted person or a trained helper."
+    },
+    {
+      "id": "asked-to-keep-secret",
+      "title": "Someone told me to keep our chats secret",
+      "examples": [
+        "he told me not to tell anyone about our chats",
+        "she said it is our secret",
+        "an adult asked me to hide our messages from my parents",
+        "why does he want me to keep this a secret"
+      ],
+      "answer": "A person who asks a child to keep secrets from the people who care for them is a warning sign. You can tell someone you trust, and none of it is your fault."
+    },
+    {
+      "id": "meeting-online-friend",
+      "title": "An online friend wants to meet me",
+      "examples": [
+        "an online friend wants to meet me",
+        "he asked me to meet him alone",
+        "should I meet someone I only know from the internet",
+        "a stranger from social media invited me to meet"
+      ],
+      "answer": "Please don't go alone. People online are not always who they say they are. Tell someone you trust first. If you do decide to meet anyone, a trusted adult should know and go with you."
+    },
+    {
+      "id": "gifts-for-pictures",
+      "title": "Someone offers gifts, airtime or money",
+      "examples": [
+        "someone offered me airtime for pictures",
+        "he promised to send me money if I send photos",
+        "an older man keeps buying me gifts online",
+        "a person offered me a phone if I chat privately"
+      ],
+      "answer": "Gifts or money in return for photos or secrets are a warning sign, even if the person seems kind. You can say no, stop replying and keep the messages. A trained person can help."
+    },
+    {
+      "id": "cyberbullying-what-to-do",
+      "title": "I am being bullied online",
+      "examples": [
+        "I am being bullied online",
+        "people are insulting me in a group chat",
+        "someone keeps sending me mean messages",
+        "classmates are mocking me on social media",
+        "people are making fun of me in a group chat",
+        "someone is laughing at me online",
+        "classmates are teasing me on whatsapp"
+      ],
+      "answer": "I'm sorry this is happening. It is not your fault. Keep screenshots, block the people who are hurting you, and tell someone you trust. You can also report the messages to the app."
+    },
+    {
+      "id": "photo-shared-without-consent",
+      "title": "Someone shared my photo without asking",
+      "examples": [
+        "someone shared my photo without my permission",
+        "my picture was posted in a group chat",
+        "they put my embarrassing video online",
+        "a classmate forwarded my private picture",
+        "I want to remove a picture someone posted of me",
+        "how do I get my photo taken down"
+      ],
+      "answer": "That is not okay, and it is not your fault. Save proof of where it was posted, then ask the app to remove it. A trusted adult or a trained helper can support you."
+    },
+    {
+      "id": "fake-account",
+      "title": "Someone made a fake account pretending to be me",
+      "examples": [
+        "someone made a fake account with my name",
+        "a person is pretending to be me online",
+        "there is a fake profile using my photos",
+        "an account is impersonating me"
+      ],
+      "answer": "Take screenshots of the fake account and its link, then use the app's report option for impersonation. Tell your friends not to trust it, and tell someone you trust."
+    },
+    {
+      "id": "hacked-account",
+      "title": "My account was hacked",
+      "examples": [
+        "someone hacked my account",
+        "I cannot log into my account anymore",
+        "a person is using my profile without permission",
+        "I think someone knows my password"
+      ],
+      "answer": "Try to reset your password from the app's login page and sign out of other devices. Use a new password you have not used anywhere else, and turn on two-step login if the app offers it."
+    },
+    {
+      "id": "scam-prize-message",
+      "title": "A message says I won a prize",
+      "examples": [
+        "I got a message saying I won a prize",
+        "someone says I won money and must pay a fee first",
+        "a link says I won a free phone",
+        "a stranger asked me to pay to receive a gift"
+      ],
+      "answer": "This is very likely a scam. Real prizes don't ask you to pay first or share your passwords. Don't click the link or send money, and tell someone you trust."
+    },
+    {
+      "id": "saw-disturbing-content",
+      "title": "I saw something violent or disturbing",
+      "examples": [
+        "I saw a violent video and I cannot stop thinking about it",
+        "I saw something disturbing online",
+        "a scary video was sent to me",
+        "I came across a graphic picture"
+      ],
+      "answer": "It is normal to feel upset after seeing that. You did nothing wrong. Close it, don't share it, and talk to someone you trust. You can report the content to the app."
+    },
+    {
+      "id": "saw-sexual-content",
+      "title": "I saw sexual content online",
+      "examples": [
+        "I saw porn and feel bad",
+        "someone sent me a sexual video",
+        "I saw an inappropriate picture online",
+        "adult content appeared on my phone"
+      ],
+      "answer": "You did not do anything wrong by seeing it, especially if it was sent to you. Close it, don't forward it, and talk to someone you trust. If someone sent it to you on purpose, you can tell a trained helper."
+    },
+    {
+      "id": "block-and-report",
+      "title": "How to block someone or report an account",
+      "examples": [
+        "how do I block someone",
+        "how do I report an account on social media",
+        "where is the report button",
+        "how can I stop a person from messaging me"
+      ],
+      "answer": "Open the person's profile or the message, then look for the menu with Block or Report. Report first if you can, so the app has proof, and save screenshots before you block."
+    },
+    {
+      "id": "stranger-friend-request",
+      "title": "A stranger sent me a friend request",
+      "examples": [
+        "a stranger sent me a friend request",
+        "someone I do not know is following me",
+        "an unknown person messaged me",
+        "should I accept requests from people I do not know"
+      ],
+      "answer": "You don't have to accept. If you don't know the person, it is safer to ignore or decline. Don't share personal details with people you haven't met, and tell someone you trust if they keep trying."
+    },
+    {
+      "id": "personal-information",
+      "title": "Someone asks for my personal information",
+      "examples": [
+        "someone asked for my address",
+        "a person wants to know my school",
+        "a stranger asked where I live",
+        "a game friend asked for my phone number"
+      ],
+      "answer": "You can say no. Don't share your address, school, phone number or location with people you don't know in real life. If they keep asking, stop replying and tell someone you trust."
+    },
+    {
+      "id": "who-can-i-tell",
+      "title": "Who can I tell",
+      "examples": [
+        "who can I tell about this",
+        "I do not know who to talk to",
+        "is there someone I can talk to about what happened",
+        "I need a trusted person to talk to"
+      ],
+      "answer": "Choose someone who makes you feel safe, such as a relative, teacher, counsellor or older friend. You can also talk with a trained helper through the helpline. You decide who to tell."
+    },
+    {
+      "id": "afraid-parents-angry",
+      "title": "I am afraid my parents will be angry",
+      "examples": [
+        "I am afraid my parents will be angry",
+        "my parents will take my phone",
+        "I am scared to tell my family",
+        "I will get punished if I tell"
+      ],
+      "answer": "Feeling afraid to tell is very common. You did not cause this. If you are not ready to tell family, you can talk with a trained helper first, who can help you think about what to say."
+    },
+    {
+      "id": "what-happens-if-i-report",
+      "title": "What happens if I report",
+      "examples": [
+        "what happens if I report",
+        "will you tell my parents if I report",
+        "who will know about my report",
+        "is my report private",
+        "will my parents know",
+        "will my family find out",
+        "who gets told if I report"
+      ],
+      "answer": "You choose the next step, and a trained person will explain your options before anything happens. If someone's life is in danger, a trained person may need to act to keep you safe, and they will tell you."
+    },
+    {
+      "id": "is-it-my-fault",
+      "title": "Is it my fault",
+      "examples": [
+        "is it my fault",
+        "did I do something wrong",
+        "I feel ashamed about what happened",
+        "it is because of me"
+      ],
+      "answer": "No. When someone threatens, pressures or tricks a child, the responsibility is theirs. Feeling ashamed is common, and talking to someone you trust can help."
+    },
+    {
+      "id": "adult-says-love",
+      "title": "An older person says they love me",
+      "examples": [
+        "an older person says he loves me",
+        "an adult says we are in a relationship",
+        "he is much older and says I am special",
+        "my online boyfriend is an adult"
+      ],
+      "answer": "An adult who builds a romantic relationship with a child is not safe, even if it feels special. It is not your fault. Stop sending photos, keep the messages, and tell a trusted person or helper."
+    },
+    {
+      "id": "friend-needs-help",
+      "title": "My friend is being threatened",
+      "examples": [
+        "my friend is being threatened online",
+        "a friend told me someone is blackmailing her",
+        "I think my friend is being groomed",
+        "how can I help a friend who is being bullied"
+      ],
+      "answer": "Thank you for caring. Listen without blaming, encourage your friend to keep the messages and not to pay or reply, and help them reach a trusted adult or a trained helper."
+    },
+    {
+      "id": "sharing-passwords",
+      "title": "Should I share my passwords",
+      "examples": [
+        "my friend asked for my password",
+        "should I share my password with my boyfriend",
+        "someone wants my login details",
+        "is it okay to give my password to a friend"
+      ],
+      "answer": "Keep your passwords private, even from close friends. Anyone with them can read your messages and pretend to be you. If you have already shared one, change it now."
+    },
+    {
+      "id": "deleted-messages",
+      "title": "I already deleted the messages",
+      "examples": [
+        "I already deleted the messages",
+        "can I still report if I deleted the chat",
+        "I removed the photos before I told anyone",
+        "the messages are gone from my phone"
+      ],
+      "answer": "You can still ask for help. Tell a trained helper what happened. Other copies may exist on the other person's phone or in the app, and the app may be able to help."
+    },
+    {
+      "id": "video-call-recorded",
+      "title": "Someone recorded me on a video call",
+      "examples": [
+        "someone recorded me on a video call",
+        "he screen recorded our call",
+        "she took screenshots of me on video chat",
+        "they are using a recording of me to threaten me"
+      ],
+      "answer": "Recording someone without permission is wrong. Don't do anything more on camera, keep any messages about it, and tell a trusted person or a trained helper so they can help you."
+    },
+    {
+      "id": "gaming-chat-pressure",
+      "title": "A player in a game is pressuring me",
+      "examples": [
+        "a player in a game is pressuring me",
+        "someone in game chat asked me to move to another app",
+        "a gamer keeps asking me personal questions",
+        "a person offered game items for private chats"
+      ],
+      "answer": "You can mute, block and report players. Don't move to private apps or share personal details with people you only know from games. Offers of items for private chats are a warning sign."
+    },
+    {
+      "id": "feeling-low-after-incident",
+      "title": "I feel sad and worried after what happened",
+      "examples": [
+        "I feel sad after what happened online",
+        "I cannot sleep because I am worried about my picture",
+        "I feel anxious since the messages started",
+        "I feel alone and ashamed"
+      ],
+      "answer": "What you are feeling makes sense. You don't have to carry it alone. Talking with someone you trust or a trained helper can ease it. If you ever feel unsafe or want to hurt yourself, tell someone right away."
+    }
+  ]
+}

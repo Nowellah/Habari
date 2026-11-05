@@ -8,6 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ai_service import lexicon_engine
+from ai_service.engine import bridge
 from ai_service.language import detect_language
 
 HARM_PICKER = Path(__file__).resolve().parent.parent / "shared" / "harm_picker.json"
@@ -74,13 +75,27 @@ def triage(text: str, pick: str | None = None, language: str | None = None, clas
     harm_flags = [f for f in flags if f != "authority"]
     confidence = 0.85 if harm_flags else (0.5 if pick else 0.2)
     method = "rules"
+    external_only = False
+
+    lang = detect_language(text) if text.strip() else {"language": "unknown", "confidence": 0.0, "ask_language": True}
+    spoken = language or (lang["language"] if lang["language"] != "unknown" else None)
+    engine = bridge.assess(text, spoken) if text.strip() else None
+    if engine:
+        method = "rules+engine"
+        if engine.category and (engine.severity > severity or category == "unclear"):
+            category = engine.category
+        severity = max(severity, engine.severity)
+        flags = flags + [f for f in engine.flags if f not in flags]
+        external_only = engine.external_only
+        if engine.confident:
+            confidence = max(confidence, 0.85)
 
     if classifier and text.strip():
         try:
             scores = classifier(text, CATEGORIES)
             label, score = max(scores.items(), key=lambda kv: kv[1])
             if score >= CLASSIFIER_MIN_SCORE:
-                method = "rules+classifier"
+                method = method + "+classifier"
                 if CATEGORY_FLOOR.get(label, 0) > severity or category in ("unclear",) or not harm_flags:
                     category = label
                 severity = max(severity, CATEGORY_FLOOR.get(label, 0))
@@ -88,12 +103,11 @@ def triage(text: str, pick: str | None = None, language: str | None = None, clas
         except Exception:  # a broken model must never block or lower triage
             method = "rules (classifier failed)"
 
-    lang = detect_language(text) if text.strip() else {"language": "unknown", "confidence": 0.0, "ask_language": True}
     return {
         "pick_suggestion": _pick_for(category, flags),
         "category": category,
         "severity": severity,
-        "role": "authority" if ("authority" in flags or pick == "3") else "",
+        "role": "authority" if ("authority" in flags or pick == "3" or external_only) else "",
         "confidence": confidence,
         "flags": flags,
         "language": language or lang["language"],
