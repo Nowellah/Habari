@@ -12,12 +12,13 @@ cd C:\Users\UESR\Desktop\UI
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+copy .env.example .env    # then set your own STORAGE_SECRET in .env
 python main.py
 ```
 
 Open: **http://127.0.0.1:8080**
 
-Demo mode is on by default — no backend required.
+Demo mode is on by default (DEMO_MODE in .env) — no backend required. Never commit `.env`; it holds your secrets.
 
 ---
 
