@@ -1,14 +1,16 @@
 """Officer case page, case actions and the partner board."""
+import json
 from statistics import median
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseBadRequest
+from django.http import FileResponse, Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from channels import voice_notes
 from core import allocation, followup, linking, router, sla
 from core.harm import picks
 from core.messages import _messages
@@ -46,12 +48,28 @@ def case_detail(request, code):
         "referrals": case.referrals.select_related("partner").order_by("sent_at"),
         "events": case.sla_events.order_by("at"),
         "messages": case.messages.order_by("created_at"),
+        "voice_notes": voice_notes.for_case(case),
         "replies": _replies(),
         "close_reasons": CLOSE_REASONS,
         "officers": Officer.objects.select_related("user").order_by("user__username"),
         "supervisor": is_supervisor(request.user),
         "links": linking.linked_cases(case),
     })
+
+
+@login_required
+def case_voice(request, code, evidence_id):
+    """The child's original recording, for the officer on the case only."""
+    case = _case(request, code)
+    evidence = get_object_or_404(case.evidence, pk=evidence_id, kind=voice_notes.KIND)
+    try:
+        path = voice_notes.audio_path(json.loads(evidence.value)["file"])
+        audio = open(path, "rb")
+    except (ValueError, KeyError, OSError):
+        raise Http404("recording not found")
+    response = FileResponse(audio, content_type="audio/wav")
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @login_required
