@@ -27,3 +27,8 @@ Thumbs.db
 # ── Misc ───────────────────────────────────────────────────────────────────────
 *.log
 .superpowers/
+
+# Secrets: never commit any .env file, in any folder. Templates are fine.
+.env
+.env.*
+!.env.example
