@@ -1,0 +1,62 @@
+{% extends "channels/sim_phone_base.html" %}
+{% block title %}SMS simulator{% endblock %}
+{% block sim %}
+<h1>SMS simulator</h1>
+<div class="sim-wrap">
+  <div class="phone" aria-label="Simulated basic phone">
+    <div class="bar"><span>Basic phone</span><span id="num-label"></span></div>
+    <div class="screen" id="screen"></div>
+    <form id="f" autocomplete="off">
+      <input id="msg" placeholder="Type SMS, e.g. HELP" aria-label="SMS text">
+      <button>Send</button>
+    </form>
+  </div>
+  <div class="side">
+    <p><label>Pretend phone number<br><input id="number" value="+256700000001"></label></p>
+    <p class="muted">Messages go to <code>/hooks/sms</code> exactly as Africa's Talking would send them. Replies are read from the SMS outbox, the same place a real SMS would be sent from.</p>
+    <p class="muted">Try: <code>HELP</code>, then <code>2</code>, then a sentence. Then <code>STATUS</code> and your code, <code>PIN mango</code>, or <code>STOP</code>.</p>
+  </div>
+</div>
+<script>
+  const screen = document.getElementById('screen');
+  const numberEl = document.getElementById('number');
+  let lastId = 0;
+
+  function bubble(text, who) {
+    const b = document.createElement('div');
+    b.className = 'bubble ' + who;
+    b.textContent = text;
+    screen.appendChild(b);
+    screen.scrollTop = screen.scrollHeight;
+  }
+
+  async function poll() {
+    const r = await fetch('/sim/sms/outbox?number=' + encodeURIComponent(numberEl.value));
+    const data = await r.json();
+    for (const m of data.messages) {
+      if (m.id > lastId) { bubble(m.text, 'them'); lastId = m.id; }
+    }
+  }
+
+  function resetForNumber() {
+    screen.innerHTML = ''; lastId = 0;
+    document.getElementById('num-label').textContent = numberEl.value;
+    poll();
+  }
+
+  document.getElementById('f').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('msg');
+    const text = input.value.trim();
+    if (!text) return;
+    bubble(text, 'me');
+    input.value = '';
+    const body = new URLSearchParams({from: numberEl.value, to: '12345', text});
+    await fetch('/hooks/sms', {method: 'POST', body});
+    poll();
+  });
+  numberEl.addEventListener('change', resetForNumber);
+  resetForNumber();
+  setInterval(poll, 3000);
+</script>
+{% endblock %}

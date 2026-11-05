@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .sim-wrap { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+  .phone { width: 300px; max-width: 100%; border: 10px solid #222; border-radius: 32px; background:#f4f4f0; color:#111; padding: 14px; min-height: 520px; display:flex; flex-direction:column; }
+  .phone .bar { font: 12px monospace; color:#555; display:flex; justify-content:space-between; margin-bottom:8px; }
+  .phone .screen { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:4px; max-height: 400px; }
+  .bubble { max-width: 85%; padding: 8px 10px; border-radius: 12px; font-size: 14px; white-space: pre-wrap; }
+  .me { align-self:flex-end; background:#2f6f5e; color:#fff; }
+  .them { align-self:flex-start; background:#fff; border:1px solid #ddd; }
+  .phone form { display:flex; gap:6px; margin-top:8px; }
+  .phone input { flex:1; padding:8px; border-radius:8px; border:1px solid #bbb; font-size:15px; min-width:0; }
+  .phone button { padding:8px 12px; border-radius:8px; border:0; background:#2f6f5e; color:#fff; font-weight:600; }
+  .side { max-width: 420px; }
+  .side input { padding:6px; }
+  .side code { background: var(--line); padding: 1px 5px; border-radius: 4px; }
+</style>
+{% block sim %}{% endblock %}
+{% endblock %}

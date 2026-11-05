@@ -1,10 +1,12 @@
 """Channel gateway: every channel turns its message into the same call here.
 
 State machine per reporter and channel:
-    START -> PICK_HARM -> DESCRIBE -> CASE_OPEN
+    START -> PICK_HARM -> DESCRIBE -> (PICK_LANG) -> CASE_OPEN
 Pick 1, or a danger phrase at any point, creates a severity 4 case at once and
 the reply starts with the helpline.
+PICK_LANG is asked once, after the case exists, when the language is unclear.
 Commands work in any state: HELP, STATUS <code> [word], STOP, PIN <word>.
+AI triage runs in the background after each reply (core.ai_triage).
 """
 import hashlib
 import hmac
@@ -13,6 +15,8 @@ import time
 from django.conf import settings
 from django.db import IntegrityError, transaction
 
+from ai_service.language import detect_language
+from core import ai_triage
 from core.harm import pick_severity, picks
 from core.messages import msg, status_words
 from core.models import Case, Conversation, Message, Reporter, ReporterVault
@@ -20,6 +24,7 @@ from core.triage_rules import apply_rules
 from core.utils import PHONE_CHANNELS, new_case_code, normalise_msisdn, pseudo_id
 
 MENU_WORDS = {"HELP", "MENU", "START", "/START", "HI", "HELLO"}
+LANG_OPTIONS = {"1": ("lg", "Luganda"), "2": ("rn", "Runyankore"), "3": ("sw", "Swahili"), "4": ("en", "English")}
 
 
 def _reply(text, state, case=None, options=None):
@@ -30,7 +35,7 @@ def _menu_options():
     return [{"key": k, "label": p["short_en"]} for k, p in picks().items()]
 
 
-def _reporter(channel, sender_id, language):
+def get_reporter(channel, sender_id, language):
     rep, created = Reporter.objects.get_or_create(
         pseudo_id=pseudo_id(channel, sender_id, settings.HMAC_SECRET),
         defaults={"channel": channel, "basic_phone": channel in ("sms", "ussd")},
@@ -52,7 +57,8 @@ def _pin_hash(reporter, word):
     return hmac.new(settings.HMAC_SECRET.encode(), key.encode(), hashlib.sha256).hexdigest()
 
 
-def _create_case(reporter, channel, pick, text, language):
+def create_case(reporter, channel, pick, text, language):
+    """Create a case from rules only, then queue AI triage for after the reply."""
     rules = apply_rules(text, pick)
     for _ in range(5):
         try:
@@ -70,10 +76,22 @@ def _create_case(reporter, channel, pick, text, language):
         raise RuntimeError("could not allocate a case code")
     if text:
         Message.objects.create(case=case, direction="in", text=text, channel=channel)
+    ai_triage.schedule(case.id)
     return case
 
 
-def _case_reply(case, conv):
+def _should_ask_language(case, text, reporter, language):
+    if case.severity >= 4 or language or reporter.language or not text:
+        return False  # danger replies stay short; never ask twice
+    return detect_language(text)["ask_language"]
+
+
+def _case_reply(case, conv, text="", language=None):
+    if case.severity < 4 and _should_ask_language(case, text, case.reporter, language):
+        conv.state, conv.case, conv.draft = "PICK_LANG", case, {}
+        conv.save()
+        options = [{"key": k, "label": name} for k, (_, name) in LANG_OPTIONS.items()]
+        return _reply(msg("received", code=case.code) + " " + msg("lang_question"), "PICK_LANG", case, options)
     conv.state, conv.case, conv.draft = "CASE_OPEN", case, {}
     conv.save()
     key = "danger" if case.severity >= 4 else "received"
@@ -129,10 +147,25 @@ def _route(channel, reporter, text, language):
         conv.save()
         return _reply(msg(key), "PICK_HARM", options=_menu_options())
 
-    if command in MENU_WORDS:
+    # Only a lone "HELP" opens the menu; "help me, he wants..." is a description.
+    if command in MENU_WORDS and len(words) == 1:
         return open_menu()
 
     danger = apply_rules(text).severity >= 4
+
+    if conv.state == "PICK_LANG" and conv.case:
+        if text in LANG_OPTIONS:
+            code, name = LANG_OPTIONS[text]
+            case = conv.case
+            case.language, case.language_conf = code, 1.0
+            case.save(update_fields=["language", "language_conf"])
+            reporter.language = code
+            reporter.save(update_fields=["language"])
+            conv.state = "CASE_OPEN"
+            conv.save()
+            return _reply(msg("lang_saved", language=name), "CASE_OPEN", case)
+        conv.state = "CASE_OPEN"  # they wrote something else: treat it as more information
+        conv.save()
 
     if conv.state == "CASE_OPEN" and conv.case:
         case = conv.case
@@ -144,6 +177,7 @@ def _route(channel, reporter, text, language):
         if rules.role_hint and not case.alleged_role:
             case.alleged_role = rules.role_hint
         case.save()
+        ai_triage.schedule(case.id)
         # Phase 3: a severity rise resets the SLA clock here.
         if case.severity >= 4 and was < 4:
             return _reply(msg("danger", code=case.code), "CASE_OPEN", case)
@@ -151,18 +185,19 @@ def _route(channel, reporter, text, language):
 
     if conv.state == "DESCRIBE":
         pick = conv.draft.get("pick")
-        case = _create_case(reporter, channel, pick, "" if text == "0" else text, language)
-        return _case_reply(case, conv)
+        description = "" if text == "0" else text
+        case = create_case(reporter, channel, pick, description, language)
+        return _case_reply(case, conv, description, language)
 
     if conv.state == "PICK_HARM" and text in picks():
         if text == "1":
-            return _case_reply(_create_case(reporter, channel, "1", "", language), conv)
+            return _case_reply(create_case(reporter, channel, "1", "", language), conv)
         conv.state, conv.draft = "DESCRIBE", {"pick": text}
         conv.save()
         return _reply(msg("describe"), "DESCRIBE")
 
     if danger:  # a danger phrase skips the menu, in START or PICK_HARM
-        return _case_reply(_create_case(reporter, channel, "1", text, language), conv)
+        return _case_reply(create_case(reporter, channel, "1", text, language), conv)
 
     return open_menu("menu_retry" if conv.state == "PICK_HARM" else "menu")
 
@@ -171,7 +206,7 @@ def handle(channel, sender_id, text="", language=None, attachments=None, locatio
     """Single entry point for every channel adapter. Returns the gateway response contract."""
     started = time.perf_counter()
     with transaction.atomic():
-        reporter = _reporter(channel, str(sender_id), language)
+        reporter = get_reporter(channel, str(sender_id), language)
         out = _route(channel, reporter, (text or "").strip(), language)
     out["first_reply_ms"] = round((time.perf_counter() - started) * 1000)
     return out

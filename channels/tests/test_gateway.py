@@ -63,6 +63,12 @@ class ReportTests(GatewayTestCase):
         self.assertEqual(case.messages.get().text, "a man keeps asking me for money")
         self.assertIn(f"STATUS {case.code}", out["reply_text"])
 
+    def test_description_starting_with_help_is_not_a_command(self):
+        out = self.report("2", "help me please he wants my pictures")
+        self.assertIsNotNone(out["case_code"])
+        self.assertEqual(Case.objects.get(code=out["case_code"]).messages.get().text,
+                         "help me please he wants my pictures")
+
     def test_zero_skips_the_description(self):
         out = self.report("4", "0")
         case = Case.objects.get(code=out["case_code"])
