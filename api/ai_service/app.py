@@ -7,6 +7,17 @@ language ID and translation, and AI_ZEROSHOT_MODEL to load a zero-shot model.
 """
 import os
 from functools import lru_cache
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+
+def load_env(path=Path(__file__).resolve().parent.parent / ".env"):
+    """Read the project's .env, so the AI service sees the same keys as the web app."""
+    load_dotenv(path)
+
+
+load_env()  # before the imports below, which read their settings from the environment
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
