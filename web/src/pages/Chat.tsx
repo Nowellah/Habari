@@ -1,86 +1,59 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import QuickExit from "../components/QuickExit";
-import {
-  type Option, type SharedMeta, type SpokenLanguage,
-  getConfig, newSenderId, sendLocation, sendMessage, transcribe,
-} from "../lib/api";
-import { canSpeak, matchOption, speak, speechText, stopSpeaking } from "../lib/speech";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import avatar from "../assets/habari-icon.png";
+import Page from "../components/Page";
+import { type SharedMeta, sendLocation } from "../lib/api";
+import { type SpokenLanguage, spokenLanguageFor } from "../lib/choices";
+import { canSpeak, matchOption, stopSpeaking } from "../lib/speech";
 import { type Listening, canRecord, listen } from "../lib/voice";
-
-interface Bubble { id: number; who: "bot" | "kid"; text: string; call?: boolean }
-
-const CHECK_WORDS = "Check the words. Change anything that is wrong, then press Send.";
+import { useSession } from "../state/session";
 
 export default function Chat() {
-  // Anonymous mode: a one-time id kept only in this page's memory.
-  // Closing or refreshing the page forgets it. Nothing is written to the device.
-  const senderId = useMemo(newSenderId, []);
+  const s = useSession();
+  const navigate = useNavigate();
   const [params] = useSearchParams();
-
-  const [helpline, setHelpline] = useState("116");
-  const [voiceReady, setVoiceReady] = useState(false);
-  const [bubbles, setBubbles] = useState<Bubble[]>([]);
-  const [options, setOptions] = useState<Option[]>([]);
-  const [started, setStarted] = useState(false);
   const [text, setText] = useState("");
   const [hint, setHint] = useState<string | null>(null);
-  const [locNote, setLocNote] = useState("so we can find the nearest helper. Only your district is kept.");
+  const [locNote, setLocNote] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
-  const [language, setLanguage] = useState<SpokenLanguage>("en");
-  const [aloud, setAloud] = useState(false);
-
-  const nextId = useRef(0);
-  const meta = useRef<SharedMeta>({});
+  const [areaSaved, setAreaSaved] = useState(false);
+  const askedFor = useRef<string | null>(null);
+  const [spoken, setSpoken] = useState<SpokenLanguage>(spokenLanguageFor(s.language));
   const voice = useRef<Listening | null>(null);
-  const aloudRef = useRef(false);
-  aloudRef.current = aloud;
-  const recordable = useMemo(canRecord, []) && voiceReady;
+  const autoStarted = useRef(false);
+  const end = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLInputElement>(null);
+  const recordable = useMemo(canRecord, []) && s.voiceReady;
   const speakable = useMemo(canSpeak, []);
-
-  const add = (who: Bubble["who"], body: string, call = false) =>
-    setBubbles((b) => [...b, { id: nextId.current++, who, text: body, call }]);
-
-  useEffect(() => {
-    void getConfig().then((c) => { setHelpline(c.helpline); setVoiceReady(c.voice); });
-  }, []);
 
   // Opened from a share, the embeddable link or the mock feed: fill in what was shared.
   useEffect(() => {
-    if (params.get("shared") === "1") {
-      const shared: SharedMeta = {};
-      const url = params.get("url"), src = params.get("src"), handle = params.get("handle"), title = params.get("title");
-      if (url) shared.url = url;
-      if (src) shared.platform = src;
-      if (handle) shared.handle = handle;
-      if (title) shared.title = title;
-      meta.current = shared;
-      setText((params.get("text") || "").replace(shared.url || " ", "").trim());
-      history.replaceState(null, "", "/chat"); // the shared details leave the address bar
+    if (params.get("shared") !== "1") return;
+    const shared: SharedMeta = {};
+    for (const [from, to] of [["url", "url"], ["src", "platform"], ["handle", "handle"], ["title", "title"]] as const) {
+      const v = params.get(from);
+      if (v) shared[to] = v;
     }
-  }, [params]);
+    s.setShared(shared);
+    setText((params.get("text") || "").replace(shared.url || " ", "").trim());
+    history.replaceState(null, "", "/chat"); // the shared details leave the address bar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    if (voiceReady && params.get("voice") === "1") setHint("Press Speak and tell us what happened.");
-  }, [voiceReady, params]);
+    if (s.voiceReady && params.get("voice") === "1") setHint("Press the microphone and tell us what happened.");
+  }, [s.voiceReady, params]);
 
-  useEffect(() => { window.scrollTo(0, document.body.scrollHeight); }, [bubbles, options]);
-
-  async function send(value: string, shown?: string) {
-    setStarted(true);
-    setOptions([]);
-    add("kid", shown || value);
-    let reply;
-    try {
-      reply = await sendMessage(senderId, value, meta.current);
-    } catch {
-      add("bot", `We could not connect. If you are in danger, call ${helpline}. It is free.`);
-      return;
+  // Arriving from the welcome, age and language screens, the chat opens by itself.
+  useEffect(() => {
+    if (s.entered && !s.started && !autoStarted.current) {
+      autoStarted.current = true;
+      void s.send("HELP", null);
     }
-    add("bot", reply.reply_text, reply.reply_text.startsWith("Call "));
-    setOptions(reply.options || []);
-    if (aloudRef.current) speak(speechText(reply.reply_text, reply.options || []));
-  }
+  }, [s]);
+
+  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [s.bubbles, s.options, s.waiting]);
+  useEffect(() => () => { voice.current?.abort(); }, []);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -88,9 +61,9 @@ export default function Chat() {
     if (!value) return;
     setText("");
     // Typing or saying exactly the words on a button works like pressing that button.
-    const button = matchOption(value, options);
-    if (button) void send(button.key, button.label);
-    else void send(value);
+    const button = matchOption(value, s.options);
+    if (button) void s.send(button.key, button.label, "choice");
+    else void s.send(value);
   }
 
   async function onSpeak() {
@@ -99,113 +72,160 @@ export default function Chat() {
     try {
       voice.current = await listen({
         onEnd: () => { voice.current = null; setListening(false); },
-        onSilence: () => setHint("We did not hear anything. Press Speak to try again."),
-        onAudio: async (wav) => {
-          setHint("Turning your voice into words…");
-          const out = await transcribe(wav, language);
-          if (out.ok) { setText(out.text); setHint(CHECK_WORDS); } else setHint(out.message);
-        },
+        onSilence: () => setHint("We did not hear anything. Press the microphone to try again."),
+        onAudio: (wav, cues) => { setHint(null); void s.sendVoice(wav, spoken, cues); },
       });
       setListening(true);
-      setHint("Listening… it stops when you pause, or press Stop.");
+      setHint("Recording your voice note. Press Stop to send it.");
     } catch {
       setHint("The microphone is off. You can type instead.");
     }
   }
 
-  function onLocation() {
-    if (!navigator.geolocation) { setLocNote("This phone cannot share location. That is OK."); return; }
+  /** Asks the phone for a rough position. Only the district is kept by the server. */
+  function shareArea(automatic: boolean) {
+    if (!navigator.geolocation) {
+      if (!automatic) setLocNote("This phone cannot share location. That is OK.");
+      return;
+    }
+    if (automatic) setLocNote("To find a helper near you, I am asking your phone for your area. You can say no.");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        try { setLocNote((await sendLocation(senderId, pos.coords.latitude, pos.coords.longitude)).reply_text); }
-        catch { setLocNote("We could not send it. That is OK."); }
+        try {
+          setLocNote((await sendLocation(s.senderId, pos.coords.latitude, pos.coords.longitude)).reply_text);
+          setAreaSaved(true);
+        } catch { setLocNote(automatic ? null : "We could not send it. That is OK."); }
       },
-      () => setLocNote("No problem. We will not use your location."),
+      () => setLocNote(automatic ? null : "No problem. We will not use your location."),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
     );
   }
 
-  function leave() {
-    voice.current?.abort();
-    stopSpeaking();
-    setBubbles([]);
-    setOptions([]);
-  }
+  // Once a report is open, ask for the area one time so the child does not have to look for a button.
+  useEffect(() => {
+    if (!s.caseCode || askedFor.current === s.caseCode) return;
+    askedFor.current = s.caseCode;
+    shareArea(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.caseCode]);
 
   return (
-    <>
-      <QuickExit onExit={leave} />
-      <main>
-        <div className="chat">
-          <header>
-            <h1>Habari</h1>
-            <p className="muted help">
-              You are not in trouble. Nothing is saved on this phone. In danger now?{" "}
-              <a href={`tel:${helpline}`}>Call {helpline}</a>, it is free. <a href="/kb">Safety tips</a>
-            </p>
-          </header>
-          <div className="log" id="log" aria-live="polite">
-            {!started && (
-              <button className="start" id="start" type="button" onClick={() => void send("HELP", "Talk to us")}>
+    <Page narrow={false}>
+      <div className="chat">
+        <div className="chat-head">
+          <img className="avatar" src={avatar} alt="" />
+          <div className="who">
+            <strong>Habari <i className="online" aria-hidden="true" /></strong>
+            <small>{s.waiting ? "typing…" : "Online • Private. Nothing is saved on this phone."}</small>
+          </div>
+        </div>
+        <nav className="chat-links" aria-label="More help">
+          <Link to="/help">Human help</Link>
+          <Link to="/language">Language</Link>
+          <Link to="/report">My report</Link>
+          {!areaSaved && <button type="button" id="share-location" onClick={() => shareArea(false)}>Share roughly where I am</button>}
+        </nav>
+        {s.danger && (
+          <div className="emergency-banner critical" role="alert">
+            In danger now? <a href={`tel:${s.helpline}`}>Call {s.helpline}</a>. It is free, and you are not in trouble.
+          </div>
+        )}
+        <div className="log" id="log" aria-live="polite">
+          {!s.started && (
+            <div className="intro">
+              <div className="bubble-row bot">
+                <img className="avatar sm" src={avatar} alt="" />
+                <div className="b bot-bubble bot">
+                  Hi, I am Habari. You are not in trouble. In danger now? <a href={`tel:${s.helpline}`}>Call {s.helpline}</a>, it is free.
+                </div>
+              </div>
+              <button className="qr-pill" id="start" type="button" onClick={() => void s.send("HELP", "Talk to us")}>
                 Talk to us
               </button>
-            )}
-            {bubbles.map((b) => (
-              <div key={b.id} className={`b ${b.who}`}>
-                {b.text}
-                {b.call && (<><br /><a className="call" href={`tel:${helpline}`}>Call {helpline} now</a></>)}
-              </div>
-            ))}
-            {options.length > 0 && (
-              <div className="opts">
-                {options.map((o) => (
-                  <button key={o.key} type="button" className="opt" onClick={() => void send(o.key, o.label)}>
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <p className="muted help">
-            <button type="button" id="share-location" className="linkish" onClick={onLocation}>
-              Share roughly where I am
-            </button>{" "}
-            <span id="loc-note">{locNote}</span>
-          </p>
-          {recordable && (
-            <div className="voicebar muted help" id="voicebar">
-              <label>
-                Speak in{" "}
-                <select id="voice-lang" aria-label="Language you will speak" value={language}
-                  onChange={(e) => setLanguage(e.target.value as SpokenLanguage)}>
-                  <option value="en">English</option>
-                  <option value="lg">Luganda</option>
-                </select>
-              </label>
-              {speakable && (
-                <label>
-                  <input type="checkbox" id="read-aloud" checked={aloud}
-                    onChange={(e) => { setAloud(e.target.checked); if (!e.target.checked) stopSpeaking(); }} />{" "}
-                  Read replies out loud
-                </label>
-              )}
-              {aloud && <span id="aloud-note">Replies play from the phone speaker. Use earphones if other people are near.</span>}
             </div>
           )}
-          {hint && <p className="muted help" id="voice-hint">{hint}</p>}
-          <form className="send" id="send" autoComplete="off" onSubmit={onSubmit}>
-            {recordable && (
-              <button type="button" id="speak" className={`speak${listening ? " rec" : ""}`}
-                aria-label="Speak instead of typing" onClick={() => void onSpeak()}>
-                {listening ? "Stop" : "Speak"}
-              </button>
-            )}
-            <input id="text" value={text} onChange={(e) => setText(e.target.value)}
-              placeholder="Type here, any language" aria-label="Your message" />
-            <button type="submit">Send</button>
-          </form>
+          {s.bubbles.map((b, i) => (
+            <div key={b.id} className={`bubble-row ${b.who}`}>
+              {b.who === "bot" && (s.bubbles[i - 1]?.who !== "bot"
+                ? <img className="avatar sm" src={avatar} alt="" />
+                : <span className="avatar sm gap" />)}
+              <div className={`b ${b.who === "kid" ? "child-bubble kid" : "bot-bubble bot"}`}>
+                {b.audioUrl ? <audio controls src={b.audioUrl} aria-label="Your voice note" /> : b.text}
+                {b.call && (<><br /><a className="call" href={`tel:${s.helpline}`}>Call {s.helpline} now</a></>)}
+                <time>{clock(b.at)}</time>
+              </div>
+            </div>
+          ))}
+          {s.waiting && (
+            <div className="bubble-row bot" aria-label="Habari is typing">
+              <img className="avatar sm" src={avatar} alt="" />
+              <div className="bot-bubble typing"><i className="typing-dot" /><i className="typing-dot" /><i className="typing-dot" /></div>
+            </div>
+          )}
+          {s.options.length > 0 && (
+            <div className="quick-replies-row">
+              {s.options.map((o) => (
+                <button key={o.key} type="button" className="qr-pill opt" onClick={() => void s.send(o.key, o.label, "choice")}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div ref={end} />
         </div>
-      </main>
-    </>
+
+        {s.caseCode && (
+          <div className="case-bar">
+            Case <strong>{s.caseCode}</strong>
+            <button type="button" className="linkish" onClick={() => navigate("/report")}>Review my report</button>
+            <button type="button" className="linkish" onClick={() => navigate("/confirmation")}>Save my code</button>
+          </div>
+        )}
+        {recordable && (
+          <div className="voicebar" id="voicebar">
+            <label>Voice note language{" "}
+              <select id="voice-lang" aria-label="Language you will speak" value={spoken}
+                onChange={(e) => setSpoken(e.target.value as SpokenLanguage)}>
+                <option value="en">English</option>
+                <option value="lg">Luganda</option>
+              </select>
+            </label>
+            {speakable && (
+              <label>
+                <input type="checkbox" id="read-aloud" checked={s.aloud} onChange={(e) => s.setAloud(e.target.checked)} />{" "}
+                Read replies out loud
+              </label>
+            )}
+            {s.aloud && <span id="aloud-note">Replies play from the speaker. Use earphones if other people are near.</span>}
+          </div>
+        )}
+        {hint && <p className="hint" id="voice-hint">{hint}</p>}
+        {locNote && <p className="hint" id="loc-note">{locNote}</p>}
+        <form className="send" id="send" autoComplete="off" onSubmit={onSubmit}>
+          <input id="text" ref={box} value={text} onChange={(e) => setText(e.target.value)}
+            placeholder="Type a message" aria-label="Your message" />
+          {recordable && !text.trim() ? (
+            <button type="button" id="speak" className={`round speak${listening ? " rec" : ""}`}
+              aria-label={listening ? "Stop recording" : "Record a voice note"} title={listening ? "Stop and send" : "Record a voice note"}
+              onClick={() => void onSpeak()}>
+              {listening ? <StopIcon /> : <MicIcon />}
+            </button>
+          ) : (
+            <button type="submit" className="round send-btn" aria-label="Send" title="Send"><SendIcon /></button>
+          )}
+        </form>
+      </div>
+    </Page>
   );
 }
+
+function clock(at: number): string {
+  return new Date(at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+const icon = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": true } as const;
+const MicIcon = () => (
+  <svg {...icon}><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z" /></svg>
+);
+const StopIcon = () => (<svg {...icon}><rect x="6" y="6" width="12" height="12" rx="2" /></svg>);
+const SendIcon = () => (<svg {...icon}><path d="M3 20.5v-6.7l9-1.8-9-1.8V3.5L22 12 3 20.5Z" /></svg>);
