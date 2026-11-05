@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group, User
 from django.core.management.base import BaseCommand
 
 from core.models import Officer, Partner
+from polls.models import Poll
 
 GROUPS = ["officer", "supervisor", "safeguarding", "admin"]
 
@@ -54,6 +55,9 @@ class Command(BaseCommand):
                 user=user, defaults={"languages": langs, "skills": skills, "district": district,
                                      "on_call": username in ON_CALL}
             )
+
+        Poll.objects.get_or_create(question="Did anyone make you uncomfortable online this week?",
+                                   defaults={"options": ["Yes", "No", "Skip"]})
 
         supervisor_group = Group.objects.get(name="supervisor")
         for username in SUPERVISORS:

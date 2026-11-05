@@ -148,3 +148,57 @@ def partner_board(request):
             "window": p.ack_minutes,
         })
     return render(request, "dashboard/partners.html", {"rows": rows})
+
+
+@login_required
+def poll_list(request):
+    from polls.models import Poll
+    from polls.service import results
+
+    require_staff_role(request.user)
+    if request.method == "POST":
+        question = request.POST.get("question", "").strip()[:160]
+        options = [o.strip() for o in request.POST.get("options", "").split(",") if o.strip()][:5]
+        if question and len(options) >= 2:
+            Poll.objects.create(question=question, options=options)
+        return redirect("poll_list")
+    polls = [{"poll": p, "rows": results(p), "count": p.responses.count()} for p in Poll.objects.order_by("-created_at")]
+    return render(request, "dashboard/polls.html", {"polls": polls, "minimum": settings.HEATMAP_MIN})
+
+
+@login_required
+@require_POST
+def poll_send(request, poll_id):
+    from polls.models import Poll
+    from polls.service import send_poll
+
+    require_staff_role(request.user)
+    poll = get_object_or_404(Poll, pk=poll_id)
+    send_poll(poll)
+    return redirect("poll_list")
+
+
+@login_required
+def heat_map(request):
+    require_staff_role(request.user)
+    return render(request, "dashboard/map.html", {"minimum": settings.HEATMAP_MIN})
+
+
+@login_required
+def heat_map_data(request):
+    """Report counts per district. Below HEATMAP_MIN the count is withheld. No individual points."""
+    from django.db.models import Count
+    from django.http import JsonResponse
+
+    from core.geo import centre
+
+    require_staff_role(request.user)
+    rows = []
+    for row in Case.objects.exclude(district="").values("district").annotate(n=Count("id")).order_by("district"):
+        point = centre(row["district"])
+        if point is None:
+            continue
+        shown = row["n"] >= settings.HEATMAP_MIN
+        rows.append({"district": row["district"], "lat": point[0], "lon": point[1],
+                     "count": row["n"] if shown else None})
+    return JsonResponse({"minimum": settings.HEATMAP_MIN, "districts": rows})

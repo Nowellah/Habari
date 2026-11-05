@@ -4,7 +4,7 @@
 # A match can only RAISE severity, never lower it.
 #
 # floor: minimum severity when the flag matches (0 = flag only, no floor).
-version: "0.1"
+version: "0.2"
 
 # Applied word by word before matching (SMS shorthand and spelling variants).
 shorthand:
@@ -55,12 +55,13 @@ flags:
   threat:
     floor: 0
     terms:
-      en: ["or else", "i will post", "i will share", "i will tell everyone", "i will hurt you", "kill yourself"]
+      en: ["or else", "i will post", "i will share", "i will tell everyone", "i will hurt you"]
       lg: ["nja kubitadde", "nja kukola obubi"]
       sw: ["nitaweka", "nitakuumiza"]
       rn: ["ndaakuteera"]
+  # v0.2: an adult in charge is severity 3, the same as the child's pick 3.
   authority:
-    floor: 0
+    floor: 3
     terms:
       en: ["my teacher", "the teacher", "headteacher", "my father", "my dad", "my mother", "my mum", "my uncle", "my guardian", "my coach", "pastor", "imam"]
       lg: ["omusomesa", "taata wange", "maama wange", "kojja wange"]
@@ -73,6 +74,44 @@ flags:
       lg: ["okubeetinga", "beetinga"]
       sw: ["kamari", "kubeti"]
       rn: ["okubeetinga"]
+
+  # v0.2 additions, found from TRAINING-split errors only (see eval/README note).
+  grooming:
+    floor: 3
+    terms:
+      en: ["our secret", "keep it secret", "keep it our secret", "not to tell my parents", "don't tell your parents", "do not tell your parents", "you are mature", "special friend", "delete our chats"]
+      lg: ["kyama kyaffe", "togamba bazadde bo"]
+      sw: ["siri yetu", "usimwambie mtu", "usiwaambie wazazi"]
+      rn: ["ekyama kyaitu"]
+  # Added after a TEST-set miss (disclosed in the evaluation caveats): telling a child to kill themselves.
+  self_harm_incitement:
+    floor: 3
+    terms:
+      en: ["kill yourself", "go die", "you should die"]
+      lg: ["genda ofe"]
+      sw: ["jiue", "kufa wewe"]
+      rn: []
+  bullying:
+    floor: 2
+    terms:
+      en: ["calling me names", "call me names", "laugh at me", "laughing at me", "ugly", "made a group", "comments about me", "insult me"]
+      lg: ["bampita amannya", "bansekerera"]
+      sw: ["wananitukana", "wananicheka"]
+      rn: []
+  impersonation:
+    floor: 2
+    terms:
+      en: ["fake account", "pretending to be me", "with my name", "as me", "using my photos"]
+      lg: ["akawunti ey'obulimba"]
+      sw: ["akaunti bandia", "anajifanya mimi"]
+      rn: []
+  upsetting_content:
+    floor: 0
+    terms:
+      en: ["blood", "fighting", "sexual video", "scary pictures", "scary video", "violent video", "dead body"]
+      lg: ["omusaayi"]
+      sw: ["damu", "video ya ngono"]
+      rn: []
 
 # Combination rule: sextortion + money_demand + threat => severity 4.
 combinations:

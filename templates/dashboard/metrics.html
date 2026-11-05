@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Evaluation{% endblock %}
+{% block content %}
+<h1>Triage evaluation</h1>
+{% if not data %}
+  <div class="card">
+    <p>No results yet. From the project folder run:</p>
+    <pre>.venv\Scripts\python eval\scripts\run_all.py</pre>
+  </div>
+{% else %}
+  <p class="muted">Method: {{ data.method }}. Run {{ data.generated_at }}. Target: {{ data.target }}.</p>
+
+  {% for set in sets %}
+  <div class="card">
+    <h2>{{ set.title }} <span class="muted">({{ set.s.n }} messages)</span></h2>
+    <table>
+      <tbody>
+        <tr><th>Recall on severity 3 and 4</th>
+            <td><strong>{{ set.s.severity_high.recall|floatformat:2 }}</strong>
+              <span class="muted">95% CI {{ set.s.severity_high.ci95.0|floatformat:2 }}–{{ set.s.severity_high.ci95.1|floatformat:2 }}</span>
+              {% if set.s.severity_high.recall >= 0.9 %}meets target{% else %}<span class="sev sev-4">below target</span>{% endif %}</td></tr>
+        <tr><th>Missed high-severity cases (false negatives)</th><td>{{ set.s.severity_high.false_negatives }} of {{ set.s.severity_high.support }}</td></tr>
+        <tr><th>Over-flagged as high (false positives)</th><td>{{ set.s.severity_high.false_positives }}</td></tr>
+        <tr><th>Precision on severity 3 and 4</th><td>{{ set.s.severity_high.precision|floatformat:2 }}</td></tr>
+        <tr><th>Recall on severity 4 only</th><td>{{ set.s.severity_4.recall|floatformat:2 }} ({{ set.s.severity_4.false_negatives }} missed)</td></tr>
+        <tr><th>Adult-in-charge role recall</th><td>{{ set.s.authority_role.recall|floatformat:2 }} of {{ set.s.authority_role.support }}</td></tr>
+        <tr><th>Category macro-F1 / accuracy</th><td>{{ set.s.category.macro_f1|floatformat:2 }} / {{ set.s.category.accuracy|floatformat:2 }}</td></tr>
+      </tbody>
+    </table>
+
+    <h3>By language</h3>
+    <div class="wrap"><table>
+      <thead><tr><th>Language</th><th>Messages</th><th>Severity 3–4 recall</th><th>Missed</th><th>Category accuracy</th><th>Language ID accuracy</th></tr></thead>
+      <tbody>
+      {% for lang, v in set.s.per_language.items %}
+        <tr><td>{{ lang }}</td><td>{{ v.n }}</td><td>{{ v.severity_high.recall|floatformat:2 }}</td><td>{{ v.severity_high.false_negatives }}</td>
+            <td>{{ v.category_accuracy|floatformat:2 }}</td><td>{{ v.language_id_accuracy|floatformat:2 }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+
+    <h3>Category confusion matrix <span class="muted">(rows: true, columns: predicted)</span></h3>
+    <div class="wrap"><table>
+      <thead><tr><th></th>{% for l in set.cm_labels %}<th>{{ l|truncatechars:12 }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for name, row in set.cm_rows %}<tr><th>{{ name }}</th>{% for v in row %}<td>{{ v|default:"" }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+  {% endfor %}
+
+  <div class="card">
+    <h2>Limits</h2>
+    <ul>{% for c in data.caveats %}<li>{{ c }}</li>{% endfor %}</ul>
+    <p class="muted">Every error is listed in eval/results/errors.csv.</p>
+  </div>
+{% endif %}
+{% endblock %}

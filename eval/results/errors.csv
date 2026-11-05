@@ -1,0 +1,32 @@
+set,error,language,gold_category,pred_category,gold_severity,pred_severity,text
+synthetic_test,wrong category,en,grooming,sextortion,3,3,a grown up on Instagram buys me gifts and asks for private pictures
+synthetic_test,wrong category,en,grooming,sextortion,3,3,"please help, a grown up on Instagram buys me gifts and asks for private pictures"
+synthetic_test,wrong category,en,grooming,sextortion,3,3,I am scared. a grown up on Instagram buys me gifts and asks for private pictures
+synthetic_test,wrong category,en,grooming,sextortion,3,3,hi a grown up on Instagram buys me gifts and asks for private pictures
+synthetic_test,wrong category,en,grooming,sextortion,3,3,a grown up on TikTok buys me gifts and asks for private pictures
+synthetic_test,wrong category,en,grooming,sextortion,3,3,"please help, a grown up on TikTok buys me gifts and asks for private pictures"
+synthetic_test,wrong category,en,grooming,sextortion,3,3,I am scared. a grown up on TikTok buys me gifts and asks for private pictures
+synthetic_test,wrong category,en,grooming,sextortion,3,3,hi a grown up on TikTok buys me gifts and asks for private pictures
+synthetic_test,wrong category,en,scam,unclear,2,1,they asked for my PIN so they can give me free data
+synthetic_test,wrong category,en,scam,unclear,2,1,"please help, they asked for my PIN so they can give me free data"
+synthetic_test,wrong category,en,scam,unclear,2,1,I am scared. they asked for my PIN so they can give me free data
+synthetic_test,wrong category,en,scam,unclear,2,1,hi they asked for my PIN so they can give me free data
+hard_test,MISSED HIGH SEVERITY,en,sextortion,unclear,4,1,he says if I don't pay he will show everyone my photos from the bathroom
+hard_test,MISSED HIGH SEVERITY,en,self_harm,unclear,4,1,I don't see the point of waking up tomorrow
+hard_test,wrong category,en,self_harm,exposure_by_authority,4,3,I took a lot of my mum's tablets on purpose
+hard_test,MISSED HIGH SEVERITY,en,self_harm,unclear,4,1,I just want everything to stop forever
+hard_test,MISSED HIGH SEVERITY,en,grooming,unclear,3,1,a guy I met in a game keeps asking for pics of me in my uniform
+hard_test,MISSED HIGH SEVERITY,en,grooming,unclear,3,1,he told me our chats are special and my parents would not understand
+hard_test,MISSED HIGH SEVERITY,en,threats,unclear,4,1,an adult I met online is waiting outside my school gate
+hard_test,MISSED HIGH SEVERITY,en,threats,unclear,4,1,someone keeps sending me messages saying they know where I live
+hard_test,MISSED HIGH SEVERITY,en,threats,unclear,4,1,the man said he has a knife and will find me
+hard_test,MISSED HIGH SEVERITY,en,exposure_by_authority,unclear,3,1,our coach makes me stay after training and touches me
+hard_test,MISSED HIGH SEVERITY,en,exposure_by_authority,unclear,3,1,my stepdad reads my messages and slaps me
+hard_test,MISSED HIGH SEVERITY,en,cyberbullying,unclear,3,1,they edited my face onto a dirty picture and shared it in the class group
+hard_test,wrong category,en,impersonation,unclear,2,1,someone opened an account using my school photo and says rude things
+hard_test,wrong category,en,scam,unclear,2,1,a page says I can double my money if I send them my savings
+hard_test,wrong category,en,gambling_or_betting,unclear,2,1,I lost my transport money on an online game that pays cash
+hard_test,wrong category,en,inappropriate_content,unclear,1,1,I watched a video of someone getting hurt and I keep seeing it
+hard_test,MISSED HIGH SEVERITY,lg,self_harm,unclear,4,1,ndi mukoowu nnyo era saagala kuba mulamu
+hard_test,MISSED HIGH SEVERITY,sw,self_harm,unclear,4,1,sitaki kuishi tena
+hard_test,MISSED HIGH SEVERITY,sw,threats,unclear,4,1,mtu anasema atanisubiri nje ya shule

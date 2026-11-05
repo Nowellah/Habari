@@ -1,0 +1,259 @@
+template_id,text,category,severity,role,language,split
+en-s1,"I want to die, nobody cares about me",self_harm,4,,en,train
+en-s1,"please help, I want to die, nobody cares about me",self_harm,4,,en,train
+en-s1,"I am scared. I want to die, nobody cares about me",self_harm,4,,en,train
+en-s1,"hi I want to die, nobody cares about me",self_harm,4,,en,train
+en-s2,I keep thinking I should kill myself,self_harm,4,,en,train
+en-s2,"please help, I keep thinking I should kill myself",self_harm,4,,en,train
+en-s2,I am scared. I keep thinking I should kill myself,self_harm,4,,en,train
+en-s2,hi I keep thinking I should kill myself,self_harm,4,,en,train
+en-s3,I want to hurt myself after what a man posted on Instagram,self_harm,4,,en,train
+en-s3,"please help, I want to hurt myself after what a man posted on Instagram",self_harm,4,,en,train
+en-s3,I am scared. I want to hurt myself after what a man posted on Instagram,self_harm,4,,en,train
+en-s3,hi I want to hurt myself after what a man posted on Instagram,self_harm,4,,en,train
+en-s3,I want to hurt myself after what a boy from my class posted on Snapchat,self_harm,4,,en,train
+en-s3,"please help, I want to hurt myself after what a boy from my class posted on Snapchat",self_harm,4,,en,train
+en-s3,I am scared. I want to hurt myself after what a boy from my class posted on Snapchat,self_harm,4,,en,train
+en-s3,hi I want to hurt myself after what a boy from my class posted on Snapchat,self_harm,4,,en,train
+en-s4,there is no reason to live anymore,self_harm,4,,en,test
+en-s4,"please help, there is no reason to live anymore",self_harm,4,,en,test
+en-s4,I am scared. there is no reason to live anymore,self_harm,4,,en,test
+en-s4,hi there is no reason to live anymore,self_harm,4,,en,test
+en-t1,a stranger says he is coming to my house tonight,threats,4,,en,train
+en-t1,"please help, a stranger says he is coming to my house tonight",threats,4,,en,train
+en-t1,I am scared. a stranger says he is coming to my house tonight,threats,4,,en,train
+en-t1,hi a stranger says he is coming to my house tonight,threats,4,,en,train
+en-t1,a boy from my class says he is coming to my house tonight,threats,4,,en,train
+en-t1,"please help, a boy from my class says he is coming to my house tonight",threats,4,,en,train
+en-t1,I am scared. a boy from my class says he is coming to my house tonight,threats,4,,en,train
+en-t1,hi a boy from my class says he is coming to my house tonight,threats,4,,en,train
+en-t2,someone on WhatsApp wants to meet me after school and says I must come alone,threats,4,,en,train
+en-t2,"please help, someone on WhatsApp wants to meet me after school and says I must come alone",threats,4,,en,train
+en-t2,I am scared. someone on WhatsApp wants to meet me after school and says I must come alone,threats,4,,en,train
+en-t2,hi someone on WhatsApp wants to meet me after school and says I must come alone,threats,4,,en,train
+en-t2,a boy from my class on WhatsApp wants to meet me after school and says I must come alone,threats,4,,en,train
+en-t2,"please help, a boy from my class on WhatsApp wants to meet me after school and says I must come alone",threats,4,,en,train
+en-t2,I am scared. a boy from my class on WhatsApp wants to meet me after school and says I must come alone,threats,4,,en,train
+en-t2,hi a boy from my class on WhatsApp wants to meet me after school and says I must come alone,threats,4,,en,train
+en-t3,he said he is going to kill me if I tell anyone,threats,4,,en,train
+en-t3,"please help, he said he is going to kill me if I tell anyone",threats,4,,en,train
+en-t3,I am scared. he said he is going to kill me if I tell anyone,threats,4,,en,train
+en-t3,hi he said he is going to kill me if I tell anyone,threats,4,,en,train
+en-t4,a stranger locked me in the room and took my phone,threats,4,,en,test
+en-t4,"please help, a stranger locked me in the room and took my phone",threats,4,,en,test
+en-t4,I am scared. a stranger locked me in the room and took my phone,threats,4,,en,test
+en-t4,hi a stranger locked me in the room and took my phone,threats,4,,en,test
+en-t4,someone locked me in the room and took my phone,threats,4,,en,test
+en-t4,"please help, someone locked me in the room and took my phone",threats,4,,en,test
+en-t4,I am scared. someone locked me in the room and took my phone,threats,4,,en,test
+en-t4,hi someone locked me in the room and took my phone,threats,4,,en,test
+en-x1,"someone on Snapchat says I will post your nude pictures unless you send 50,000 shillings",sextortion,4,,en,train
+en-x1,"please help, someone on Snapchat says I will post your nude pictures unless you send 50,000 shillings",sextortion,4,,en,train
+en-x1,"I am scared. someone on Snapchat says I will post your nude pictures unless you send 50,000 shillings",sextortion,4,,en,train
+en-x1,"hi someone on Snapchat says I will post your nude pictures unless you send 50,000 shillings",sextortion,4,,en,train
+en-x1,a boy from my class on Instagram says I will post your nude pictures unless you send 20k,sextortion,4,,en,train
+en-x1,"please help, a boy from my class on Instagram says I will post your nude pictures unless you send 20k",sextortion,4,,en,train
+en-x1,I am scared. a boy from my class on Instagram says I will post your nude pictures unless you send 20k,sextortion,4,,en,train
+en-x1,hi a boy from my class on Instagram says I will post your nude pictures unless you send 20k,sextortion,4,,en,train
+en-x2,someone wants me to send nude pictures on Instagram,sextortion,3,,en,train
+en-x2,"please help, someone wants me to send nude pictures on Instagram",sextortion,3,,en,train
+en-x2,I am scared. someone wants me to send nude pictures on Instagram,sextortion,3,,en,train
+en-x2,hi someone wants me to send nude pictures on Instagram,sextortion,3,,en,train
+en-x2,someone wants me to send nude pictures on TikTok,sextortion,3,,en,train
+en-x2,"please help, someone wants me to send nude pictures on TikTok",sextortion,3,,en,train
+en-x2,I am scared. someone wants me to send nude pictures on TikTok,sextortion,3,,en,train
+en-x2,hi someone wants me to send nude pictures on TikTok,sextortion,3,,en,train
+en-x3,a man has my private pictures and says send money or else,sextortion,4,,en,train
+en-x3,"please help, a man has my private pictures and says send money or else",sextortion,4,,en,train
+en-x3,I am scared. a man has my private pictures and says send money or else,sextortion,4,,en,train
+en-x3,hi a man has my private pictures and says send money or else,sextortion,4,,en,train
+en-x3,a boy from my class has my private pictures and says send money or else,sextortion,4,,en,train
+en-x3,"please help, a boy from my class has my private pictures and says send money or else",sextortion,4,,en,train
+en-x3,I am scared. a boy from my class has my private pictures and says send money or else,sextortion,4,,en,train
+en-x3,hi a boy from my class has my private pictures and says send money or else,sextortion,4,,en,train
+en-x4,he keeps asking me to send naked pictures,sextortion,3,,en,test
+en-x4,"please help, he keeps asking me to send naked pictures",sextortion,3,,en,test
+en-x4,I am scared. he keeps asking me to send naked pictures,sextortion,3,,en,test
+en-x4,hi he keeps asking me to send naked pictures,sextortion,3,,en,test
+en-g1,an older man on Instagram keeps saying I am mature and that we should keep it our secret,grooming,3,,en,train
+en-g1,"please help, an older man on Instagram keeps saying I am mature and that we should keep it our secret",grooming,3,,en,train
+en-g1,I am scared. an older man on Instagram keeps saying I am mature and that we should keep it our secret,grooming,3,,en,train
+en-g1,hi an older man on Instagram keeps saying I am mature and that we should keep it our secret,grooming,3,,en,train
+en-g1,an older man on WhatsApp keeps saying I am mature and that we should keep it our secret,grooming,3,,en,train
+en-g1,"please help, an older man on WhatsApp keeps saying I am mature and that we should keep it our secret",grooming,3,,en,train
+en-g1,I am scared. an older man on WhatsApp keeps saying I am mature and that we should keep it our secret,grooming,3,,en,train
+en-g1,hi an older man on WhatsApp keeps saying I am mature and that we should keep it our secret,grooming,3,,en,train
+en-g2,someone sends me airtime and asks me not to tell my parents about our chats,grooming,3,,en,train
+en-g2,"please help, someone sends me airtime and asks me not to tell my parents about our chats",grooming,3,,en,train
+en-g2,I am scared. someone sends me airtime and asks me not to tell my parents about our chats,grooming,3,,en,train
+en-g2,hi someone sends me airtime and asks me not to tell my parents about our chats,grooming,3,,en,train
+en-g2,a boy from my class sends me airtime and asks me not to tell my parents about our chats,grooming,3,,en,train
+en-g2,"please help, a boy from my class sends me airtime and asks me not to tell my parents about our chats",grooming,3,,en,train
+en-g2,I am scared. a boy from my class sends me airtime and asks me not to tell my parents about our chats,grooming,3,,en,train
+en-g2,hi a boy from my class sends me airtime and asks me not to tell my parents about our chats,grooming,3,,en,train
+en-g3,a grown up on Instagram buys me gifts and asks for private pictures,grooming,3,,en,test
+en-g3,"please help, a grown up on Instagram buys me gifts and asks for private pictures",grooming,3,,en,test
+en-g3,I am scared. a grown up on Instagram buys me gifts and asks for private pictures,grooming,3,,en,test
+en-g3,hi a grown up on Instagram buys me gifts and asks for private pictures,grooming,3,,en,test
+en-g3,a grown up on TikTok buys me gifts and asks for private pictures,grooming,3,,en,test
+en-g3,"please help, a grown up on TikTok buys me gifts and asks for private pictures",grooming,3,,en,test
+en-g3,I am scared. a grown up on TikTok buys me gifts and asks for private pictures,grooming,3,,en,test
+en-g3,hi a grown up on TikTok buys me gifts and asks for private pictures,grooming,3,,en,test
+en-a1,my teacher sends me messages at night on Snapchat,exposure_by_authority,3,authority,en,train
+en-a1,"please help, my teacher sends me messages at night on Snapchat",exposure_by_authority,3,authority,en,train
+en-a1,I am scared. my teacher sends me messages at night on Snapchat,exposure_by_authority,3,authority,en,train
+en-a1,hi my teacher sends me messages at night on Snapchat,exposure_by_authority,3,authority,en,train
+en-a1,my teacher sends me messages at night on TikTok,exposure_by_authority,3,authority,en,train
+en-a1,"please help, my teacher sends me messages at night on TikTok",exposure_by_authority,3,authority,en,train
+en-a1,I am scared. my teacher sends me messages at night on TikTok,exposure_by_authority,3,authority,en,train
+en-a1,hi my teacher sends me messages at night on TikTok,exposure_by_authority,3,authority,en,train
+en-a2,my uncle touches me and says I must not tell,exposure_by_authority,3,authority,en,train
+en-a2,"please help, my uncle touches me and says I must not tell",exposure_by_authority,3,authority,en,train
+en-a2,I am scared. my uncle touches me and says I must not tell,exposure_by_authority,3,authority,en,train
+en-a2,hi my uncle touches me and says I must not tell,exposure_by_authority,3,authority,en,train
+en-a3,the headteacher asked me to send him a photo of myself,exposure_by_authority,3,authority,en,train
+en-a3,"please help, the headteacher asked me to send him a photo of myself",exposure_by_authority,3,authority,en,train
+en-a3,I am scared. the headteacher asked me to send him a photo of myself,exposure_by_authority,3,authority,en,train
+en-a3,hi the headteacher asked me to send him a photo of myself,exposure_by_authority,3,authority,en,train
+en-a4,my father hits me when he sees me on the phone,exposure_by_authority,3,authority,en,test
+en-a4,"please help, my father hits me when he sees me on the phone",exposure_by_authority,3,authority,en,test
+en-a4,I am scared. my father hits me when he sees me on the phone,exposure_by_authority,3,authority,en,test
+en-a4,hi my father hits me when he sees me on the phone,exposure_by_authority,3,authority,en,test
+en-b1,people in my class keep calling me names on Instagram,cyberbullying,2,,en,train
+en-b1,"please help, people in my class keep calling me names on Instagram",cyberbullying,2,,en,train
+en-b1,I am scared. people in my class keep calling me names on Instagram,cyberbullying,2,,en,train
+en-b1,hi people in my class keep calling me names on Instagram,cyberbullying,2,,en,train
+en-b1,people in my class keep calling me names on WhatsApp,cyberbullying,2,,en,train
+en-b1,"please help, people in my class keep calling me names on WhatsApp",cyberbullying,2,,en,train
+en-b1,I am scared. people in my class keep calling me names on WhatsApp,cyberbullying,2,,en,train
+en-b1,hi people in my class keep calling me names on WhatsApp,cyberbullying,2,,en,train
+en-b2,a man made a group on Snapchat just to laugh at me,cyberbullying,2,,en,train
+en-b2,"please help, a man made a group on Snapchat just to laugh at me",cyberbullying,2,,en,train
+en-b2,I am scared. a man made a group on Snapchat just to laugh at me,cyberbullying,2,,en,train
+en-b2,hi a man made a group on Snapchat just to laugh at me,cyberbullying,2,,en,train
+en-b2,a stranger made a group on Instagram just to laugh at me,cyberbullying,2,,en,train
+en-b2,"please help, a stranger made a group on Instagram just to laugh at me",cyberbullying,2,,en,train
+en-b2,I am scared. a stranger made a group on Instagram just to laugh at me,cyberbullying,2,,en,train
+en-b2,hi a stranger made a group on Instagram just to laugh at me,cyberbullying,2,,en,train
+en-b3,they say I am ugly and post comments about me every day,cyberbullying,2,,en,train
+en-b3,"please help, they say I am ugly and post comments about me every day",cyberbullying,2,,en,train
+en-b3,I am scared. they say I am ugly and post comments about me every day,cyberbullying,2,,en,train
+en-b3,hi they say I am ugly and post comments about me every day,cyberbullying,2,,en,train
+en-b4,a man wrote kill yourself under my photo,cyberbullying,3,,en,test
+en-b4,"please help, a man wrote kill yourself under my photo",cyberbullying,3,,en,test
+en-b4,I am scared. a man wrote kill yourself under my photo,cyberbullying,3,,en,test
+en-b4,hi a man wrote kill yourself under my photo,cyberbullying,3,,en,test
+en-b4,someone wrote kill yourself under my photo,cyberbullying,3,,en,test
+en-b4,"please help, someone wrote kill yourself under my photo",cyberbullying,3,,en,test
+en-b4,I am scared. someone wrote kill yourself under my photo,cyberbullying,3,,en,test
+en-b4,hi someone wrote kill yourself under my photo,cyberbullying,3,,en,test
+en-i1,someone made a fake Snapchat account with my name and photos,impersonation,2,,en,train
+en-i1,"please help, someone made a fake Snapchat account with my name and photos",impersonation,2,,en,train
+en-i1,I am scared. someone made a fake Snapchat account with my name and photos,impersonation,2,,en,train
+en-i1,hi someone made a fake Snapchat account with my name and photos,impersonation,2,,en,train
+en-i1,someone made a fake TikTok account with my name and photos,impersonation,2,,en,train
+en-i1,"please help, someone made a fake TikTok account with my name and photos",impersonation,2,,en,train
+en-i1,I am scared. someone made a fake TikTok account with my name and photos,impersonation,2,,en,train
+en-i1,hi someone made a fake TikTok account with my name and photos,impersonation,2,,en,train
+en-i2,a stranger is pretending to be me on TikTok,impersonation,2,,en,train
+en-i2,"please help, a stranger is pretending to be me on TikTok",impersonation,2,,en,train
+en-i2,I am scared. a stranger is pretending to be me on TikTok,impersonation,2,,en,train
+en-i2,hi a stranger is pretending to be me on TikTok,impersonation,2,,en,train
+en-i2,someone is pretending to be me on Instagram,impersonation,2,,en,train
+en-i2,"please help, someone is pretending to be me on Instagram",impersonation,2,,en,train
+en-i2,I am scared. someone is pretending to be me on Instagram,impersonation,2,,en,train
+en-i2,hi someone is pretending to be me on Instagram,impersonation,2,,en,train
+en-i3,a fake account is sending messages to my friends as me,impersonation,2,,en,test
+en-i3,"please help, a fake account is sending messages to my friends as me",impersonation,2,,en,test
+en-i3,I am scared. a fake account is sending messages to my friends as me,impersonation,2,,en,test
+en-i3,hi a fake account is sending messages to my friends as me,impersonation,2,,en,test
+en-c1,someone on Snapchat said I won a prize and must send money first,scam,2,,en,train
+en-c1,"please help, someone on Snapchat said I won a prize and must send money first",scam,2,,en,train
+en-c1,I am scared. someone on Snapchat said I won a prize and must send money first,scam,2,,en,train
+en-c1,hi someone on Snapchat said I won a prize and must send money first,scam,2,,en,train
+en-c1,someone on WhatsApp said I won a prize and must send money first,scam,2,,en,train
+en-c1,"please help, someone on WhatsApp said I won a prize and must send money first",scam,2,,en,train
+en-c1,I am scared. someone on WhatsApp said I won a prize and must send money first,scam,2,,en,train
+en-c1,hi someone on WhatsApp said I won a prize and must send money first,scam,2,,en,train
+en-c2,a man asked me to send mobile money to get a job,scam,2,,en,train
+en-c2,"please help, a man asked me to send mobile money to get a job",scam,2,,en,train
+en-c2,I am scared. a man asked me to send mobile money to get a job,scam,2,,en,train
+en-c2,hi a man asked me to send mobile money to get a job,scam,2,,en,train
+en-c3,they asked for my PIN so they can give me free data,scam,2,,en,test
+en-c3,"please help, they asked for my PIN so they can give me free data",scam,2,,en,test
+en-c3,I am scared. they asked for my PIN so they can give me free data,scam,2,,en,test
+en-c3,hi they asked for my PIN so they can give me free data,scam,2,,en,test
+en-gb1,my friend made me try betting and I lost my school fees,gambling_or_betting,2,,en,train
+en-gb1,"please help, my friend made me try betting and I lost my school fees",gambling_or_betting,2,,en,train
+en-gb1,I am scared. my friend made me try betting and I lost my school fees,gambling_or_betting,2,,en,train
+en-gb1,hi my friend made me try betting and I lost my school fees,gambling_or_betting,2,,en,train
+en-gb2,I keep betting on football on my phone and cannot stop,gambling_or_betting,2,,en,train
+en-gb2,"please help, I keep betting on football on my phone and cannot stop",gambling_or_betting,2,,en,train
+en-gb2,I am scared. I keep betting on football on my phone and cannot stop,gambling_or_betting,2,,en,train
+en-gb2,hi I keep betting on football on my phone and cannot stop,gambling_or_betting,2,,en,train
+en-gb3,a casino app keeps sending me offers,gambling_or_betting,2,,en,test
+en-gb3,"please help, a casino app keeps sending me offers",gambling_or_betting,2,,en,test
+en-gb3,I am scared. a casino app keeps sending me offers,gambling_or_betting,2,,en,test
+en-gb3,hi a casino app keeps sending me offers,gambling_or_betting,2,,en,test
+en-n1,I saw a video with fighting and blood on Instagram,inappropriate_content,1,,en,train
+en-n1,"please help, I saw a video with fighting and blood on Instagram",inappropriate_content,1,,en,train
+en-n1,I am scared. I saw a video with fighting and blood on Instagram,inappropriate_content,1,,en,train
+en-n1,hi I saw a video with fighting and blood on Instagram,inappropriate_content,1,,en,train
+en-n1,I saw a video with fighting and blood on TikTok,inappropriate_content,1,,en,train
+en-n1,"please help, I saw a video with fighting and blood on TikTok",inappropriate_content,1,,en,train
+en-n1,I am scared. I saw a video with fighting and blood on TikTok,inappropriate_content,1,,en,train
+en-n1,hi I saw a video with fighting and blood on TikTok,inappropriate_content,1,,en,train
+en-n2,someone sent me a sexual video I did not want to see,inappropriate_content,1,,en,train
+en-n2,"please help, someone sent me a sexual video I did not want to see",inappropriate_content,1,,en,train
+en-n2,I am scared. someone sent me a sexual video I did not want to see,inappropriate_content,1,,en,train
+en-n2,hi someone sent me a sexual video I did not want to see,inappropriate_content,1,,en,train
+en-n3,I saw scary pictures on WhatsApp and now I cannot sleep,inappropriate_content,1,,en,test
+en-n3,"please help, I saw scary pictures on WhatsApp and now I cannot sleep",inappropriate_content,1,,en,test
+en-n3,I am scared. I saw scary pictures on WhatsApp and now I cannot sleep,inappropriate_content,1,,en,test
+en-n3,hi I saw scary pictures on WhatsApp and now I cannot sleep,inappropriate_content,1,,en,test
+en-n3,I saw scary pictures on Snapchat and now I cannot sleep,inappropriate_content,1,,en,test
+en-n3,"please help, I saw scary pictures on Snapchat and now I cannot sleep",inappropriate_content,1,,en,test
+en-n3,I am scared. I saw scary pictures on Snapchat and now I cannot sleep,inappropriate_content,1,,en,test
+en-n3,hi I saw scary pictures on Snapchat and now I cannot sleep,inappropriate_content,1,,en,test
+lg-s1,"Njagala okufa, tewali anfaako",self_harm,4,,lg,train
+lg-s1,"bambi Njagala okufa, tewali anfaako",self_harm,4,,lg,train
+lg-s2,nja kwetta olw'ebyo bye bampandiikira ku TikTok,self_harm,4,,lg,test
+lg-s2,bambi nja kwetta olw'ebyo bye bampandiikira ku TikTok,self_harm,4,,lg,test
+lg-s2,nja kwetta olw'ebyo bye bampandiikira ku Instagram,self_harm,4,,lg,test
+lg-s2,bambi nja kwetta olw'ebyo bye bampandiikira ku Instagram,self_harm,4,,lg,test
+lg-x1,Omuntu ansaba ssente nga tasindika bifaananyi byange,sextortion,3,,lg,train
+lg-x1,bambi Omuntu ansaba ssente nga tasindika bifaananyi byange,sextortion,3,,lg,train
+lg-x2,omusajja ku WhatsApp ayagala ebifaananyi ebyobwereere,sextortion,3,,lg,test
+lg-x2,bambi omusajja ku WhatsApp ayagala ebifaananyi ebyobwereere,sextortion,3,,lg,test
+lg-x2,omusajja ku Instagram ayagala ebifaananyi ebyobwereere,sextortion,3,,lg,test
+lg-x2,bambi omusajja ku Instagram ayagala ebifaananyi ebyobwereere,sextortion,3,,lg,test
+lg-t1,omusajja anninda ku ssomero era agamba nti ajja kunzita,threats,4,,lg,test
+lg-t1,bambi omusajja anninda ku ssomero era agamba nti ajja kunzita,threats,4,,lg,test
+lg-a1,omusomesa wange ampandiikira ekiro ku Snapchat,exposure_by_authority,3,authority,lg,train
+lg-a1,bambi omusomesa wange ampandiikira ekiro ku Snapchat,exposure_by_authority,3,authority,lg,train
+lg-a1,omusomesa wange ampandiikira ekiro ku TikTok,exposure_by_authority,3,authority,lg,train
+lg-a1,bambi omusomesa wange ampandiikira ekiro ku TikTok,exposure_by_authority,3,authority,lg,train
+lg-a2,kojja wange ankwatako era agamba nti sigamba muntu,exposure_by_authority,3,authority,lg,test
+lg-a2,bambi kojja wange ankwatako era agamba nti sigamba muntu,exposure_by_authority,3,authority,lg,test
+lg-b1,abaana mu kibiina bampita amannya ku WhatsApp,cyberbullying,2,,lg,test
+lg-b1,bambi abaana mu kibiina bampita amannya ku WhatsApp,cyberbullying,2,,lg,test
+lg-b1,abaana mu kibiina bampita amannya ku Snapchat,cyberbullying,2,,lg,test
+lg-b1,bambi abaana mu kibiina bampita amannya ku Snapchat,cyberbullying,2,,lg,test
+lg-gb1,mukwano gwange yandaga okubeetinga ne mfiirwa ssente,gambling_or_betting,2,,lg,test
+lg-gb1,bambi mukwano gwange yandaga okubeetinga ne mfiirwa ssente,gambling_or_betting,2,,lg,test
+lg-c1,omuntu ku WhatsApp ansaba ssente angeme ekirabo,scam,2,,lg,test
+lg-c1,bambi omuntu ku WhatsApp ansaba ssente angeme ekirabo,scam,2,,lg,test
+lg-c1,omuntu ku Instagram ansaba ssente angeme ekirabo,scam,2,,lg,test
+lg-c1,bambi omuntu ku Instagram ansaba ssente angeme ekirabo,scam,2,,lg,test
+sw-s1,"nataka kufa, hakuna anayenijali",self_harm,4,,sw,test
+sw-s1,"tafadhali nataka kufa, hakuna anayenijali",self_harm,4,,sw,test
+sw-x1,mtu ananiomba pesa na picha zangu za uchi,sextortion,3,,sw,test
+sw-x1,tafadhali mtu ananiomba pesa na picha zangu za uchi,sextortion,3,,sw,test
+sw-a1,mwalimu wangu ananitumia ujumbe usiku,exposure_by_authority,3,authority,sw,test
+sw-a1,tafadhali mwalimu wangu ananitumia ujumbe usiku,exposure_by_authority,3,authority,sw,test
+sw-gb1,rafiki yangu alinifundisha kubeti nikapoteza pesa,gambling_or_betting,2,,sw,test
+sw-gb1,tafadhali rafiki yangu alinifundisha kubeti nikapoteza pesa,gambling_or_betting,2,,sw,test
+sw-b1,watoto darasani wananitukana kwenye WhatsApp,cyberbullying,2,,sw,test
+sw-b1,tafadhali watoto darasani wananitukana kwenye WhatsApp,cyberbullying,2,,sw,test
+sw-b1,watoto darasani wananitukana kwenye Instagram,cyberbullying,2,,sw,test
+sw-b1,tafadhali watoto darasani wananitukana kwenye Instagram,cyberbullying,2,,sw,test

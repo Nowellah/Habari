@@ -20,6 +20,11 @@ def ai_result(**kw):
 
 @override_settings(AI_TRIAGE_INLINE=True)
 class BackgroundTriageTests(TestCase):
+    def setUp(self):
+        stub = patch("core.ai_client.summarise", return_value=None)  # no real network in tests
+        stub.start()
+        self.addCleanup(stub.stop)
+
     def send(self, text):
         body = {"sender_id": PHONE, "text": text}
         return self.client.post("/api/channel/sms", json.dumps(body), content_type="application/json").json()
@@ -117,3 +122,46 @@ class AiClientTests(TestCase):
 
         with patch("core.ai_client.requests.post", return_value=Good()):
             self.assertEqual(ai_client.triage("x", "2", None)["category"], "sextortion")
+
+
+@override_settings(AI_TRIAGE_INLINE=True)
+class SummaryOnCaseTests(TestCase):
+    SUMMARY = {"summary": "- he wants my pictures", "timeline": [],
+               "entities": {"handles": ["@x1"], "phones": [], "urls": [], "amounts_ugx": [50000],
+                            "dates": [], "platforms": ["instagram"]}, "method": "extractive"}
+
+    def report(self):
+        body = lambda t: json.dumps({"sender_id": PHONE, "text": t})
+        for t in ("HELP", "2"):
+            self.client.post("/api/channel/sms", body(t), content_type="application/json")
+        return self.client.post("/api/channel/sms", body("he wants my pictures"),
+                                content_type="application/json").json()["case_code"]
+
+    def test_summary_and_details_are_saved(self):
+        with patch("core.ai_client.triage", return_value=ai_result()), \
+             patch("core.ai_client.summarise", return_value=self.SUMMARY):
+            with self.captureOnCommitCallbacks(execute=True):
+                code = self.report()
+        case = Case.objects.get(code=code)
+        self.assertEqual(case.summary, "- he wants my pictures")
+        self.assertEqual(case.entities["handles"], ["@x1"])
+
+    def test_no_summary_when_ai_is_down(self):
+        with patch("core.ai_client.triage", return_value=None), \
+             patch("core.ai_client.summarise", return_value=None):
+            with self.captureOnCommitCallbacks(execute=True):
+                code = self.report()
+        self.assertEqual(Case.objects.get(code=code).summary, "")
+
+    def test_officer_sees_summary_and_details(self):
+        with patch("core.ai_client.triage", return_value=ai_result()), \
+             patch("core.ai_client.summarise", return_value=self.SUMMARY):
+            with self.captureOnCommitCallbacks(execute=True):
+                code = self.report()
+        user = User.objects.create_user("sarah", password="pw")
+        user.groups.add(Group.objects.get_or_create(name="officer")[0])
+        self.client.login(username="sarah", password="pw")
+        r = self.client.get(f"/officer/case/{code}/")
+        self.assertContains(r, "he wants my pictures")
+        self.assertContains(r, "@x1")
+        self.assertContains(r, "50000")

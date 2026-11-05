@@ -71,6 +71,7 @@ def create_case(reporter, channel, pick, text, language):
                     severity=max(rules.severity, pick_severity(pick)), flags=rules.flags,
                     alleged_role="authority" if (pick == "3" or rules.role_hint) else "",
                     language=language or reporter.language,
+                    district=reporter.district,
                 )
             break
         except IntegrityError:  # code collision, try another
@@ -126,6 +127,15 @@ def _stop(reporter):
     return _reply(msg("stopped"), "START")
 
 
+def _set_district(reporter, conv, district):
+    """Keep the district on the child and on their open case. Never coordinates."""
+    reporter.district = district
+    reporter.save(update_fields=["district"])
+    if conv and conv.case and not conv.case.district:
+        conv.case.district = district
+        conv.case.save(update_fields=["district"])
+
+
 def _route(channel, reporter, text, language):
     words = text.split()
     command = words[0].upper() if words else ""
@@ -135,6 +145,17 @@ def _route(channel, reporter, text, language):
         return _status(reporter, conv, words[1:])
     if command == "STOP":
         return _stop(reporter)
+    if command == "DISTRICT":
+        from core.geo import district_by_name
+        found = district_by_name(" ".join(words[1:]))
+        if not found:
+            return _reply(msg("district_unknown"), conv.state if conv else "START")
+        _set_district(reporter, conv, found)
+        return _reply(msg("location_saved", district=found), conv.state if conv else "START")
+    if command == "JOIN" and len(words) == 1:
+        reporter.poll_opt_in = True
+        reporter.save(update_fields=["poll_opt_in"])
+        return _reply(msg("poll_joined"), conv.state if conv else "START")
     if command == "PIN":
         if len(words) < 2:
             return _reply(msg("pin_need_word"), conv.state if conv else "START")
@@ -144,6 +165,32 @@ def _route(channel, reporter, text, language):
 
     if conv is None:
         conv = Conversation.objects.create(reporter=reporter, channel=channel)
+
+    if conv.state == "POLL":
+        from polls.models import Poll
+        from polls.service import record_answer
+        poll = Poll.objects.filter(pk=(conv.draft or {}).get("poll")).first()
+        conv.state, conv.draft = "START", {}
+        conv.save()
+        if poll and text.isdigit() and 1 <= int(text) <= len(poll.options):
+            answer = poll.options[int(text) - 1]
+            record_answer(poll, reporter, answer)
+            # The first option ("Yes") gently invites a conversation. No case is made.
+            return _reply(msg("poll_yes" if text == "1" else "poll_thanks"), "START")
+        # anything else: carry on as a normal message
+
+    if conv.state == "VOICE_CONFIRM":
+        # "1" sends what we heard; anything else is the child's own typed words.
+        draft = conv.draft or {}
+        conv.state, conv.draft = draft.get("prev_state", "START"), draft.get("prev_draft", {})
+        conv.save()
+        via_voice = text == "1"
+        out = _route(channel, reporter, draft.get("voice_text", "") if via_voice else text, language)
+        if via_voice and out.get("case_code"):
+            case = Case.objects.get(code=out["case_code"])
+            case.flags = sorted(set(case.flags) | {"via_voice"})
+            case.save(update_fields=["flags"])
+        return out
 
     def open_menu(key="menu"):
         conv.state, conv.case, conv.draft = "PICK_HARM", None, {}
@@ -243,6 +290,37 @@ def handle(channel, sender_id, text="", language=None, attachments=None, locatio
     started = time.perf_counter()
     with transaction.atomic():
         reporter = get_reporter(channel, str(sender_id), language)
-        out = _route(channel, reporter, (text or "").strip(), language)
+        text = (text or "").strip()
+        if isinstance(location, dict):
+            from core.geo import nearest_district
+            district = nearest_district(location.get("lat"), location.get("lon"))  # coordinates end here
+            conv = reporter.conversations.filter(channel=channel).order_by("-updated_at").first()
+            if district:
+                _set_district(reporter, conv, district)
+            if not text:
+                key = "location_saved" if district else "location_unknown"
+                out = _reply(msg(key, district=district or ""), conv.state if conv else "START",
+                             conv.case if conv else None)
+                out["first_reply_ms"] = round((time.perf_counter() - started) * 1000)
+                return out
+        out = _route(channel, reporter, text, language)
+        if out.get("case_code") and meta:
+            from channels.meta_evidence import attach_meta
+            attach_meta(Case.objects.get(code=out["case_code"]), meta)
+    out["first_reply_ms"] = round((time.perf_counter() - started) * 1000)
+    return out
+
+
+def handle_voice_transcript(channel, sender_id, transcript, language=None) -> dict:
+    """Show the child what we heard. Nothing is sent until they reply 1 (or type)."""
+    started = time.perf_counter()
+    with transaction.atomic():
+        reporter = get_reporter(channel, str(sender_id), language)
+        conv = reporter.conversations.filter(channel=channel).order_by("-updated_at").first()             or Conversation.objects.create(reporter=reporter, channel=channel)
+        conv.draft = {"voice_text": transcript, "prev_state": conv.state, "prev_draft": conv.draft}
+        conv.state = "VOICE_CONFIRM"
+        conv.save()
+        out = _reply(msg("voice_confirm", text=transcript), "VOICE_CONFIRM", conv.case,
+                     [{"key": "1", "label": "Send it"}])
     out["first_reply_ms"] = round((time.perf_counter() - started) * 1000)
     return out
