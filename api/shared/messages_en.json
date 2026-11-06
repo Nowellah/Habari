@@ -110,6 +110,8 @@
   "advice_sextortion_web": "Right now: do not pay and do not send anything more. Paying usually makes them ask for more.\n\nKeep the messages (take screenshots), then block them. You did nothing wrong.",
   "case_word": "Case",
   "labels": {
+    "hurt_yes": "Yes, I am hurt",
+    "hurt_no": "No, I am not hurt",
       "skip": "Skip",
       "feel_little": "A little",
       "feel_lot": "A lot",

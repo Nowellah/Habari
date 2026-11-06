@@ -45,7 +45,7 @@ SOURCE_FLAGS = {"1": "danger_from_known", "2": "danger_from_online", "3": "dange
 OFFER_LABELS = {"TALK": "offer_talk", "REPORT": "offer_report", "PROOF": "offer_proof", "ASK": "offer_ask"}
 WEB_START_WORDS = {"MENU", "START", "/START", "HI", "HELLO"}
 EVIDENCE_ENTRY_ID = "keep-evidence"
-HURT_OPTIONS = {"1": "Yes, I am hurt", "2": "No, I am not hurt", "3": "Not sure"}
+HURT_OPTIONS = {"1": "hurt_yes", "2": "hurt_no", "3": "not_sure"}
 HARM_BY_PERSON_FLAGS = {"harm_by_person", "rule:abuse_sexual_or_physical"}
 PROOF_ANSWERS = {"PROOF_LATER": "proof_later", "PROOF_DONE": "proof_done", "PROOF_RIGHT": "proof_right"}
 NEXT_STEPS = re.compile(r"\b(what (do|should|can) i do|what now|what next|what happens next|help me)\b")
@@ -625,7 +625,7 @@ def _route(channel, reporter, text, language):
                 return helped
         if channel == "web" and "share_done" not in case.flags:
             return _reply(_join(msg("added", code=case.code), msg("share_more")), "CASE_OPEN", case,
-                          [{"key": "PROOF_ADD", "label": "Add screenshots"}, {"key": "PROOF_DONE", "label": "That is all"}])
+                          [{"key": "PROOF_ADD", "label": L("proof_add")}, {"key": "PROOF_DONE", "label": L("proof_done")}])
         return _reply(msg("added", code=case.code), "CASE_OPEN", case)
 
     if conv.state == "DESCRIBE":
