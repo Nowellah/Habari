@@ -51,7 +51,7 @@ def _category_from_flags(flags, pick):
         return "impersonation"
     if "gambling" in flags:
         return "gambling_or_betting"
-    if "money_demand" in flags:
+    if "money_demand" in flags or "account_takeover" in flags:
         return "scam"
     if "upsetting_content" in flags:
         return "inappropriate_content"

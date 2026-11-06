@@ -105,6 +105,13 @@ flags:
       lg: ["akawunti ey'obulimba"]
       sw: ["akaunti bandia", "anajifanya mimi"]
       rn: []
+  account_takeover:
+    floor: 2
+    terms:
+      en: ["hacked", "hack", "hacker", "hackers", "hacking", "scam", "scammed", "scammer", "fraud", "phishing", "stole my account", "stole my password", "took over my account", "logged into my account", "changed my password", "asked for my password", "gave my password", "told him my password", "told her my password", "shared my password", "knows my password"]
+      lg: []
+      sw: []
+      rn: []
   upsetting_content:
     floor: 0
     terms:
