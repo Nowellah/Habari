@@ -198,8 +198,6 @@ WEB_DIST = None if "test" in sys.argv else Path(os.getenv("WEB_DIST", str(BASE_D
 # AI service (Phase 2). Triage runs in a background thread after the child's reply.
 # 127.0.0.1, not "localhost": on Windows "localhost" tries IPv6 first and a
 # service bound to 127.0.0.1 then costs ~2 s per call before it connects.
-AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://127.0.0.1:8001")
-AI_TIMEOUT = float(os.getenv("AI_TIMEOUT", "3"))
 AI_TRIAGE_INLINE = os.getenv("AI_TRIAGE_INLINE", "0") == "1"  # tests run it in-line
 # Simulator pages (/sim/sms, /sim/ussd) only exist while this is on.
 SIMULATORS_ENABLED = os.getenv("SIMULATORS_ENABLED", "1" if DEBUG else "0") == "1"
