@@ -99,29 +99,25 @@ class BackgroundTriageTests(TestCase):
 
 
 class AiClientTests(TestCase):
-    @override_settings(AI_SERVICE_URL="http://127.0.0.1:9", AI_TIMEOUT=1)
-    def test_unreachable_service_returns_none(self):
-        self.assertIsNone(ai_client.triage("I want to die", None, None))
+    def test_a_real_danger_phrase_is_critical(self):
+        with patch("ai_service.language.sunbird_client.language_id", return_value=None):
+            self.assertEqual(ai_client.triage("I want to die", None, None)["severity"], 4)
 
-    def test_bad_response_returns_none(self):
-        class Bad:
-            status_code = 500
-
-            def json(self):
-                return {}
-
-        with patch("core.ai_client.requests.post", return_value=Bad()):
+    def test_a_crash_returns_none(self):
+        with patch("core.ai_client.run_triage", side_effect=RuntimeError("boom")):
             self.assertIsNone(ai_client.triage("x", None, None))
 
-    def test_good_response_is_returned(self):
-        class Good:
-            status_code = 200
+    def test_an_odd_result_returns_none(self):
+        with patch("core.ai_client.run_triage", return_value={}):
+            self.assertIsNone(ai_client.triage("x", None, None))
 
-            def json(self):
-                return ai_result()
-
-        with patch("core.ai_client.requests.post", return_value=Good()):
+    def test_a_good_result_is_returned(self):
+        with patch("core.ai_client.run_triage", return_value=ai_result()):
             self.assertEqual(ai_client.triage("x", "2", None)["category"], "sextortion")
+
+    def test_summary_failure_returns_none(self):
+        with patch("core.ai_client.synthesis.summarise", side_effect=RuntimeError("boom")):
+            self.assertIsNone(ai_client.summarise([{"text": "x"}]))
 
 
 @override_settings(AI_TRIAGE_INLINE=True)
