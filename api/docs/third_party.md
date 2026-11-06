@@ -14,6 +14,10 @@ Declare these in the pitch. **Check each licence and each platform's terms again
 | Leaflet | Heat map | BSD-2-Clause |
 | OpenStreetMap tiles | Heat map background | Data ODbL; follow the OSM tile usage policy (use another tile server for heavy use) |
 | Node.js test runner | Extension tests | MIT |
+| PostgreSQL, psycopg | Database when DB_NAME is set (SQLite otherwise) | PostgreSQL Licence, LGPL-3.0 |
+| React, React DOM, React Router | Web app pages (web/) | MIT |
+| Vite, TypeScript, Vitest | Web app build and tests | MIT, Apache-2.0, MIT |
+| ngrok | Public URL for SMS/USSD/WhatsApp callbacks during development | ngrok terms of service |
 
 ## Ready, used when credentials are set
 
@@ -33,7 +37,18 @@ Declare these in the pitch. **Check each licence and each platform's terms again
 |---|---|
 | NLLB-200 | CC-BY-NC (non-commercial), and no Runyankore |
 | fastText lid.176 | No Luganda |
-| Keycloak, PostgreSQL, Celery, Docker | Planned; the prototype uses Django groups, SQLite and simple loops |
+| Keycloak, Celery, Docker | Planned; the prototype uses Django groups and simple loops |
+
+## AI tools used to build the prototype
+
+The guide allows AI-assisted coding and writing tools if they are declared. These were used:
+
+| Tool | Who | What it was used for |
+|---|---|---|
+| Claude Code (Anthropic, Claude Opus 5.5) | Eleanor Nabaloga | Reviewing teammates' branches; merging them and resolving conflicts; restoring the CI workflow; triage rules v0.3 and v0.4; writing hard_test_v2 and benign_test; officer alert, referral status and sextortion reply fixes; tests for these; submission documents (architecture, evaluation, business case, demo script). Every change was run against the test suite and reviewed before it was committed. |
+| _Team members: add any other AI tools you used (for example ChatGPT, GitHub Copilot, Gemini) and what for, before code freeze._ | | |
+
+AI tools did not supply any data about real children. The test messages they helped write are synthetic.
 
 ## Data
 

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-05T20:21:54+00:00",
-  "method": "lexicon rules v0.3 + rule engine (ai_service/triage.py), text only",
+  "generated_at": "2026-11-06T06:25:18+00:00",
+  "method": "lexicon rules v0.4 + rule engine (ai_service/triage.py), text only",
   "target": "Recall of at least 0.90 on severity 3 and 4",
   "synthetic_test": {
     "n": 90,
@@ -962,6 +962,15 @@
       }
     }
   },
+  "benign_test": {
+    "n": 38,
+    "false_alarms": 9,
+    "false_alarm_rate": 0.23684210526315788,
+    "ci95": [
+      0.12993561496969508,
+      0.39207119165337856
+    ]
+  },
   "caveats": [
     "All data is synthetic. No real child data was used.",
     "The same team wrote the keyword list and the synthetic messages, so synthetic scores are optimistic. The hand-written hard test set avoids the keywords and shows the real limits.",
@@ -971,6 +980,8 @@
     "Triage here is the lexicon rules plus the rule engine (ai_service/engine). The zero-shot model slot was not enabled for this run.",
     "Lexicon v0.2 rules were added from TRAINING-split errors only, with one exception: the 'kill yourself' rule was added after a test-set miss, for child safety. Baseline v0.1 results are kept in eval/results/metrics_baseline_v0.1.json.",
     "v0.3 rules were written from the misses in the first hard test set, so that set is NO LONGER BLIND and its score is optimistic. Before v0.3, the rules caught 9 of its 18 serious cases (0.50).",
-    "The second hard test set (hard_test_v2) was committed before the v0.3 rules were written and was not used to choose them, so it is the fairest number here. Before v0.3 the rules caught 12 of its 26 serious cases (0.46). It was written by the same person as the v0.3 rules, so even this score may be optimistic. A test set written by someone outside the team is the next step."
+    "The second hard test set (hard_test_v2) was committed before the v0.3 rules were written and was not used to choose them, so it is the fairest number here. Before v0.3 the rules caught 12 of its 26 serious cases (0.46). It was written by the same person as the v0.3 rules, so even this score may be optimistic. A test set written by someone outside the team is the next step.",
+    "v0.4 stopped treating any mention of a parent or teacher as severity 3 (it now needs a sign of harm or a warning sign such as being alone with them). That change first lost 2 serious cases in hard_test_v2, and the warning-sign list was chosen after looking at them, so hard_test_v2 is no longer fully blind either. Its blind score, before v0.4, was 0.92.",
+    "False alarms are measured on benign_test (38 harmless messages, committed before it was scored). English: 2 of 30 raised. Luganda and Swahili: 7 of 8 raised, because text the rules cannot read is sent to a person at severity 3 by design. The rules were not changed after scoring this set."
   ]
 }
