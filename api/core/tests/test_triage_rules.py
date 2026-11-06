@@ -71,3 +71,26 @@ class DangerFastPathTests(SimpleTestCase):
 
     def test_empty_text_does_not_fail(self):
         self.assertEqual(apply_rules("", pick="5").severity, 1)
+
+
+class AdultInChargeNeedsHarmTests(SimpleTestCase):
+    """v0.4: naming a parent or teacher is not harm on its own."""
+
+    def test_everyday_mentions_get_no_role_and_no_floor(self):
+        for text in ["my teacher says I did well in the exam", "my mum asked me to buy sugar",
+                     "my coach says I played well today", "my dad came home late at night from work"]:
+            with self.subTest(text):
+                r = apply_rules(text)
+                self.assertIsNone(r.role_hint)
+                self.assertLess(r.severity, 3)
+
+    def test_adult_in_charge_with_harm_or_warning_sign_is_severity_3(self):
+        for text in ["my teacher beats me every day", "my stepdad slaps me",
+                     "the pastor wants me to come alone after church", "my uncle texts me at night"]:
+            with self.subTest(text):
+                r = apply_rules(text)
+                self.assertEqual(r.role_hint, "authority")
+                self.assertGreaterEqual(r.severity, 3)
+
+    def test_pick_3_still_sets_severity_3_without_any_words(self):
+        self.assertGreaterEqual(apply_rules("it is him", pick="3").severity, 3)

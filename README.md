@@ -4,6 +4,17 @@ A child-first online safety companion for Uganda (UCC Testbed Hackathon 2026, Tr
 
 A child can report something that happened online from almost any door: SMS, USSD, Telegram, WhatsApp, a web chat, a browser button, a voice note, or a share from a social app. Every door leads to the same case engine. Serious cases go to the right partner with a tracked acknowledgement, late cases escalate automatically, and the child can follow their case without giving a name.
 
+## Submission documents (UCC Testbed Hackathon 2026)
+
+| Document | Contents |
+|---|---|
+| [Architecture](docs/ARCHITECTURE.md) | Diagram, how a report moves, components, privacy and safe-failure design |
+| [Evaluation](docs/EVALUATION.md) | Triage accuracy with **false negatives and false positives**, and how fair each number is |
+| [Third-party and AI tools](api/docs/third_party.md) | Every library, model, service and AI tool used, with licences |
+| [Business case](docs/BUSINESS_CASE.md) | Users, business model, costs, route to adoption |
+| [Demo video script](docs/DEMO_VIDEO_SCRIPT.md) | The 3-minute demo, pitch points and likely judge questions |
+| Live results | `/metrics` (evaluation) and `/about/status` (what is Built, Simulated or Planned) |
+
 ## Repo layout
 
 ```

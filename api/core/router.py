@@ -9,7 +9,7 @@ Rules (Guideline §4, plan §4.7):
 from django.utils import timezone
 
 from core.harm import picks
-from core.models import Partner, Referral
+from core.models import Case, Partner, Referral
 
 EXTERNAL_ONLY_ROLES = {"authority", "parent", "teacher", "guardian"}
 AUTHORITY_ROUTE = ["sauti_116", "ucc", "counsellor", "police_cfpu"]
@@ -82,7 +82,24 @@ def send_referrals(case, partners=None, now=None):
         ref = Referral.objects.create(case=case, partner=p, payload=payload(case), sent_at=now)
         mock.deliver(ref, now)
         created.append(ref)
+    if created:
+        _advance(case, Case.Status.REFERRED, now)
     return created
+
+
+# Statuses a referral may move a case on from. Later ones (in progress, resolved,
+# closed) are set by people and are never moved back.
+_BEFORE_REFERRED = {"received", "triaged", "assigned"}
+
+
+def _advance(case, new_status, now):
+    """Move the case forward to new_status, telling the child if the words change."""
+    from core import followup
+
+    case.refresh_from_db(fields=["status"])
+    allowed = _BEFORE_REFERRED | ({"referred"} if new_status == Case.Status.ACKNOWLEDGED else set())
+    if case.status in allowed:
+        followup.set_status(case, new_status, now=now)
 
 
 def escalate_second_partner(case, now=None):
@@ -108,4 +125,5 @@ def acknowledge_referral(ref, now=None):
     if not case.ack_at:
         case.ack_at = now
         case.save(update_fields=["ack_at"])
+    _advance(case, Case.Status.ACKNOWLEDGED, now)
     return ref

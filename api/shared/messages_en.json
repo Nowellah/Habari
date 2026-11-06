@@ -96,5 +96,7 @@
     "closed": "Your report is closed. Send HELP any time if you need us again.",
     "closed_unfounded": "Your report is closed. Send HELP any time if you need us again.",
     "closed_child_stop": "Your report is closed. Send HELP any time if you need us again."
-  }
+  },
+  "advice_sextortion": "Do not pay or send anything more. Keep the messages as proof, then block them.",
+  "advice_sextortion_web": "Right now: do not pay and do not send anything more. Paying usually makes them ask for more.\n\nKeep the messages (take screenshots), then block them. You did nothing wrong."
 }

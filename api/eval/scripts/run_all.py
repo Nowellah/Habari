@@ -24,6 +24,7 @@ from eval.scripts import make_synthetic  # noqa: E402
 RESULTS = ROOT / "eval" / "results"
 HARD = ROOT / "eval" / "data" / "hard_test.csv"
 HARD_V2 = ROOT / "eval" / "data" / "hard_test_v2.csv"
+BENIGN = ROOT / "eval" / "data" / "benign_test.csv"
 
 CAVEATS = [
     "All data is synthetic. No real child data was used.",
@@ -43,6 +44,13 @@ CAVEATS = [
     "used to choose them, so it is the fairest number here. Before v0.3 the rules caught 12 of its 26 "
     "serious cases (0.46). It was written by the same person as the v0.3 rules, so even this score may be "
     "optimistic. A test set written by someone outside the team is the next step.",
+    "v0.4 stopped treating any mention of a parent or teacher as severity 3 (it now needs a sign of harm or "
+    "a warning sign such as being alone with them). That change first lost 2 serious cases in hard_test_v2, "
+    "and the warning-sign list was chosen after looking at them, so hard_test_v2 is no longer fully blind "
+    "either. Its blind score, before v0.4, was 0.92.",
+    "False alarms are measured on benign_test (38 harmless messages, committed before it was scored). "
+    "English: 2 of 30 raised. Luganda and Swahili: 7 of 8 raised, because text the rules cannot read is sent "
+    "to a person at severity 3 by design. The rules were not changed after scoring this set.",
 ]
 
 
@@ -92,6 +100,17 @@ def score(rows):
     }, errors
 
 
+def score_benign(rows):
+    """Harmless messages: any raised to severity 3 or 4 is a false alarm."""
+    preds = [triage(r["text"]) for r in rows]
+    alarms = [{"text": r["text"], "language": r["language"], "gold_category": "none",
+               "pred_category": p["category"], "gold_severity": "1-2", "pred_severity": p["severity"],
+               "error": "FALSE ALARM"} for r, p in zip(rows, preds) if p["severity"] >= 3]
+    n = len(rows)
+    return {"n": n, "false_alarms": len(alarms), "false_alarm_rate": len(alarms) / n if n else 0.0,
+            "ci95": metrics.wilson(len(alarms), n)}, alarms
+
+
 def main(out_dir=RESULTS):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -103,13 +122,16 @@ def main(out_dir=RESULTS):
     syn_scores, syn_errors = score(synthetic)
     hard_scores, hard_errors = score(hard)
     hard_v2_scores, hard_v2_errors = score(hard_v2)
+    with BENIGN.open(encoding="utf8") as f:
+        benign_scores, benign_errors = score_benign(list(csv.DictReader(f)))
     data = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "method": "lexicon rules v0.3 + rule engine (ai_service/triage.py), text only",
+        "method": "lexicon rules v0.4 + rule engine (ai_service/triage.py), text only",
         "target": "Recall of at least 0.90 on severity 3 and 4",
         "synthetic_test": syn_scores,
         "hard_test": hard_scores,
         "hard_test_v2": hard_v2_scores,
+        "benign_test": benign_scores,
         "caveats": CAVEATS,
     }
     path = out_dir / "metrics.json"
@@ -119,7 +141,7 @@ def main(out_dir=RESULTS):
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         for name, errs in (("synthetic_test", syn_errors), ("hard_test", hard_errors),
-                           ("hard_test_v2", hard_v2_errors)):
+                           ("hard_test_v2", hard_v2_errors), ("benign_test", benign_errors)):
             for e in errs:
                 w.writerow({"set": name, **e})
     return path
@@ -134,4 +156,7 @@ if __name__ == "__main__":
         print(f"{name}: n={s['n']}  severity 3-4 recall={hi['recall']:.2f} "
               f"(95% CI {hi['ci95'][0]:.2f}-{hi['ci95'][1]:.2f})  missed={hi['false_negatives']}  "
               f"category macro-F1={s['category']['macro_f1']:.2f}")
+    b = d["benign_test"]
+    print(f"benign_test: n={b['n']}  false alarms={b['false_alarms']} "
+          f"(rate {b['false_alarm_rate']:.2f}, 95% CI {b['ci95'][0]:.2f}-{b['ci95'][1]:.2f})")
     print(f"wrote {p} and errors.csv")

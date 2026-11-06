@@ -10,6 +10,16 @@
 {% else %}
   <p class="muted">Method: {{ data.method }}. Run {{ data.generated_at }}. Target: {{ data.target }}.</p>
 
+  {% if data.benign_test %}
+  <div class="card">
+    <h2>False alarms on harmless messages <span class="muted">({{ data.benign_test.n }} messages)</span></h2>
+    <p><strong>{{ data.benign_test.false_alarms }}</strong> of {{ data.benign_test.n }} raised to severity 3 or 4
+      (rate {{ data.benign_test.false_alarm_rate|floatformat:2 }}, 95% CI {{ data.benign_test.ci95.0|floatformat:2 }}–{{ data.benign_test.ci95.1|floatformat:2 }}).
+      Most are Luganda or Swahili messages: text the rules cannot read goes to a person at severity 3 on purpose, so danger is not missed.
+      Every false alarm is listed in <code>eval/results/errors.csv</code>.</p>
+  </div>
+  {% endif %}
+
   {% for set in sets %}
   <div class="card">
     <h2>{{ set.title }} <span class="muted">({{ set.s.n }} messages)</span></h2>

@@ -2,7 +2,13 @@
 
 Each phase is tagged in git. Feature status lives in `shared/feature_status.json` (shown at `/about/status`).
 
-## Unreleased – triage rules v0.3 (5 Nov 2026)
+## Unreleased – demo flow fixes (5 Nov 2026)
+Sextortion reports get severity 4 and the helpline in the first reply (the rule engine now runs in the first pass), plus what to do right now: don't pay, keep proof, block. Officer alerts now show on the dashboard (they needed email addresses or phone-number usernames before, and no email backend was set). Sending referrals marks the case Referred and a partner acknowledgement marks it Acknowledged, so the child's status words move on.
+
+## triage rules v0.4 (5 Nov 2026)
+Naming a parent, teacher or other adult in charge is no longer severity 3 by itself ("my teacher says I did well"). It needs a sign of harm (hitting, touching, threats, grooming) or a warning sign (alone with them, at night, a locked door, messages about the child's body, repeated private messages). Only then is the case routed with the adult-in-charge rule. New harm_by_person flag; lg, sw and rn terms are drafts.
+
+## triage rules v0.3 (5 Nov 2026)
 Broader rules for indirect self-harm, overdose, strangers near the child, sextortion with a payment demand (now severity 4), requests for images (now severity 3), doctored images, trusted adults (coach, pastor, step-parents) and unrecognised languages (now severity 3 for review). Second hard test set added before the rule changes.
 Evaluation: severity 3-4 recall 0.46 → 0.92 on hard test set 2 (written by the same person as the rules, so optimistic). Hard test set 1 was used to write the rules and is no longer blind (0.50 → 1.00).
 

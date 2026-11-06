@@ -37,8 +37,10 @@ def _category_from_flags(flags, pick):
         return "self_harm"
     if "imminent_danger" in flags:
         return "threats"
-    if pick == "3" or "authority" in flags:
+    if pick == "3" or lexicon_engine.authority_harm(flags):
         return "exposure_by_authority"
+    if "harm_by_person" in flags:
+        return "threats"
     if "sextortion" in flags:
         return "sextortion"
     if "grooming" in flags:
@@ -73,6 +75,7 @@ def triage(text: str, pick: str | None = None, language: str | None = None, clas
     severity = max(_pick_severity().get(pick or "", 1), floor)
     category = _category_from_flags(flags, pick)
     harm_flags = [f for f in flags if f != "authority"]
+    adult_in_charge = lexicon_engine.authority_harm(flags)
     confidence = 0.85 if harm_flags else (0.5 if pick else 0.2)
     method = "rules"
     external_only = False
@@ -91,6 +94,8 @@ def triage(text: str, pick: str | None = None, language: str | None = None, clas
         severity = max(severity, engine.severity)
         flags = flags + [f for f in engine.flags if f not in flags]
         external_only = engine.external_only
+        if external_only and category == "unclear":
+            category = "exposure_by_authority"
         if engine.confident:
             confidence = max(confidence, 0.85)
 
@@ -111,7 +116,7 @@ def triage(text: str, pick: str | None = None, language: str | None = None, clas
         "pick_suggestion": _pick_for(category, flags),
         "category": category,
         "severity": severity,
-        "role": "authority" if ("authority" in flags or pick == "3" or external_only) else "",
+        "role": "authority" if (adult_in_charge or pick == "3" or external_only) else "",
         "confidence": confidence,
         "flags": flags,
         "language": language or lang["language"],

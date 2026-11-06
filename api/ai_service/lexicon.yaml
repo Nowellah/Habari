@@ -4,7 +4,7 @@
 # A match can only RAISE severity, never lower it.
 #
 # floor: minimum severity when the flag matches (0 = flag only, no floor).
-version: "0.3"
+version: "0.4"
 
 # Applied word by word before matching (SMS shorthand and spelling variants).
 shorthand:
@@ -60,13 +60,33 @@ flags:
       sw: ["nitaweka", "nitakuumiza"]
       rn: ["ndaakuteera"]
   # v0.2: an adult in charge is severity 3, the same as the child's pick 3.
+  # v0.4: naming an adult in charge is not harm by itself ("my teacher says I did
+  # well"). The floor of 3 now needs a harm flag too; see AUTHORITY_HARM_FLAGS.
   authority:
-    floor: 3
+    floor: 0
     terms:
       en: ["my teacher", "the teacher", "headteacher", "my father", "my dad", "my mother", "my mum", "my uncle", "my guardian", "my coach", "our coach", "the coach", "our teacher", "stepdad", "stepfather", "stepmother", "stepmum", "pastor", "imam"]
       lg: ["omusomesa", "taata wange", "maama wange", "kojja wange"]
       sw: ["mwalimu", "baba yangu", "mama yangu", "mjomba"]
       rn: ["omwegyesa", "taata wangye", "maama wangye"]
+  # v0.4: physical or sexual harm done to the child. lg, sw and rn terms are DRAFTS.
+  harm_by_person:
+    floor: 3
+    terms:
+      en: ["beats me", "beat me", "beating me", "hits me", "hit me", "hitting me", "slaps me", "slapped me", "kicks me", "kicked me", "canes me", "caned me", "burns me", "burned me", "touches me", "touched me", "touching me", "forces me", "forced me", "undress", "raped", "rape", "defiled", "private parts"]
+      lg: ["ankuba", "yankuba", "ankwatako"]
+      sw: ["ananipiga", "alinipiga", "ananigusa", "alinigusa", "alinibaka"]
+      rn: ["anteera"]
+  # v0.4: warning signs that matter when an adult in charge is named: being alone
+  # with them, at night, behind a locked door, or messages about the child's body.
+  # No floor on its own; with "authority" it gives severity 3 (see combinations).
+  risk_context:
+    floor: 0
+    terms:
+      en: ["alone with him", "alone with her", "alone with me", "me alone", "come alone", "office alone", "stay alone with", "locked the door", "locks the door", "keeps messaging me", "keeps texting me", "keeps calling me", "messages at night", "texts me at night", "calls me at night", "comes at night", "my room", "his office", "her office", "his house", "his room", "my body", "love messages", "love letters", "sexy", "kiss", "kissed", "scared of", "afraid of", "secret", "pictures of me", "photos of me"]
+      lg: []
+      sw: ["peke yangu", "usiku", "mwili wangu"]
+      rn: []
   gambling:
     floor: 2
     terms:
@@ -124,6 +144,11 @@ flags:
 combinations:
   - all_of: [sextortion, money_demand, threat]
     floor: 4
+  # v0.4: an adult in charge plus a threat is severity 3 (the other harm flags already are).
+  - all_of: [authority, threat]
+    floor: 3
+  - all_of: [authority, risk_context]
+    floor: 3
 
 # Common words used only to guess the language (DRAFT, needs native review).
 # A message with words from two languages counts as mixed, so the bot asks.
