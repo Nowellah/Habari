@@ -1,12 +1,10 @@
-"""Runtime configuration read from environment variables."""
+"""Settings for the knowledge answers, read from environment variables."""
 import logging
 import os
 import re
 from dataclasses import dataclass
 
 logger = logging.getLogger("habari.ai")
-
-_HELPLINE_PATTERN = re.compile(r"^[0-9+\-\s()]{3,20}$")
 
 DEFAULT_EMBED_MODEL = "nomic-embed-text"
 DEFAULT_EMBED_THRESHOLD = 0.6
@@ -18,7 +16,6 @@ DEFAULT_OLLAMA_TIMEOUT = 3.0
 class Settings:
     """Values that must come from configuration and never from code."""
 
-    helpline_number: str | None
     ollama_url: str | None = None
     embed_model: str = DEFAULT_EMBED_MODEL
     embed_threshold: float = DEFAULT_EMBED_THRESHOLD
@@ -52,12 +49,7 @@ def _read_ollama_url() -> str | None:
 
 def get_settings() -> Settings:
     """Read settings on every call so a changed environment takes effect."""
-    helpline = os.getenv("HABARI_HELPLINE_NUMBER", "").strip()
-    if helpline and not _HELPLINE_PATTERN.match(helpline):
-        logger.warning("HABARI_HELPLINE_NUMBER is not a valid phone number format and was ignored")
-        helpline = ""
     return Settings(
-        helpline_number=helpline or None,
         ollama_url=_read_ollama_url(),
         embed_model=os.getenv("HABARI_EMBED_MODEL", "").strip() or DEFAULT_EMBED_MODEL,
         embed_threshold=_read_float("HABARI_EMBED_THRESHOLD", DEFAULT_EMBED_THRESHOLD, 0.0, 1.0),

@@ -1,23 +1,4 @@
 import pytest
-from fastapi.testclient import TestClient
-
-from ai_service.engine.main import app
-
-
-@pytest.fixture
-def client():
-    return TestClient(app, raise_server_exceptions=False)
-
-
-@pytest.fixture
-def helpline(monkeypatch):
-    monkeypatch.setenv("HABARI_HELPLINE_NUMBER", "0800 100 200")
-    return "0800 100 200"
-
-
-@pytest.fixture(autouse=True)
-def no_helpline_by_default(monkeypatch):
-    monkeypatch.delenv("HABARI_HELPLINE_NUMBER", raising=False)
 
 
 @pytest.fixture(autouse=True)

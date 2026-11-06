@@ -7,8 +7,8 @@ from ai_service.engine import retrieval
 from ai_service.engine.config import Settings, get_settings
 from ai_service.engine.retrieval import load_knowledge_base, parse_knowledge_base, search
 
-KEYWORD_SETTINGS = Settings(helpline_number=None)
-EMBED_SETTINGS = Settings(helpline_number=None, ollama_url="http://127.0.0.1:11434")
+KEYWORD_SETTINGS = Settings()
+EMBED_SETTINGS = Settings(ollama_url="http://127.0.0.1:11434")
 
 EXPECTED_MATCHES = [
     ("he says he will post my nudes if I dont pay", "sextortion-should-i-pay"),
@@ -109,7 +109,7 @@ class FakeOllama:
 def test_embedding_backend_is_used_when_configured(monkeypatch):
     fake = FakeOllama()
     monkeypatch.setattr(retrieval, "_post_json", fake)
-    settings = Settings(helpline_number=None, ollama_url="http://127.0.0.1:11434", embed_threshold=0.3)
+    settings = Settings(ollama_url="http://127.0.0.1:11434", embed_threshold=0.3)
     result = search("my account got hacked", "en", settings)
     assert result.backend == "embedding"
     assert result.match.entry.id == "hacked-account"
@@ -120,7 +120,7 @@ def test_embedding_backend_is_used_when_configured(monkeypatch):
 def test_entry_embeddings_are_computed_once(monkeypatch):
     fake = FakeOllama()
     monkeypatch.setattr(retrieval, "_post_json", fake)
-    settings = Settings(helpline_number=None, ollama_url="http://127.0.0.1:11434", embed_threshold=0.3)
+    settings = Settings(ollama_url="http://127.0.0.1:11434", embed_threshold=0.3)
     search("my account got hacked", "en", settings)
     search("how do I block a person", "en", settings)
     assert len(fake.calls) == 3  # one indexing call, then one query call per search
@@ -128,7 +128,7 @@ def test_entry_embeddings_are_computed_once(monkeypatch):
 
 def test_embedding_threshold_gives_no_match_for_unrelated_text(monkeypatch):
     monkeypatch.setattr(retrieval, "_post_json", FakeOllama())
-    settings = Settings(helpline_number=None, ollama_url="http://127.0.0.1:11434", embed_threshold=0.6)
+    settings = Settings(ollama_url="http://127.0.0.1:11434", embed_threshold=0.6)
     result = search("football scores today", "en", settings)
     assert result.backend == "embedding" and result.match is None
 
