@@ -8,6 +8,7 @@ from channels.ussd import ussd_hook
 from channels.whatsapp import whatsapp_hook
 from channels.views import channel_api
 from channels.proof_views import proof_upload
+from channels.status_views import case_status
 from channels.voice_views import voice_note, voice_shortcut, voice_transcribe
 from dashboard import officer_views as ov
 from dashboard import pwa_views
@@ -47,6 +48,7 @@ urlpatterns = [
     path("api/voice/transcribe", voice_transcribe, name="voice_transcribe"),
     path("api/voice-note", voice_note, name="voice_note"),
     path("api/proof", proof_upload, name="proof_upload"),
+    path("api/case-status", case_status, name="case_status_api"),
     path("status/<str:code>", status_page, name="status"),
     path("officer/", officer_list, name="officer_list"),
     path("officer/partners", ov.partner_board, name="partner_board"),
