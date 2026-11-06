@@ -29,6 +29,24 @@ export function sendLocation(senderId: string, lat: number, lon: number): Promis
   return post({ channel: "web", sender_id: senderId, text: "", location: { lat, lon } });
 }
 
+export interface TrackStep { key: string; title: string; detail: string; state: "done" | "current" | "todo" | "skipped"; at: string | null }
+export interface CaseTrack {
+  code: string; closed: boolean; headline: string; steps: TrackStep[];
+  opened_at: string; closed_at: string | null; took: string; goal: string;
+  messages: { text: string; at: string }[];
+}
+export type TrackResult = { ok: true; data: CaseTrack } | { ok: false; needsWord: boolean; message: string };
+
+/** Where a case is. Needs the code, and the secret word if the child set one. Nothing about the report itself comes back. */
+export async function getCaseStatus(code: string, word: string): Promise<TrackResult> {
+  const r = await fetch(`${BASE}/api/case-status`, {
+    method: "POST", headers: JSON_HEADERS, cache: "no-store", body: JSON.stringify({ code, word }),
+  });
+  if (r.ok) return { ok: true, data: (await r.json()) as CaseTrack };
+  const body = (await r.json().catch(() => ({}))) as { message?: string; needs_word?: boolean };
+  return { ok: false, needsWord: body.needs_word === true, message: body.message || "We could not look that up. Please try again." };
+}
+
 export const MAX_PROOF_BYTES = 8 * 1024 * 1024;
 
 /** Adds a screenshot or PDF to the child's open case. A refused file comes back as a reply they can read. */
