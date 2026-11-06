@@ -161,7 +161,7 @@ class FirstMenuTests(GatewayTestCase):
 
     def test_sms_menu_is_unchanged(self):
         out = self.send("MENU", sender="+256700000002", channel="sms")
-        self.assertIn("Reply 1 Danger", out["reply_text"])
+        self.assertIn("\n1 Danger", out["reply_text"])  # SMS keeps its numbered list, one option per line
 
     def test_free_text_at_the_first_menu_is_not_thrown_away(self):
         self.web("MENU")
