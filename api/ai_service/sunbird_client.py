@@ -1,9 +1,10 @@
 """Thin wrapper around the Sunbird AI API. Every function returns None when no
 SUNBIRD_TOKEN is set or the call fails, so callers always have a fallback.
 
-The endpoint paths changed in 2026 (see build plan §1.5). They are settings so a
-change touches only the .env file. The speech path and fields follow docs.sunbird.ai;
-the language and translate calls have not been checked against the live API.
+Verified against live API on 2026-11-06:
+  - /tasks/language_id  — POST JSON, returns {"language": "lug", "confidence": 0.69}
+  - /tasks/stt          — POST multipart, returns {"output": {"text": "...", "language": "eng"}}
+  - /tasks/nllb_translate — POST JSON; 405 on Free tier (translation not included)
 """
 import logging
 import os
@@ -14,7 +15,7 @@ log = logging.getLogger(__name__)
 
 BASE = os.getenv("SUNBIRD_BASE_URL", "https://api.sunbird.ai")
 LANGUAGE_PATH = os.getenv("SUNBIRD_LANGUAGE_PATH", "/tasks/language_id")
-TRANSLATE_PATH = os.getenv("SUNBIRD_TRANSLATE_PATH", "/tasks/translate")
+TRANSLATE_PATH = os.getenv("SUNBIRD_TRANSLATE_PATH", "/tasks/nllb_translate")
 TIMEOUT = float(os.getenv("SUNBIRD_TIMEOUT", "4"))
 
 # Sunbird uses 3-letter codes; Habari uses short codes.
@@ -50,7 +51,7 @@ def language_id(text):
     return {"language": TO_HABARI.get(code, code)} if code else None
 
 
-STT_PATH = os.getenv("SUNBIRD_STT_PATH", "/tasks/audio/transcriptions")
+STT_PATH = os.getenv("SUNBIRD_STT_PATH", "/tasks/stt")
 
 
 STT_DEFAULT_LANGUAGE = os.getenv("SUNBIRD_STT_LANGUAGE", "eng")
@@ -96,7 +97,7 @@ def transcribe(audio: bytes, language):
     except (requests.RequestException, ValueError) as exc:
         log.warning("Sunbird speech-to-text failed: %s", type(exc).__name__)
         return None
-    text = data.get("audio_transcription") or data.get("text") or None
+    text = data.get("audio_transcription") or data.get("text") or (data.get("output") or {}).get("text") or None
     if not text:
         log.warning("Sunbird speech-to-text returned no words")
     return text
