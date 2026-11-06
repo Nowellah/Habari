@@ -42,7 +42,7 @@ class DangerQuestionsTests(GatewayTestCase):
         out = self.web("0")
         self.assertIn("A helper will read everything", out["reply_text"])
         self.assertEqual(Case.objects.get().severity, 4)
-        self.assertEqual(out["options"], [])
+        self.assertEqual([o["key"] for o in out["options"]], ["PROOF_ADD", "PROOF_LATER"])
 
     def test_the_childs_own_words_at_the_last_question_are_kept(self):
         self.start()
