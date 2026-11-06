@@ -29,6 +29,25 @@ export function sendLocation(senderId: string, lat: number, lon: number): Promis
   return post({ channel: "web", sender_id: senderId, text: "", location: { lat, lon } });
 }
 
+export const MAX_PROOF_BYTES = 8 * 1024 * 1024;
+
+/** Adds a screenshot or PDF to the child's open case. A refused file comes back as a reply they can read. */
+export async function sendProof(senderId: string, file: File): Promise<Reply> {
+  const form = new FormData();
+  form.append("sender_id", senderId);
+  form.append("file", file, file.name);
+  const r = await fetch(`${BASE}/api/proof`, { method: "POST", body: form, cache: "no-store" });
+  if (r.ok) return (await r.json()) as Reply;
+  if (r.status === 400 || r.status === 413 || r.status === 415) {
+    const data = (await r.json().catch(() => ({}))) as { message?: string };
+    return {
+      reply_text: data.message || "I could not use that file.",
+      options: [{ key: "PROOF_ADD", label: "Try another file" }], case_code: null, state: "CASE_OPEN",
+    };
+  }
+  throw new Error(String(r.status));
+}
+
 export interface AppConfig { helpline: string; voice: boolean }
 
 /** Server settings. Voice is offered only when a speech-to-text engine is set up. */
