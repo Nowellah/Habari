@@ -31,10 +31,9 @@ python manage.py seed_demo        # roles, 5 simulated partners, 6 officers, 1 s
 Run in separate windows:
 
 ```powershell
-python manage.py runserver                                   # 1 website            http://localhost:8000
-python -m uvicorn ai_service.app:app --port 8001             # 2 AI service
-$env:SLA_TIME_SCALE=180; python manage.py run_sla_watcher    # 3 SLA clock (demo speed: 1 min = 3 SLA hours)
-python manage.py run_telegram                                # 4 Telegram bot (needs TELEGRAM_TOKEN)
+python manage.py runserver                                   # 1 website and chatbot  http://localhost:8000
+$env:SLA_TIME_SCALE=180; python manage.py run_sla_watcher    # 2 SLA clock (demo speed: 1 min = 3 SLA hours)
+python manage.py run_telegram                                # 3 Telegram bot (needs TELEGRAM_TOKEN)
 ```
 
 Demo logins (local only): officers `sarah`, `joseph`, `grace`, `moses`, `amina`, `peter`; supervisor `esther`; password `habari-demo` (change with `DEMO_OFFICER_PASSWORD`).
@@ -82,7 +81,7 @@ channels/        gateway, SMS, USSD, Telegram, WhatsApp, voice, extension eviden
 dashboard/       child pages, officer pages, metrics, installable app
 polls/  kb/      U-Report style polls, knowledge base
 partners_mock/   simulated partners
-ai_service/      FastAPI: language, triage, translate, transcribe, summarise
+ai_service/      plain Python used by Django: language, rules, triage, speech, summaries, knowledge answers
 eval/            synthetic data, hard test set, metrics
 extension/       browser extension
 shared/          harm picks, SLA rules, messages, districts, feature status

@@ -8,7 +8,7 @@ A child can report something that happened online from almost any door: SMS, USS
 
 ```
 HABARI/
-  api/    Django backend + AI service (Python 3.14, Django 5.2, FastAPI)
+  api/    Django backend with the chatbot, rules and speech helpers in one process (Python 3.14, Django)
   web/    React frontend (Vite + TypeScript)
 ```
 
@@ -38,13 +38,10 @@ Run services in separate terminals:
 # Terminal 1 — Django web app       http://localhost:8000
 python manage.py runserver
 
-# Terminal 2 — AI service           http://localhost:8001
-python -m uvicorn ai_service.app:app --port 8001
-
-# Terminal 3 — SLA watcher (demo speed: 1 min = 3 SLA hours)
+# Terminal 2 — SLA watcher (demo speed: 1 min = 3 SLA hours)
 $env:SLA_TIME_SCALE=180; python manage.py run_sla_watcher
 
-# Terminal 4 — Telegram bot (optional, needs TELEGRAM_TOKEN in .env)
+# Terminal 3 — Telegram bot (optional, needs TELEGRAM_TOKEN in .env)
 python manage.py run_telegram
 ```
 
@@ -68,7 +65,6 @@ Key `web/.env` variables:
 
 ```
 VITE_API_BASE_URL=http://127.0.0.1:8000
-VITE_AI_SERVICE_URL=http://127.0.0.1:8001
 ```
 
 The Vite dev server proxies `/api/*` and `/static/*` to Django automatically, so relative paths like `fetch('/api/...')` work without hardcoding the base URL.
