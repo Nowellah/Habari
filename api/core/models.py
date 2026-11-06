@@ -141,6 +141,8 @@ class Partner(models.Model):
     districts = models.JSONField(default=list)
     ack_minutes = models.PositiveIntegerField(default=120)
     slow_mode = models.BooleanField(default=False)
+    # Real contact number for display on the officer dashboard and referral notes.
+    phone = models.CharField(max_length=32, blank=True)
     # Key the partner sends in X-Partner-Key when acknowledging a referral.
     api_key = models.CharField(max_length=64, default=_new_key)
 

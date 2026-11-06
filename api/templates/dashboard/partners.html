@@ -6,11 +6,12 @@
 <p class="muted">How quickly each partner acknowledges referrals. Times are SLA minutes. Partners are simulated in this prototype; windows are proposed targets.</p>
 <div class="wrap">
 <table>
-  <thead><tr><th>Partner</th><th>Window</th><th>Referrals</th><th>Acknowledged</th><th>Median time to acknowledge</th><th>Breach rate</th></tr></thead>
+  <thead><tr><th>Partner</th><th>Contact</th><th>Window</th><th>Referrals</th><th>Acknowledged</th><th>Median time to acknowledge</th><th>Breach rate</th></tr></thead>
   <tbody>
   {% for r in rows %}
     <tr>
       <td>{{ r.partner.name }}</td>
+      <td>{% if r.partner.phone %}<strong>{{ r.partner.phone }}</strong>{% else %}<span class="muted">—</span>{% endif %}</td>
       <td>{{ r.window }} min</td>
       <td>{{ r.sent }}</td>
       <td>{{ r.acked }}</td>

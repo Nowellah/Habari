@@ -484,6 +484,26 @@ def _route(channel, reporter, text, language):
     if conv is None:
         conv = Conversation.objects.create(reporter=reporter, channel=channel)
 
+    # ── SMS / basic-phone: ask language on the very first message ──────────────
+    # A child who just texted HELP (or anything) and has no language set yet is
+    # asked to pick their language before the harm menu appears.  Commands (STATUS,
+    # STOP, PIN) are handled above so they always work regardless of this state.
+    if channel in ("sms",) and conv.state == "START" and not reporter.language:
+        conv.state, conv.draft = "PICK_LANG_FIRST", {}
+        conv.save()
+        return _reply(msg("lang_question"), "PICK_LANG_FIRST")
+
+    if conv.state == "PICK_LANG_FIRST":
+        if text in LANG_OPTIONS:
+            code, name = LANG_OPTIONS[text]
+            reporter.language = code
+            reporter.save(update_fields=["language"])
+            _lang.set(code if code in reply_languages() else "en")
+        # Whether they chose a valid option or not, move to the harm menu.
+        conv.state, conv.case, conv.draft = "PICK_HARM", None, {}
+        conv.save()
+        return _reply(msg("menu"), "PICK_HARM", options=_menu_options())
+
     if conv.state == "POLL":
         from polls.models import Poll
         from polls.service import record_answer

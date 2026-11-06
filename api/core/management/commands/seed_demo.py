@@ -10,11 +10,12 @@ from polls.models import Poll
 GROUPS = ["officer", "supervisor", "safeguarding", "admin"]
 
 PARTNERS = [
-    ("sauti_116", "Sauti 116 child helpline (simulated)", ["self_harm", "threats", "sextortion", "grooming", "exposure_by_authority", "cyberbullying"], [], 15),
-    ("police_cfpu", "Police Child and Family Protection Unit (simulated)", ["self_harm", "threats", "sextortion", "grooming", "exposure_by_authority"], ["Kampala", "Wakiso", "Mbarara", "Gulu"], 120),
-    ("ucc", "Uganda Communications Commission (simulated)", ["sextortion", "impersonation", "cyberbullying", "scam", "gambling_or_betting", "inappropriate_content"], [], 1440),
-    ("school_focal", "School safeguarding focal person (simulated)", ["cyberbullying", "impersonation"], ["Kampala", "Wakiso"], 1440),
-    ("counsellor", "Outside counsellor (simulated)", ["self_harm", "sextortion", "grooming", "exposure_by_authority", "cyberbullying", "inappropriate_content"], [], 240),
+    # slug, display name, categories, districts, ack_minutes, phone
+    ("sauti_116",   "Sauti 116 child helpline (simulated)",                    ["self_harm", "threats", "sextortion", "grooming", "exposure_by_authority", "cyberbullying"],                         [], 15,   "116"),
+    ("police_cfpu", "Police Child and Family Protection Unit (simulated)",      ["self_harm", "threats", "sextortion", "grooming", "exposure_by_authority"],                                          ["Kampala", "Wakiso", "Mbarara", "Gulu"], 120, "0800 199 185"),
+    ("ucc",         "Uganda Communications Commission (simulated)",             ["sextortion", "impersonation", "cyberbullying", "scam", "gambling_or_betting", "inappropriate_content"],             [], 1440, ""),
+    ("school_focal","School safeguarding focal person (simulated)",             ["cyberbullying", "impersonation"],                                                                                    ["Kampala", "Wakiso"], 1440, ""),
+    ("counsellor",  "Outside counsellor (simulated)",                          ["self_harm", "sextortion", "grooming", "exposure_by_authority", "cyberbullying", "inappropriate_content"],            [], 240,  ""),
 ]
 
 # Officers paged for severity 4 cases, and supervisors who can reassign.
@@ -39,9 +40,10 @@ class Command(BaseCommand):
             Group.objects.get_or_create(name=name)
         officer_group = Group.objects.get(name="officer")
 
-        for slug, name, cats, districts, ack in PARTNERS:
+        for slug, name, cats, districts, ack, phone in PARTNERS:
             Partner.objects.update_or_create(
-                slug=slug, defaults={"name": name, "categories": cats, "districts": districts, "ack_minutes": ack}
+                slug=slug, defaults={"name": name, "categories": cats, "districts": districts,
+                                     "ack_minutes": ack, "phone": phone}
             )
 
         password = os.getenv("DEMO_OFFICER_PASSWORD", "habari-demo")
