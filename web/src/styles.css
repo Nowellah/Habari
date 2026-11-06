@@ -150,3 +150,5 @@ form.send input:focus { outline: 2px solid var(--deep-teal); }
 .side-right .swoosh { margin-left: 0; }
 @media (min-width: 1150px) { .side, .dots { display: block; } }
 .online { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4cd964; margin-left: 4px; vertical-align: middle; }
+.b .proof-thumb { display: block; max-width: 220px; max-height: 220px; border-radius: 8px; }
+.round.clip { background: transparent; color: var(--deep-teal); box-shadow: none; }

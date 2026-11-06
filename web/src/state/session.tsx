@@ -1,10 +1,10 @@
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { type Option, type Reply, type SharedMeta, getConfig, newSenderId, sendMessage, sendVoiceNote } from "../lib/api";
+import { type Option, type Reply, type SharedMeta, getConfig, newSenderId, sendMessage, sendProof, sendVoiceNote } from "../lib/api";
 import type { Language, SpokenLanguage } from "../lib/choices";
 import { speak, speechText, stopSpeaking } from "../lib/speech";
 import type { Cues } from "../lib/voice";
 
-export interface Bubble { id: number; who: "bot" | "kid"; text: string; at: number; call?: boolean; kind?: "text" | "choice"; audioUrl?: string }
+export interface Bubble { id: number; who: "bot" | "kid"; text: string; at: number; call?: boolean; kind?: "text" | "choice"; audioUrl?: string; imageUrl?: string }
 
 interface Session {
   senderId: string;
@@ -30,6 +30,8 @@ interface Session {
   send(value: string, shown?: string | null, kind?: "text" | "choice"): Promise<void>;
   /** Send a recorded voice note. It stays a voice note; the bot still answers it. */
   sendVoice(wav: Blob, spoken: SpokenLanguage, cues: Cues): Promise<void>;
+  /** Add a screenshot or PDF to the open case. */
+  sendProofFile(file: File): Promise<void>;
   setShared(meta: SharedMeta): void;
   /** Forget the whole conversation. */
   reset(): void;
@@ -124,6 +126,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await exchange((meta) => sendVoiceNote(senderId, wav, spoken, cues, meta, languageRef.current));
   }, [add, exchange, senderId]);
 
+  const sendProofFile = useCallback(async (file: File) => {
+    setStarted(true);
+    setOptions([]);
+    const isImage = file.type.startsWith("image/");
+    const imageUrl = isImage ? URL.createObjectURL(file) : undefined;
+    if (imageUrl) audioUrls.current.push(imageUrl);
+    add("kid", isImage ? "Screenshot" : "File added", { imageUrl });
+    await exchange(() => sendProof(senderId, file));
+  }, [add, exchange, senderId]);
+
   const reset = useCallback(() => {
     stopSpeaking();
     audioUrls.current.forEach((u) => URL.revokeObjectURL(u));
@@ -142,9 +154,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     bubbles, options, waiting, started, caseCode, category, danger,
     entered, markEntered: () => setEntered(true),
     aloud, setAloud: (on) => { setAloudState(on); if (!on) stopSpeaking(); },
-    send, sendVoice, setShared: (m) => { shared.current = m; },
+    send, sendVoice, sendProofFile, setShared: (m) => { shared.current = m; },
     reset,
-  }), [senderId, helpline, voiceReady, age, language, bubbles, options, waiting, started, caseCode, category, danger, entered, aloud, send, sendVoice, reset]);
+  }), [senderId, helpline, voiceReady, age, language, bubbles, options, waiting, started, caseCode, category, danger, entered, aloud, send, sendVoice, sendProofFile, reset]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

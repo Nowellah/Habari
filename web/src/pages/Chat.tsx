@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import avatar from "../assets/habari-icon.png";
 import Page from "../components/Page";
-import { type SharedMeta, sendLocation } from "../lib/api";
+import { MAX_PROOF_BYTES, type Option, type SharedMeta, sendLocation } from "../lib/api";
 import { type SpokenLanguage, spokenLanguageFor } from "../lib/choices";
 import { canSpeak, matchOption, stopSpeaking } from "../lib/speech";
 import { type Listening, canRecord, listen } from "../lib/voice";
@@ -23,6 +23,7 @@ export default function Chat() {
   const autoStarted = useRef(false);
   const end = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLInputElement>(null);
+  const filePicker = useRef<HTMLInputElement>(null);
   const recordable = useMemo(canRecord, []) && s.voiceReady;
   const speakable = useMemo(canSpeak, []);
 
@@ -48,12 +49,27 @@ export default function Chat() {
   useEffect(() => {
     if (s.entered && !s.started && !autoStarted.current) {
       autoStarted.current = true;
-      void s.send("HELP", null);
+      void s.send("MENU", null);
     }
   }, [s]);
 
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [s.bubbles, s.options, s.waiting]);
   useEffect(() => () => { voice.current?.abort(); }, []);
+
+  /** A button press. Adding screenshots opens the file picker; every other button is sent as a choice. */
+  function pick(o: Option) {
+    if (o.key === "PROOF_ADD") filePicker.current?.click();
+    else void s.send(o.key, o.label, "choice");
+  }
+
+  function onFile(files: FileList | null) {
+    const file = files?.[0];
+    if (filePicker.current) filePicker.current.value = "";
+    if (!file) return;
+    if (file.size > MAX_PROOF_BYTES) { setHint("That file is too big. Please choose one under 8 MB."); return; }
+    setHint(null);
+    void s.sendProofFile(file);
+  }
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,7 +78,7 @@ export default function Chat() {
     setText("");
     // Typing or saying exactly the words on a button works like pressing that button.
     const button = matchOption(value, s.options);
-    if (button) void s.send(button.key, button.label, "choice");
+    if (button) pick(button);
     else void s.send(value);
   }
 
@@ -139,7 +155,7 @@ export default function Chat() {
                   Hi, I am Habari. You are not in trouble. In danger now? <a href={`tel:${s.helpline}`}>Call {s.helpline}</a>, it is free.
                 </div>
               </div>
-              <button className="qr-pill" id="start" type="button" onClick={() => void s.send("HELP", "Talk to us")}>
+              <button className="qr-pill" id="start" type="button" onClick={() => void s.send("MENU", "Talk to us")}>
                 Talk to us
               </button>
             </div>
@@ -150,7 +166,8 @@ export default function Chat() {
                 ? <img className="avatar sm" src={avatar} alt="" />
                 : <span className="avatar sm gap" />)}
               <div className={`b ${b.who === "kid" ? "child-bubble kid" : "bot-bubble bot"}`}>
-                {b.audioUrl ? <audio controls src={b.audioUrl} aria-label="Your voice note" /> : b.text}
+                {b.audioUrl ? <audio controls src={b.audioUrl} aria-label="Your voice note" />
+                  : b.imageUrl ? <img className="proof-thumb" src={b.imageUrl} alt="Screenshot you added" /> : b.text}
                 {b.call && (<><br /><a className="call" href={`tel:${s.helpline}`}>Call {s.helpline} now</a></>)}
                 <time>{clock(b.at)}</time>
               </div>
@@ -165,7 +182,7 @@ export default function Chat() {
           {s.options.length > 0 && (
             <div className="quick-replies-row">
               {s.options.map((o) => (
-                <button key={o.key} type="button" className="qr-pill opt" onClick={() => void s.send(o.key, o.label, "choice")}>
+                <button key={o.key} type="button" className="qr-pill opt" onClick={() => pick(o)}>
                   {o.label}
                 </button>
               ))}
@@ -204,6 +221,14 @@ export default function Chat() {
         <form className="send" id="send" autoComplete="off" onSubmit={onSubmit}>
           <input id="text" ref={box} value={text} onChange={(e) => setText(e.target.value)}
             placeholder="Type a message" aria-label="Your message" />
+          {s.caseCode && (
+            <>
+              <input ref={filePicker} type="file" hidden accept="image/jpeg,image/png,image/webp,application/pdf"
+                onChange={(e) => onFile(e.target.files)} />
+              <button type="button" className="round clip" aria-label="Add a screenshot" title="Add a screenshot"
+                onClick={() => filePicker.current?.click()}><ClipIcon /></button>
+            </>
+          )}
           {recordable && !text.trim() ? (
             <button type="button" id="speak" className={`round speak${listening ? " rec" : ""}`}
               aria-label={listening ? "Stop recording" : "Record a voice note"} title={listening ? "Stop and send" : "Record a voice note"}
@@ -226,6 +251,9 @@ function clock(at: number): string {
 const icon = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": true } as const;
 const MicIcon = () => (
   <svg {...icon}><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z" /></svg>
+);
+const ClipIcon = () => (
+  <svg {...icon}><path d="M16.5 6.5v9.2a4.5 4.5 0 0 1-9 0V5.6a3 3 0 0 1 6 0v9.6a1.5 1.5 0 0 1-3 0V6.5H9.5v8.7a3 3 0 0 0 6 0V5.6a4.5 4.5 0 0 0-9 0v10.1a6 6 0 0 0 12 0V6.5h-2Z" /></svg>
 );
 const StopIcon = () => (<svg {...icon}><rect x="6" y="6" width="12" height="12" rx="2" /></svg>);
 const SendIcon = () => (<svg {...icon}><path d="M3 20.5v-6.7l9-1.8-9-1.8V3.5L22 12 3 20.5Z" /></svg>);
