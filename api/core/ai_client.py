@@ -1,57 +1,56 @@
-"""Calls the AI service. Returns None on any failure so the caller can fall back."""
-import requests
-from django.conf import settings
+"""AI helpers for the case engine. They run in this process, with no separate service.
+
+Every function returns None on any failure so the caller can fall back to its rules.
+"""
+import logging
+
+from ai_service import speech, synthesis, vision
+from ai_service.classifier import zero_shot
+from ai_service.triage import triage as run_triage
+
+logger = logging.getLogger("habari.ai")
 
 
 def triage(text, pick, language):
     try:
-        r = requests.post(
-            f"{settings.AI_SERVICE_URL}/triage",
-            json={"text": text or "", "pick": pick or None, "language": language or None},
-            timeout=settings.AI_TIMEOUT,
-        )
-        if r.status_code != 200:
-            return None
-        data = r.json()
-        return data if isinstance(data, dict) and "severity" in data else None
-    except (requests.RequestException, ValueError):
+        data = run_triage(text or "", pick=pick or None, language=language or None, classifier=zero_shot())
+    except Exception as exc:  # noqa: BLE001 - a broken helper must never block a report
+        logger.error("triage failed with %s", type(exc).__name__)
         return None
+    return data if isinstance(data, dict) and "severity" in data else None
+
+
+def check_proof(image: bytes, content_type: str, said: str, category: str = ""):
+    """A rough match between a proof picture and the report. None when no check is set up or it failed."""
+    return vision.check_proof(image, content_type, said, category)
 
 
 def voice_available() -> bool:
-    """True when the AI service is up and has a speech-to-text engine set up."""
-    try:
-        r = requests.get(f"{settings.AI_SERVICE_URL}/health", timeout=1.5)
-        return r.status_code == 200 and bool(r.json().get("speech_to_text"))
-    except (requests.RequestException, ValueError, AttributeError):
-        return False
+    """True when a speech-to-text engine is set up."""
+    return bool(speech.engines_available())
 
 
 def transcribe(audio: bytes, filename: str, language=None):
-    """Voice note to text via the AI service. None if it is down or has no engine."""
-    try:
-        r = requests.post(
-            f"{settings.AI_SERVICE_URL}/transcribe",
-            files={"audio": (filename or "voice", audio)},
-            data={"language": language or ""},
-            timeout=max(settings.AI_TIMEOUT, 60),
-        )
-        if r.status_code != 200:
-            return None
-        data = r.json()
-        return data if isinstance(data, dict) and data.get("text") else None
-    except (requests.RequestException, ValueError):
+    """Voice note to text. None if no engine is set up or it could not make out any words."""
+    engine = speech.get_transcriber()
+    if engine is None or not audio:
         return None
+    try:
+        out = engine(audio, language or None)
+    except Exception as exc:  # noqa: BLE001 - speech engines fail in many ways
+        logger.error("speech to text failed with %s", type(exc).__name__)
+        return None
+    text = ((out or {}).get("text") or "").strip()
+    if not text:
+        return None
+    return {"text": text, "language": out.get("language") or language or "unknown", "engine": out.get("engine")}
 
 
 def summarise(messages):
-    """Officer summary, timeline and details. None if the AI service is down."""
+    """Officer summary, timeline and details."""
     try:
-        r = requests.post(f"{settings.AI_SERVICE_URL}/summarise", json={"messages": messages},
-                          timeout=settings.AI_TIMEOUT)
-        if r.status_code != 200:
-            return None
-        data = r.json()
-        return data if isinstance(data, dict) and "summary" in data else None
-    except (requests.RequestException, ValueError):
+        data = synthesis.summarise(messages)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("summary failed with %s", type(exc).__name__)
         return None
+    return data if isinstance(data, dict) and "summary" in data else None
