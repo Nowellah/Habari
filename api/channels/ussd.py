@@ -154,10 +154,10 @@ def _report(steps, phone):
         sms_text = _m("danger", lang, code=case.code)
         send_sms(reporter, sms_text, to_number=phone, reply=True)
         end_text = {
-            "en": f"Call {helpline} now, it is free. A person is coming to help. Case {case.code}.",
-            "lg": f"Kuba ku {helpline} kati, kya bwereere. Omuntu ajja kukuyamba. Ensonga {case.code}.",
-            "rn": f"Ita ku {helpline} kati, ni bwereere. Omu azija kukuyamba. Ensonga {case.code}.",
-            "sw": f"Piga {helpline} sasa, ni bure. Mtu anakuja kukusaidia. Nambari {case.code}.",
+            "en": f"Call {helpline} now, it is free. A person is coming to help.\nYour code: {case.code}",
+            "lg": f"Kuba ku {helpline} kati, kya bwereere. Omuntu ajja kukuyamba.\nEnnamba yo: {case.code}",
+            "rn": f"Ita ku {helpline} kati, ni bwereere. Omu azija kukuyamba.\nEnnamba yo: {case.code}",
+            "sw": f"Piga {helpline} sasa, ni bure. Mtu anakuja kukusaidia.\nNambari yako: {case.code}",
         }
         return END(end_text.get(lang, end_text["en"]))
 
@@ -186,10 +186,10 @@ def _report(steps, phone):
         sms_text = _m("danger", lang, code=case.code)
         send_sms(reporter, sms_text, to_number=phone, reply=True)
         end_text = {
-            "en": f"Call {helpline} now, it is free. A person is coming to help. Case {case.code}.",
-            "lg": f"Kuba ku {helpline} kati, kya bwereere. Omuntu ajja kukuyamba. Ensonga {case.code}.",
-            "rn": f"Ita ku {helpline} kati, ni bwereere. Omu azija kukuyamba. Ensonga {case.code}.",
-            "sw": f"Piga {helpline} sasa, ni bure. Mtu anakuja kukusaidia. Nambari {case.code}.",
+            "en": f"Call {helpline} now, it is free. A person is coming to help.\nYour code: {case.code}",
+            "lg": f"Kuba ku {helpline} kati, kya bwereere. Omuntu ajja kukuyamba.\nEnnamba yo: {case.code}",
+            "rn": f"Ita ku {helpline} kati, ni bwereere. Omu azija kukuyamba.\nEnnamba yo: {case.code}",
+            "sw": f"Piga {helpline} sasa, ni bure. Mtu anakuja kukusaidia.\nNambari yako: {case.code}",
         }
         return END(end_text.get(lang, end_text["en"]))
 
@@ -198,18 +198,18 @@ def _report(steps, phone):
 
     if steps[S_CONF] == "2":
         add_later = {
-            "en": f"Thank you. Case {case.code}. SMS us your words and the code.",
-            "lg": f"Weebale. Ensonga {case.code}. Tuweereza ebigambo n'ennamba ku SMS.",
-            "rn": f"Mwebale. Ensonga {case.code}. Tutumira amagambo n'ennamba ku SMS.",
-            "sw": f"Asante. Nambari {case.code}. Tutumie maneno yako na nambari kwa SMS.",
+            "en": f"Thank you. SMS us more words later.\nYour code: {case.code}",
+            "lg": f"Weebale. Tuweereza ebigambo ku SMS oluvannyuma.\nEnnamba yo: {case.code}",
+            "rn": f"Mwebale. Tutumira amagambo ku SMS oluvannyuma.\nEnnamba yo: {case.code}",
+            "sw": f"Asante. Tutumie maneno zaidi kwa SMS baadaye.\nNambari yako: {case.code}",
         }
         return END(add_later.get(lang, add_later["en"]))
 
     done = {
-        "en": f"Thank you. Not your fault. Case {case.code}. We sent you an SMS.",
-        "lg": f"Weebale. Si nsobi yo. Ensonga {case.code}. Twakuweereza SMS.",
-        "rn": f"Mwebale. Si nsobi yo. Ensonga {case.code}. Twakutumira SMS.",
-        "sw": f"Asante. Si kosa lako. Nambari {case.code}. Tumekutumia SMS.",
+        "en": f"Thank you. Not your fault. We sent you an SMS.\nYour code: {case.code}",
+        "lg": f"Weebale. Si nsobi yo. Twakuweereza SMS.\nEnnamba yo: {case.code}",
+        "rn": f"Mwebale. Si nsobi yo. Twakutumira SMS.\nEnnamba yo: {case.code}",
+        "sw": f"Asante. Si kosa lako. Tumekutumia SMS.\nNambari yako: {case.code}",
     }
     return END(done.get(lang, done["en"]))
 
@@ -253,10 +253,10 @@ def _talk(phone, lang):
     case.save(update_fields=["severity", "flags"])
     helpline = settings.HELPLINE_NUMBER
     end_text = {
-        "en": f"A helper will contact you soon. Case {case.code}. If you are in danger call {helpline}.",
-        "lg": f"Omuyambi ajja kukutuukirira mangu. Ensonga {case.code}. Bw'oli mu kabi kuba ku {helpline}.",
-        "rn": f"Omuyambi azija kukutuukirira mangu. Ensonga {case.code}. Bw'oli mu kabi ita ku {helpline}.",
-        "sw": f"Msaidizi atakuwasiliana hivi karibuni. Nambari {case.code}. Ukiwa hatarini piga {helpline}.",
+        "en": f"A helper will contact you soon.\nYour code: {case.code}\nIf in danger call {helpline}.",
+        "lg": f"Omuyambi ajja kukutuukirira mangu.\nEnnamba yo: {case.code}\nBw'oli mu kabi kuba ku {helpline}.",
+        "rn": f"Omuyambi azija kukutuukirira mangu.\nEnnamba yo: {case.code}\nBw'oli mu kabi ita ku {helpline}.",
+        "sw": f"Msaidizi atakuwasiliana hivi karibuni.\nNambari yako: {case.code}\nUkiwa hatarini piga {helpline}.",
     }
     return END(end_text.get(lang, end_text["en"]))
 
