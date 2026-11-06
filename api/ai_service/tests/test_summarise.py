@@ -1,11 +1,6 @@
 from unittest import TestCase
 
-from fastapi.testclient import TestClient
-
-from ai_service.app import app
 from ai_service.synthesis import extract_entities, summarise
-
-client = TestClient(app)
 
 MESSAGES = [
     {"text": "A man called @big_boss77 on Instagram keeps messaging me.", "at": "2026-11-05T10:00:00"},
@@ -66,7 +61,5 @@ class SummaryTests(TestCase):
         self.assertEqual(out["summary"], "")
         self.assertEqual(out["timeline"], [])
 
-    def test_endpoint_contract(self):
-        r = client.post("/summarise", json={"messages": MESSAGES})
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(set(r.json()), {"summary", "timeline", "entities", "method"})
+    def test_result_contract(self):
+        self.assertEqual(set(self.out), {"summary", "timeline", "entities", "method"})

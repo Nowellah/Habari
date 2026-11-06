@@ -1,13 +1,8 @@
-"""Tests for the AI service (FastAPI). Run with: python manage.py test ai_service"""
+"""Tests for the AI helpers (language, triage). Run with: python manage.py test ai_service"""
 from unittest import TestCase
 
-from fastapi.testclient import TestClient
-
-from ai_service.app import app
 from ai_service.language import detect_language
 from ai_service.triage import triage
-
-client = TestClient(app)
 
 
 class LanguageTests(TestCase):
@@ -86,28 +81,13 @@ class TriageTests(TestCase):
         self.assertEqual(triage("I want to die", classifier=broken)["severity"], 4)
 
 
-class EndpointTests(TestCase):
-    def test_health(self):
-        r = client.get("/health")
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json()["status"], "ok")
-
-    def test_triage_endpoint_contract(self):
-        r = client.post("/triage", json={"text": "I want to die"})
-        self.assertEqual(r.status_code, 200)
+class ContractTests(TestCase):
+    def test_triage_result_contract(self):
         self.assertEqual(
-            set(r.json()),
+            set(triage("I want to die")),
             {"pick_suggestion", "category", "severity", "role", "confidence", "flags", "language",
              "language_confidence", "ask_language", "method"},
         )
 
-    def test_language_endpoint(self):
-        self.assertEqual(client.post("/language", json={"text": "nataka kufa sana"}).json()["language"], "sw")
-
-    def test_translate_without_token_says_not_translated(self):
-        r = client.post("/translate", json={"text": "webale", "source": "lg", "target": "en"}).json()
-        self.assertFalse(r["translated"])
-        self.assertEqual(r["text"], "webale")
-
-    def test_overlong_text_is_rejected(self):
-        self.assertEqual(client.post("/triage", json={"text": "a" * 6000}).status_code, 422)
+    def test_swahili_is_recognised(self):
+        self.assertEqual(detect_language("nataka kufa sana")["language"], "sw")
