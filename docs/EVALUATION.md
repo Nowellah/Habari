@@ -11,7 +11,7 @@
 | Test set | Messages | Serious caught (severity 3–4) | False negatives (serious missed) | False positives (raised to 3–4 wrongly) |
 |---|---|---|---|---|
 | **Hard test set 2** (fairest, see below) | 36 | **24 of 26 = 0.92** (95% CI 0.76–0.98) | **2** | **0** of 10 non-serious |
-| **Harmless messages** (benign_test) | 38 | – | – | **9 of 38 = 0.24** (95% CI 0.13–0.39) |
+| **Harmless messages** (benign_test) | 38 | – | – | **10 of 38 = 0.26** (95% CI 0.15–0.42) |
 | Hard test set 1 (used to write the rules) | 23 | 18 of 18 = 1.00 | 0 | 0 |
 | Synthetic test set (optimistic) | 90 | 54 of 54 = 1.00 | 0 | 16 of 36 non-serious |
 
@@ -25,7 +25,7 @@ Both still reach a person (severity 2, a 24-hour deadline). Neither was ignored.
 
 ### False positives (harmless messages raised), benign_test
 - **English: 2 of 30.** "my friend is waiting for me at the shop" (a "waiting for me" danger rule) and "my mum wants me to send her photos from the school trip" (any request for photos is treated as grooming).
-- **Luganda and Swahili: 7 of 8.** This is deliberate. Text the rules cannot read is sent to a person at severity 3 rather than being treated as safe. Real AI models for Luganda and Swahili (Sunbird) would lower this.
+- **Luganda and Swahili: 8 of 8.** This is deliberate. Text the rules cannot read is sent to a person at severity 3 rather than being treated as safe. Real AI models for Luganda and Swahili (Sunbird) would lower this.
 
 A false alarm costs an officer a few minutes. A miss can cost a child's safety. The rules are set to prefer false alarms, and the numbers above show that trade-off.
 
@@ -39,7 +39,7 @@ A false alarm costs an officer a few minutes. A miss can cost a child's safety. 
 - **Hard test set 2** was committed (`f245f68`) **before** the v0.3 rules were written, and scored 0.46 before them. The v0.4 trusted-adult change was then checked against it, and its warning-sign list was chosen after looking at 2 misses, so it is **no longer fully blind**. Its blind score, before v0.4, was also 0.92.
 - **Hard test set 2 and the rules were written by the same person**, with an AI coding assistant (declared in `api/docs/third_party.md`), so even 0.92 may be optimistic.
 - **Hard test set 1** was used to write the v0.3 rules. Its 1.00 is not a fair score; before v0.3 it was 0.50.
-- **benign_test** was committed before it was scored, and no rule was changed after scoring it.
+- **benign_test** was committed before it was scored, and no rule was changed to improve its score. It went from 9 to 10 when more Luganda words were added for language detection (6 Nov): "ndi bulungi" is now recognised as Luganda and, like all Luganda text, sent to a person.
 - **The sets are small** (26 serious messages in set 2), hence the wide confidence intervals.
 - **All data is synthetic.** No real child data or images were used. Luganda and Swahili lines are drafts awaiting native-speaker review.
 

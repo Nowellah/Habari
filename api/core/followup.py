@@ -11,7 +11,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 
-from core.messages import msg, status_words
+from core.messages import child_language, msg, status_words
 from core.models import Case, Conversation, Message, ReporterVault
 
 CHECKIN_AFTER_MINUTES = 3 * 24 * 60  # SLA minutes
@@ -50,7 +50,8 @@ def send_to_child(case, text):
 
 def set_status(case, new_status, now=None, reason=""):
     now = now or timezone.now()
-    before = status_words(case)
+    lang = child_language(case)
+    before = status_words(case, lang)
     case.status = new_status
     fields = ["status"]
     if new_status == Case.Status.RESOLVED:
@@ -60,9 +61,9 @@ def set_status(case, new_status, now=None, reason=""):
         case.closed_at, case.close_reason, case.checkin_due_at = now, reason, None
         fields += ["closed_at", "close_reason", "checkin_due_at"]
     case.save(update_fields=fields)
-    after = status_words(case)
+    after = status_words(case, lang)
     if after != before:
-        send_to_child(case, msg("status_update", code=case.code, words=after.split(": ", 1)[1]))
+        send_to_child(case, msg("status_update", lang, code=case.code, words=after.split(": ", 1)[1]))
 
 
 def _set_conversation(case, state):
@@ -82,7 +83,7 @@ def process_due(now=None):
                               checkin_due_at__lte=now, checkin_count__lt=MAX_CHECKINS)
     for case in due:
         first = case.checkin_count == 0
-        send_to_child(case, msg("checkin" if first else "checkin_again", code=case.code))
+        send_to_child(case, msg("checkin" if first else "checkin_again", child_language(case), code=case.code))
         case.checkin_count += 1
         case.status = Case.Status.SAFETY_CHECK
         case.checkin_due_at = now + _real(CHECKIN_AFTER_MINUTES) if case.checkin_count < MAX_CHECKINS else None

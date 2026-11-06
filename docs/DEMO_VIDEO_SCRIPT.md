@@ -1,6 +1,6 @@
 # Habari: 3-minute demo video script
 
-**Before recording:** run `python manage.py seed_demo`, start Django (port 8000) and the AI service (port 8001), and open two browser windows: the child chat (`/chat`, phone-sized) and the officer login (`/login/`, user `peter`). Mark one officer as on call. Close everything else on screen.
+**Before recording:** run `python manage.py seed_demo`, start Django (port 8000; the AI runs inside it), and open two browser windows: the child chat (`/chat`, phone-sized) and the officer login (`/login/`, user `peter`). Mark one officer as on call. Close everything else on screen.
 
 Total: 3:00. Times are guides, not exact.
 
@@ -40,7 +40,7 @@ Total: 3:00. Times are guides, not exact.
 
 ### 2:15–2:40 · Honest about the AI
 **Screen:** `/metrics`.
-> "We measure ourselves. On a test set written before our latest rules, Habari catches 92% of serious cases, with two misses that we show. On harmless messages it raises 9 of 38: mostly Luganda and Swahili, which we send to a person on purpose rather than risk a miss. Next: a multilingual AI model on the Testbed GPU and Sunbird for local languages."
+> "We measure ourselves. On a test set written before our latest rules, Habari catches 92% of serious cases, with two misses that we show. On harmless messages it raises 10 of 38: mostly Luganda and Swahili, which we send to a person on purpose rather than risk a miss. Next: a multilingual AI model on the Testbed GPU and Sunbird for local languages."
 
 ### 2:40–3:00 · Impact and close
 **Screen:** closing slide.
@@ -62,7 +62,7 @@ Total: 3:00. Times are guides, not exact.
 |---|---|
 | Where is the AI? | Severity and category triage, language ID, speech to text; a zero-shot model slot ready for the GPU. Metrics at `/metrics`. |
 | What if the AI is wrong? | It can only raise severity, a person reviews every serious case, and failures default to human review. |
-| What if the AI service is down? | Rules still triage, the dashboard shows "Rules (AI down)", and unreadable text goes to a person. |
+| What if the AI fails? | Rules still triage, the dashboard shows "Rules (AI down)", and unreadable text goes to a person. |
 | How do you protect children's data? | Pseudonymous IDs, raw contact in a locked vault, hashed identifiers, district only, no cookies. |
 | What happens when 10 serious cases come at once? | Each gets its own officer by skill, language and workload, partners are referred at once, and deadlines catch anything stuck. |
 | How does it pay for itself? | Children free; UCC/Ministry funding, licences for NGOs and schools, donor pilots, operator zero-rating. |

@@ -33,7 +33,7 @@ A **public-good platform with paid deployments**:
 
 | Item | Estimate | Notes |
 |---|---|---|
-| Hosting (app server, database, AI service) | Low hundreds of USD per month | Hosted in Uganda to meet the Data Protection and Privacy Act |
+| Hosting (app server with AI, database) | Low hundreds of USD per month | Hosted in Uganda to meet the Data Protection and Privacy Act |
 | SMS and USSD | Depends on volume and operator rates | Goal: zero-rated by operators. Until then, a per-message cost |
 | Speech and language AI (Sunbird) | Per-request pricing or partnership | Ugandan provider of Luganda and Runyankore models |
 | Staff | Officers are provided by partners (Sauti 116, NGOs) | Habari makes their existing staff faster; it does not replace them |

@@ -24,7 +24,7 @@ flowchart LR
     DASH["Officer dashboard,<br/>alerts, metrics"]
   end
 
-  subgraph AI["AI service (FastAPI, port 8001)"]
+  subgraph AI["AI (runs inside the Django app)"]
     TRIAGE["Triage: lexicon + rule engine<br/>(+ zero-shot model slot)"]
     LANG["Language ID"]
     STT["Speech to text"]
@@ -48,8 +48,8 @@ flowchart LR
 ## How a report moves
 
 1. **The child writes.** Each channel adapter turns the message into one common call to the gateway (`POST /api/channel/{name}`).
-2. **Fast first reply.** The gateway runs the first-pass rules (keyword list plus the rule engine, both plain Python) and replies within seconds. Danger gets the helpline (116) first. USSD sessions time out quickly, so no slow AI call sits in this path.
-3. **AI triage after the reply.** Once the case is saved, the AI service scores severity (1 to 4) and category. It can only **raise** severity. Only a person can lower it.
+2. **Fast first reply, in the child's language.** Replies are in Luganda when the child writes or chooses Luganda (draft wording, awaiting native review), otherwise English. The gateway runs the first-pass rules (keyword list plus the rule engine, both plain Python) and replies within seconds. Danger gets the helpline (116) first. USSD sessions time out quickly, so no slow AI call sits in this path.
+3. **AI triage after the reply.** Once the case is saved, the AI (inside the app, no separate service) scores severity (1 to 4) and category. It can only **raise** severity. Only a person can lower it.
 4. **Officer allocation.** A score picks the officer: language match (+3), skill match (+2), same district (+1), minus 0.5 per open case. The reason is saved on the case and a supervisor can override.
 5. **Referral.** Severity 4 is referred at once to Sauti 116 and the Police Child and Family Protection Unit (plus UCC and a counsellor for sextortion). If the alleged person is a parent, teacher or other adult in charge, the case is never sent to the family or school.
 6. **Alerts and deadlines.** Severity 3 and 4 cases appear in the officers' Alerts box. Each severity has an acknowledgement deadline (15 minutes for severity 4). A missed deadline reminds, then reassigns, then pages the on-call officer and escalates to a second partner.
@@ -77,8 +77,8 @@ flowchart LR
 - **Identifiers are hashed.** Abuser handles, numbers and links are stored as HMAC hashes, which still lets repeat offenders be matched.
 - **Evidence is tamper-evident.** Each item stores a SHA-256 hash chained to the one before.
 - **Less exposure for staff.** Officers see a short summary, category and flags first, so they can act without rereading the whole report. Only synthetic data is used; no real images of children exist anywhere in the project.
-- **Safe failure.** If the AI service is down, rules still triage (`Rules (AI down)` on the dashboard). If triage itself fails, the case becomes severity 3 for human review. Unreadable text is never treated as safe.
+- **Safe failure.** If an AI step fails, rules still triage (`Rules (AI down)` on the dashboard). If triage itself fails, the case becomes severity 3 for human review. Unreadable text is never treated as safe.
 
 ## Running it
 
-Setup is in the [README](../README.md). For the demo: `python manage.py seed_demo`, then run Django on 8000 and the AI service on 8001. Demo officers are `sarah`, `peter` (on call) and others; the password is set by `DEMO_OFFICER_PASSWORD`.
+Setup is in the [README](../README.md). For the demo: `python manage.py seed_demo`, then run Django on 8000 (the AI runs inside it). Demo officers are `sarah`, `peter` (on call) and others; the password is set by `DEMO_OFFICER_PASSWORD`.

@@ -2,7 +2,10 @@
 
 Each phase is tagged in git. Feature status lives in `shared/feature_status.json` (shown at `/about/status`).
 
-## Unreleased – demo flow fixes (5 Nov 2026)
+## Unreleased – Luganda replies (6 Nov 2026)
+Children who write or choose Luganda are answered in Luganda: every reply, button, status update, check-in and SLA reminder (shared/messages_lg.json, draft wording for native review). Missing texts fall back to English. More Luganda words for language detection, and Luganda threat words so a Luganda sextortion report gets severity 4 like English. Harmless-message false alarms 9 -> 10 of 38 ("ndi bulungi" is now recognised as Luganda and sent to a person).
+
+## demo flow fixes (5 Nov 2026)
 Sextortion reports get severity 4 and the helpline in the first reply (the rule engine now runs in the first pass), plus what to do right now: don't pay, keep proof, block. Officer alerts now show on the dashboard (they needed email addresses or phone-number usernames before, and no email backend was set). Sending referrals marks the case Referred and a partner acknowledgement marks it Acknowledged, so the child's status words move on.
 
 ## triage rules v0.4 (5 Nov 2026)

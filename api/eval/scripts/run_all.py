@@ -49,7 +49,7 @@ CAVEATS = [
     "and the warning-sign list was chosen after looking at them, so hard_test_v2 is no longer fully blind "
     "either. Its blind score, before v0.4, was 0.92.",
     "False alarms are measured on benign_test (38 harmless messages, committed before it was scored). "
-    "English: 2 of 30 raised. Luganda and Swahili: 7 of 8 raised, because text the rules cannot read is sent "
+    "English: 2 of 30 raised. Luganda and Swahili: 8 of 8 raised, because text the rules cannot read is sent "
     "to a person at severity 3 by design. The rules were not changed after scoring this set.",
 ]
 

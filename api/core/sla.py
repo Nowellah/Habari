@@ -16,7 +16,7 @@ from django.utils import timezone
 
 from core import allocation, router
 from core.harm import sla_rules
-from core.messages import msg
+from core.messages import child_language, msg
 from core.models import Case, Notification, Officer, SLAEvent
 
 PAGE_AFTER = 15  # SLA minutes, severity 4
@@ -117,7 +117,7 @@ def check(case, now=None):
             c.flags = sorted(set(c.flags) | {"critical"})
             c.save(update_fields=["flags"])
         case.flags = c.flags
-        followup.send_to_child(case, msg("danger_again", code=case.code))
+        followup.send_to_child(case, msg("danger_again", child_language(case), code=case.code))
 
 
 def tick(now=None):

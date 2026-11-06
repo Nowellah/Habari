@@ -98,5 +98,37 @@
     "closed_child_stop": "Your report is closed. Send HELP any time if you need us again."
   },
   "advice_sextortion": "Do not pay or send anything more. Keep the messages as proof, then block them.",
-  "advice_sextortion_web": "Right now: do not pay and do not send anything more. Paying usually makes them ask for more.\n\nKeep the messages (take screenshots), then block them. You did nothing wrong."
+  "advice_sextortion_web": "Right now: do not pay and do not send anything more. Paying usually makes them ask for more.\n\nKeep the messages (take screenshots), then block them. You did nothing wrong.",
+  "case_word": "Case",
+  "labels": {
+      "skip": "Skip",
+      "feel_little": "A little",
+      "feel_lot": "A lot",
+      "feel_scared": "Scared",
+      "feel_danger": "In danger",
+      "safe_yes": "Yes, I am safe",
+      "safe_no": "No, I am not safe",
+      "not_sure": "Not sure",
+      "from_known": "Someone I know",
+      "from_online": "Someone online",
+      "from_authority": "An adult in charge",
+      "from_self": "Myself",
+      "offer_talk": "Talk to someone",
+      "offer_report": "Make a report",
+      "offer_proof": "Keep proof safe",
+      "offer_ask": "Ask a question",
+      "proof_add": "Add screenshots",
+      "proof_later": "Not now",
+      "proof_more": "Add more",
+      "proof_done": "That is all",
+      "proof_right": "Yes, it is right",
+      "proof_another": "Add another",
+      "tell_something": "I want to tell you something",
+      "back_to_menu": "Back to menu",
+      "write_here": "Write here",
+      "rate_good": "Good",
+      "rate_ok": "OK",
+      "rate_bad": "Not good",
+      "send_it": "Send it"
+  }
 }

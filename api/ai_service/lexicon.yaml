@@ -56,7 +56,7 @@ flags:
     floor: 0
     terms:
       en: ["or else", "i will post", "i will share", "i will tell everyone", "i will hurt you"]
-      lg: ["nja kubitadde", "nja kukola obubi"]
+      lg: ["nja kubitadde", "nja kukola obubi", "ajja kusasaanya", "ajja kuteeka", "ajja kulaga", "ajja kubiteeka", "ajja kubisaasaanya", "bw'otosasule"]
       sw: ["nitaweka", "nitakuumiza"]
       rn: ["ndaakuteera"]
   # v0.2: an adult in charge is severity 3, the same as the child's pick 3.
@@ -154,6 +154,6 @@ combinations:
 # A message with words from two languages counts as mixed, so the bot asks.
 language_markers:
   en: [i, me, my, you, he, she, they, the, a, an, is, are, was, and, to, of, in, at, for, with, "on", want, wants, please, help, someone, man, woman, asking, asks, keeps, call, calls, names, every, day, said, says, what, about, from, this, that, not, will]
-  lg: [mu, nze, oli, ali, naye, era, nnyo, kati, ki, nga, nti, ssente, omusajja, omukazi, omuntu, ansaba, njagala, webale, bambi, kubanga, ate, wange, ebifaananyi, bifaananyi, byange, essomero, tasindika, okufa]
+  lg: [mu, nze, oli, ali, naye, era, nnyo, kati, ki, nga, nti, ssente, omusajja, omukazi, omuntu, ansaba, njagala, webale, bambi, kubanga, ate, wange, ebifaananyi, bifaananyi, byange, essomero, tasindika, okufa, nkwetaaga, obuyambi, nnyamba, nsobola, ntya, lwaki, otya, gyebale, osiibye, wasuze, yange, kyange, ndi, sirina, mbuulira, ntegeeza, ekizibu, akawunti, ansaba, bansaba, ankuba, antiisa, simanyi, weebale, bambi, kale, ssebo, nnyabo]
   sw: [na, ya, wa, kwa, ni, mimi, wewe, yeye, nataka, sana, yangu, pesa, picha, shule, tafadhali, msaada, mtu, ananiomba, kwenye, kufa]
   rn: [nyowe, kandi, munonga, ninyenda, nyoherereza, ebishushani, omwegyesa, wangye, kufa]

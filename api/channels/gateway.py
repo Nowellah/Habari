@@ -24,7 +24,7 @@ from ai_service.engine.config import get_settings as knowledge_settings
 from ai_service.language import detect_language
 from core import ai_client, ai_triage, followup, sla
 from core.harm import pick_severity, picks
-from core.messages import _messages
+from core.messages import _messages, label, reply_languages
 from core.messages import msg as _msg
 from core.messages import status_words
 from core.models import Case, Conversation, Message, Reporter, ReporterVault
@@ -36,12 +36,13 @@ RATINGS = {"1": "good", "2": "ok", "3": "not_good", "😀": "good", "🙂": "goo
 FEELINGS = {"1": "little", "2": "lot", "3": "scared", "4": "danger"}
 # What the child says they feel is a floor: it can raise severity, never lower it.
 FEELING_FLOOR = {"little": 1, "lot": 2, "scared": 3, "danger": 4}
-FEELING_LABELS = {"1": "A little", "2": "A lot", "3": "Scared", "4": "In danger", "0": "Skip"}
-SAFE_OPTIONS = {"1": "Yes, I am safe", "2": "No, I am not safe", "3": "Not sure"}
-SOURCE_OPTIONS = {"1": "Someone I know", "2": "Someone online", "3": "An adult in charge", "4": "Myself", "5": "Not sure"}
+# Button labels are keys into the "labels" table of shared/messages_<lang>.json.
+FEELING_LABELS = {"1": "feel_little", "2": "feel_lot", "3": "feel_scared", "4": "feel_danger", "0": "skip"}
+SAFE_OPTIONS = {"1": "safe_yes", "2": "safe_no", "3": "not_sure"}
+SOURCE_OPTIONS = {"1": "from_known", "2": "from_online", "3": "from_authority", "4": "from_self", "5": "not_sure"}
 SOURCE_FLAGS = {"1": "danger_from_known", "2": "danger_from_online", "3": "danger_from_authority",
                 "4": "danger_from_self", "5": "danger_from_unsure"}
-OFFER_LABELS = {"TALK": "Talk to someone", "REPORT": "Make a report", "PROOF": "Keep proof safe", "ASK": "Ask a question"}
+OFFER_LABELS = {"TALK": "offer_talk", "REPORT": "offer_report", "PROOF": "offer_proof", "ASK": "offer_ask"}
 WEB_START_WORDS = {"MENU", "START", "/START", "HI", "HELLO"}
 EVIDENCE_ENTRY_ID = "keep-evidence"
 PROOF_ANSWERS = {"PROOF_LATER": "proof_later", "PROOF_DONE": "proof_done", "PROOF_RIGHT": "proof_right"}
@@ -55,13 +56,59 @@ QUESTION_STARTS = {"what", "how", "why", "can", "could", "is", "are", "am", "do"
                    "will", "who", "when", "where", "which"}
 
 _channel = ContextVar("channel", default="")
+_lang = ContextVar("lang", default="en")  # the language this reply is written in
+
+# A child who greets us in Luganda is answered in Luganda (draft list, needs native review).
+LUGANDA_GREETINGS = {"oli otya", "gyebale ko", "gyebale", "osiibye otya", "wasuze otya", "ki kati",
+                     "nkwetaaga obuyambi", "nnyamba", "mbeera", "obuyambi"}
 
 
-def msg(key, lang="en", **kw):
-    """The wording for the channel being served. The web chat has its own short, child-friendly version."""
-    if _channel.get() == "web" and f"{key}_web" in _messages(lang):
-        key = f"{key}_web"
-    return _msg(key, lang, **kw)
+def msg(key, lang=None, **kw):
+    """The wording for the channel and language being served.
+
+    The web chat has its own short, child-friendly version (key_web). The child's language
+    wins over the web version, so a Luganda text is never swapped for an English one.
+    """
+    lang = lang if lang in reply_languages() else _lang.get()
+    keys = (f"{key}_web", key) if _channel.get() == "web" else (key,)
+    for source_lang in dict.fromkeys((lang, "en")):
+        for k in keys:
+            if k in _messages(source_lang):
+                return _msg(k, source_lang, **kw)
+    return _msg(key, "en", **kw)
+
+
+def L(name):
+    """A button label in the language of this reply."""
+    return label(name, _lang.get())
+
+
+def _words(text):
+    return " ".join(re.sub(r"[^\w\s']", " ", (text or "").lower()).split())
+
+
+def _reply_language(reporter, text, language):
+    """Pick the language to answer in, and remember it on the reporter.
+
+    Order: a language the channel told us, a Luganda greeting, a message we can confidently
+    place, then what the child chose or wrote before. Short or unclear text keeps the last one.
+    """
+    supported = reply_languages()
+    if language in supported:
+        return language
+    lowered = _words(text)
+    detected = None
+    if lowered in LUGANDA_GREETINGS:
+        detected = "lg"
+    elif len(lowered.split()) >= 3:
+        guess = detect_language(lowered)
+        if not guess["ask_language"] and guess["language"] in supported:
+            detected = guess["language"]
+    if detected and detected != reporter.language:
+        reporter.language = detected
+        reporter.save(update_fields=["language"])
+    current = detected or reporter.language
+    return current if current in supported else "en"
 
 
 def _join(*parts):
@@ -83,12 +130,12 @@ def _for_buttons(out):
     elif text == msg("menu_retry"):
         text = msg("menu_said_web")
     text = re.sub(r"^Habari:\s*", "", text)
-    cut = re.search(r"\s*Reply\s+\d|\s[0-9]\s+[A-Z]", text)
+    cut = re.search(r"\s*(Reply|Ddamu)\s+\d|\s[0-9]\s+[A-Z]", text)
     if cut:
         text = text[:cut.start()].rstrip()
     out = dict(out, reply_text=text)
     if out["state"] == "DESCRIBE":
-        out["options"] = [{"key": "0", "label": "Skip"}]
+        out["options"] = [{"key": "0", "label": L("skip")}]
     return out
 
 
@@ -108,11 +155,12 @@ def _record_age(case_code, meta):
 
 
 def _menu_options():
-    return [{"key": k, "label": p["short_en"]} for k, p in picks().items()]
+    lang = _lang.get()
+    return [{"key": k, "label": p.get(f"short_{lang}") or p["short_en"]} for k, p in picks().items()]
 
 
 def _feeling_options():
-    return [{"key": k, "label": label} for k, label in FEELING_LABELS.items()]
+    return [{"key": k, "label": L(name)} for k, name in FEELING_LABELS.items()]
 
 
 def apply_feeling(case, feeling):
@@ -129,7 +177,7 @@ def apply_feeling(case, feeling):
 
 
 def _danger_options(labels):
-    return [{"key": k, "label": label} for k, label in labels.items()]
+    return [{"key": k, "label": L(name)} for k, name in labels.items()]
 
 
 def _start_danger_questions(conv, case, lead):
@@ -166,7 +214,7 @@ def _answer_danger(conv, text):
         case.save(update_fields=["flags", "alleged_role"])
         conv.draft = {"awaiting": "danger", "step": 3}
         conv.save()
-        return _reply(msg("danger_q_tell"), "CASE_OPEN", case, [{"key": "0", "label": "Skip"}])
+        return _reply(msg("danger_q_tell"), "CASE_OPEN", case, [{"key": "0", "label": L("skip")}])
     conv.draft = {}
     conv.save()
     if step == 3 and text == "0":
@@ -276,7 +324,7 @@ def _knowledge_answer(channel, text, language):
 
     Never used for anything that matches a harm rule: that is a report, not a question.
     """
-    if channel != "web" or (language or "en") != "en":
+    if channel != "web" or _lang.get() != "en":
         return None
     lowered = text.strip().lower()
     if not (lowered.endswith("?") or lowered.split()[0] in QUESTION_STARTS):
@@ -301,11 +349,11 @@ def _entry_answer(entry_id):
 
 
 def _offer_options():
-    return [{"key": k, "label": label} for k, label in OFFER_LABELS.items()]
+    return [{"key": k, "label": L(name)} for k, name in OFFER_LABELS.items()]
 
 
 def _proof_options():
-    return [{"key": "PROOF_ADD", "label": "Add screenshots"}, {"key": "PROOF_LATER", "label": "Not now"}]
+    return [{"key": "PROOF_ADD", "label": L("proof_add")}, {"key": "PROOF_LATER", "label": L("proof_later")}]
 
 
 def _with_proof_ask(text, state, case):
@@ -328,7 +376,7 @@ def _case_question_reply(case, text, language):
     if wants_steps and len(lowered.split()) <= 6:
         answer = steps
     else:
-        answer = (_lookup_answer(text) if (language or "en") == "en" else None) or (steps if wants_steps else None)
+        answer = (_lookup_answer(text) if _lang.get() == "en" else None) or (steps if wants_steps else None)
     if not answer:
         return None
     if case.evidence.filter(kind=proofs.KIND).exists():
@@ -337,7 +385,7 @@ def _case_question_reply(case, text, language):
 
 
 def _after_answer_options():
-    return [{"key": "REPORT", "label": "I want to tell you something"}, {"key": "MENU", "label": "Back to menu"}]
+    return [{"key": "REPORT", "label": L("tell_something")}, {"key": "MENU", "label": L("back_to_menu")}]
 
 
 def _status(reporter, conv, args):
@@ -354,7 +402,7 @@ def _status(reporter, conv, args):
         word = args[1] if len(args) > 1 else ""
         if not word or not hmac.compare_digest(_pin_hash(owner, word), owner.pin_hash):
             return _reply(msg("status_need_pin", code=case.code), conv.state if conv else "START")
-    return _reply(status_words(case), conv.state if conv else "START", case)
+    return _reply(status_words(case, _lang.get()), conv.state if conv else "START", case)
 
 
 def _stop(reporter):
@@ -447,7 +495,11 @@ def _route(channel, reporter, text, language):
             return _offer_choice(conv, command, open_menu)
 
     # Only a lone "HELP" opens the menu; "help me, he wants..." is a description.
-    if command in MENU_WORDS and len(words) == 1:
+    if _words(text) in LUGANDA_GREETINGS and channel == "web":
+        conv.state, conv.case, conv.draft = "OFFER", None, {}
+        conv.save()
+        return _reply(msg("offer"), "OFFER", options=_offer_options())
+    if (command in MENU_WORDS and len(words) == 1) or _words(text) in LUGANDA_GREETINGS:
         return open_menu()
 
     danger = apply_rules(text).severity >= 4
@@ -460,6 +512,7 @@ def _route(channel, reporter, text, language):
             case.save(update_fields=["language", "language_conf"])
             reporter.language = code
             reporter.save(update_fields=["language"])
+            _lang.set(code if code in reply_languages() else "en")
             conv.state, conv.draft = "CASE_OPEN", {"awaiting": "feeling"}
             conv.save()
             return _reply(_join(msg("lang_saved", language=name), msg("feeling_ask")), "CASE_OPEN", case,
@@ -483,7 +536,7 @@ def _route(channel, reporter, text, language):
             conv.state = "RATE"
             conv.save()
             return _reply(msg("checkin_rate"), "RATE", case,
-                          [{"key": "1", "label": "Good"}, {"key": "2", "label": "OK"}, {"key": "3", "label": "Not good"}])
+                          [{"key": "1", "label": L("rate_good")}, {"key": "2", "label": L("rate_ok")}, {"key": "3", "label": L("rate_bad")}])
         if text in ("2", "3"):
             Message.objects.create(case=case, direction="in", text=f"Check-in answer: {text} (not safe)", channel=channel)
             case.flags = sorted(set(case.flags) | {"child_not_safe"})
@@ -549,7 +602,7 @@ def _route(channel, reporter, text, language):
     if conv.state == "ASK" and not danger:
         if apply_rules(text).flags:  # they are describing something that happened, so it is a report
             return _case_reply(create_case(reporter, channel, "5", text, language), conv, text, language)
-        answer = _lookup_answer(text) if (language or "en") == "en" else None
+        answer = _lookup_answer(text) if _lang.get() == "en" else None
         if answer:
             return _reply(_join(answer, msg("answer_follow")), "ASK", options=_after_answer_options())
         return _reply(_join(msg("ask_none"), msg("ask_none_help")), "ASK", options=_after_answer_options())
@@ -581,14 +634,14 @@ def _offer_choice(conv, choice, open_menu):
         conv.state, conv.draft = "START", {}
         conv.save()
         return _reply(_join(msg("talk_call"), msg("talk_here")), "START",
-                      options=[{"key": "REPORT", "label": "Write here"}, {"key": "MENU", "label": "Back to menu"}])
+                      options=[{"key": "REPORT", "label": L("write_here")}, {"key": "MENU", "label": L("back_to_menu")}])
     if choice == "PROOF":
         conv.state, conv.draft = "START", {}
         conv.save()
         return _reply(_entry_answer(EVIDENCE_ENTRY_ID) or msg("ask_none_help"), "START", options=_after_answer_options())
     conv.state, conv.draft = "ASK", {}
     conv.save()
-    return _reply(msg("ask_question"), "ASK", options=[{"key": "MENU", "label": "Back to menu"}])
+    return _reply(msg("ask_question"), "ASK", options=[{"key": "MENU", "label": L("back_to_menu")}])
 
 
 def _keep_voice_notes(reporter, channel, out, notes):
@@ -615,6 +668,7 @@ def handle(channel, sender_id, text="", language=None, attachments=None, locatio
     with transaction.atomic():
         reporter = get_reporter(channel, str(sender_id), language)
         text = (text or "").strip()
+        _lang.set(_reply_language(reporter, text, language))
         if isinstance(location, dict):
             from core.geo import nearest_district
             district = nearest_district(location.get("lat"), location.get("lon"))  # coordinates end here
@@ -667,7 +721,8 @@ def add_proof(sender_id, note, image=None):
         proofs.attach(case, proofs.checked(note, check))
         if case.status in followup.CLOSED or case.status in (Case.Status.RESOLVED, Case.Status.SAFETY_CHECK):
             followup.reopen(case, "child added proof")
-        more = [{"key": "PROOF_ADD", "label": "Add more"}, {"key": "PROOF_DONE", "label": "That is all"}]
+        _lang.set(reporter.language if reporter.language in reply_languages() else "en")
+        more = [{"key": "PROOF_ADD", "label": L("proof_more")}, {"key": "PROOF_DONE", "label": L("proof_done")}]
         flag = "proof_sensitive" if check and check["sensitive"] else "proof_unclear" if check and check["relevant"] == "no" else ""
         if flag:
             case.flags = sorted(set(case.flags) | {flag})
@@ -676,7 +731,7 @@ def add_proof(sender_id, note, image=None):
             reply = _reply(msg("proof_sensitive"), conv.state, case, more)
         elif flag == "proof_unclear":
             reply = _reply(_join(msg("proof_unclear"), msg("proof_unclear_ask")), conv.state, case,
-                           [{"key": "PROOF_RIGHT", "label": "Yes, it is right"}, {"key": "PROOF_ADD", "label": "Add another"}])
+                           [{"key": "PROOF_RIGHT", "label": L("proof_right")}, {"key": "PROOF_ADD", "label": L("proof_another")}])
         else:
             reply = _reply(msg("proof_saved"), conv.state, case, more)
         return _for_buttons(reply), True
@@ -687,11 +742,12 @@ def handle_voice_transcript(channel, sender_id, transcript, language=None) -> di
     started = time.perf_counter()
     with transaction.atomic():
         reporter = get_reporter(channel, str(sender_id), language)
+        _lang.set(_reply_language(reporter, transcript, language))
         conv = reporter.conversations.filter(channel=channel).order_by("-updated_at").first()             or Conversation.objects.create(reporter=reporter, channel=channel)
         conv.draft = {"voice_text": transcript, "prev_state": conv.state, "prev_draft": conv.draft}
         conv.state = "VOICE_CONFIRM"
         conv.save()
         out = _reply(msg("voice_confirm", text=transcript), "VOICE_CONFIRM", conv.case,
-                     [{"key": "1", "label": "Send it"}])
+                     [{"key": "1", "label": L("send_it")}])
     out["first_reply_ms"] = round((time.perf_counter() - started) * 1000)
     return out
