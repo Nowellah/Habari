@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import Page from "../components/Page";
-import { stopSpeaking } from "../lib/speech";
 import { useSession } from "../state/session";
 
 export default function Welcome() {
@@ -17,8 +16,7 @@ export default function Welcome() {
         <div className="stack">
           <button className="btn-primary" type="button" onClick={() => { session.reset(); navigate("/age"); }}>Talk to us</button>
           <button className="btn-accent" type="button" onClick={() => navigate("/help")}>Get Help Now</button>
-          <button className="btn-danger" type="button"
-            onClick={() => { stopSpeaking(); session.reset(); location.replace("https://www.google.com"); }}>Quick Exit</button>
+          <button className="btn-track" type="button" onClick={() => navigate("/status")}>Track your case</button>
         </div>
         <hr className="section-divider" />
         <div className="chips">
@@ -27,7 +25,7 @@ export default function Welcome() {
           <span>No name needed</span>
         </div>
         <p className="footnote">
-          Quick Exit takes you away from this page. Nothing from this chat is saved on your phone.
+          The Exit button at the top takes you away from this page. Nothing from this chat is saved on your phone.
           In danger now? <a href={`tel:${session.helpline}`}>Call {session.helpline}</a>, it is free. <Link to="/help">More help</Link>
         </p>
         <p className="footnote"><a href="/kb">Safety tips</a></p>
