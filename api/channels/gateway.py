@@ -10,6 +10,7 @@ AI triage runs in the background after each reply (core.ai_triage).
 """
 import hashlib
 import hmac
+import logging
 import re
 import time
 from contextvars import ContextVar
@@ -17,8 +18,11 @@ from contextvars import ContextVar
 from django.conf import settings
 from django.db import IntegrityError, transaction
 
+from ai_service.engine import retrieval
+from channels import proofs
+from ai_service.engine.config import get_settings as knowledge_settings
 from ai_service.language import detect_language
-from core import ai_triage, followup, sla
+from core import ai_client, ai_triage, followup, sla
 from core.harm import pick_severity, picks
 from core.messages import _messages
 from core.messages import msg as _msg
@@ -37,8 +41,18 @@ SAFE_OPTIONS = {"1": "Yes, I am safe", "2": "No, I am not safe", "3": "Not sure"
 SOURCE_OPTIONS = {"1": "Someone I know", "2": "Someone online", "3": "An adult in charge", "4": "Myself", "5": "Not sure"}
 SOURCE_FLAGS = {"1": "danger_from_known", "2": "danger_from_online", "3": "danger_from_authority",
                 "4": "danger_from_self", "5": "danger_from_unsure"}
+OFFER_LABELS = {"TALK": "Talk to someone", "REPORT": "Make a report", "PROOF": "Keep proof safe", "ASK": "Ask a question"}
+WEB_START_WORDS = {"MENU", "START", "/START", "HI", "HELLO"}
+EVIDENCE_ENTRY_ID = "keep-evidence"
+PROOF_ANSWERS = {"PROOF_LATER": "proof_later", "PROOF_DONE": "proof_done", "PROOF_RIGHT": "proof_right"}
+NEXT_STEPS = re.compile(r"\b(what (do|should|can) i do|what now|what next|what happens next|help me)\b")
 LANG_OPTIONS = {"1": ("lg", "Luganda"), "2": ("rn", "Runyankore"), "3": ("sw", "Swahili"), "4": ("en", "English")}
 
+
+logger = logging.getLogger("habari.ai")
+
+QUESTION_STARTS = {"what", "how", "why", "can", "could", "is", "are", "am", "do", "does", "did", "should",
+                   "will", "who", "when", "where", "which"}
 
 _channel = ContextVar("channel", default="")
 
@@ -156,7 +170,7 @@ def _answer_danger(conv, text):
     conv.draft = {}
     conv.save()
     if step == 3 and text == "0":
-        return _reply(msg("danger_thanks"), "CASE_OPEN", case)
+        return _with_proof_ask(msg("danger_thanks"), "CASE_OPEN", case)
     return None
 
 
@@ -165,7 +179,7 @@ def _answer_feeling(conv, text):
     conv.draft = {}
     conv.save()
     if text == "0":
-        return _reply(msg("feeling_thanks"), "CASE_OPEN", conv.case)
+        return _with_proof_ask(msg("feeling_thanks"), "CASE_OPEN", conv.case)
     feeling = FEELINGS.get(text)
     if feeling is None:
         return None
@@ -174,8 +188,8 @@ def _answer_feeling(conv, text):
     if case.severity >= 4:
         return _start_danger_questions(conv, case, msg("danger", code=case.code))
     if feeling == "little" and case.severity >= 3:
-        return _reply(msg("feeling_higher"), "CASE_OPEN", case)
-    return _reply(msg("feeling_thanks"), "CASE_OPEN", case)
+        return _with_proof_ask(msg("feeling_higher"), "CASE_OPEN", case)
+    return _with_proof_ask(msg("feeling_thanks"), "CASE_OPEN", case)
 
 
 def get_reporter(channel, sender_id, language):
@@ -243,6 +257,75 @@ def _case_reply(case, conv, text="", language=None):
     conv.state, conv.case, conv.draft = "CASE_OPEN", case, {"awaiting": "feeling"}
     conv.save()
     return _reply(_join(msg("received", code=case.code), msg("feeling_ask")), "CASE_OPEN", case, _feeling_options())
+
+
+def _knowledge_answer(channel, text, language):
+    """A reviewed answer for a plain question on the English web chat. Nothing is generated.
+
+    Never used for anything that matches a harm rule: that is a report, not a question.
+    """
+    if channel != "web" or (language or "en") != "en":
+        return None
+    lowered = text.strip().lower()
+    if not (lowered.endswith("?") or lowered.split()[0] in QUESTION_STARTS):
+        return None
+    return _lookup_answer(text)
+
+
+def _lookup_answer(text):
+    """The best reviewed answer for the text, or None. Nothing is generated."""
+    try:
+        match = retrieval.search(text, "en", knowledge_settings()).match
+    except Exception as exc:  # noqa: BLE001 - answers are optional, the menu still works
+        logger.error("knowledge lookup failed with %s", type(exc).__name__)
+        return None
+    return match.entry.answer if match else None
+
+
+def _entry_answer(entry_id):
+    kb = retrieval.load_knowledge_base("en")
+    entry = next((e for e in kb.entries if e.id == entry_id), None) if kb else None
+    return entry.answer if entry else None
+
+
+def _offer_options():
+    return [{"key": k, "label": label} for k, label in OFFER_LABELS.items()]
+
+
+def _proof_options():
+    return [{"key": "PROOF_ADD", "label": "Add screenshots"}, {"key": "PROOF_LATER", "label": "Not now"}]
+
+
+def _with_proof_ask(text, state, case):
+    """On the web chat, finish a reply by asking for screenshots. Other channels cannot upload files."""
+    if _channel.get() != "web":
+        return _reply(text, state, case)
+    return _reply(_join(text, msg("proof_ask"), msg("proof_warn")), state, case, _proof_options())
+
+
+def _case_question_reply(case, text, language):
+    """A real answer when the child asks something after the report is made. None means carry on as usual."""
+    lowered = text.strip().lower()
+    if not lowered:
+        return None
+    wants_steps = bool(NEXT_STEPS.search(lowered))
+    if not (wants_steps or lowered.endswith("?") or lowered.split()[0] in QUESTION_STARTS):
+        return None
+    steps = _join(msg("next_steps"), msg("next_keep"), msg("next_dont"), msg("next_adult"), msg("next_helper"))
+    # A short "what do I do now" gets the plain steps; a longer, specific question gets its reviewed answer first.
+    if wants_steps and len(lowered.split()) <= 6:
+        answer = steps
+    else:
+        answer = (_lookup_answer(text) if (language or "en") == "en" else None) or (steps if wants_steps else None)
+    if not answer:
+        return None
+    if case.evidence.filter(kind=proofs.KIND).exists():
+        return _reply(answer, "CASE_OPEN", case)
+    return _with_proof_ask(answer, "CASE_OPEN", case)
+
+
+def _after_answer_options():
+    return [{"key": "REPORT", "label": "I want to tell you something"}, {"key": "MENU", "label": "Back to menu"}]
 
 
 def _status(reporter, conv, args):
@@ -340,6 +423,17 @@ def _route(channel, reporter, text, language):
         conv.save()
         return _reply(msg(key), "PICK_HARM", options=_menu_options())
 
+    if channel == "web" and len(words) == 1 and command in PROOF_ANSWERS and conv.case:
+        return _reply(msg(PROOF_ANSWERS[command]), conv.state, conv.case)
+
+    if channel == "web" and len(words) == 1:
+        if command in WEB_START_WORDS:
+            conv.state, conv.case, conv.draft = "OFFER", None, {}
+            conv.save()
+            return _reply(msg("offer"), "OFFER", options=_offer_options())
+        if command in OFFER_LABELS and conv.state in ("OFFER", "ASK", "START", "PICK_HARM"):
+            return _offer_choice(conv, command, open_menu)
+
     # Only a lone "HELP" opens the menu; "help me, he wants..." is a description.
     if command in MENU_WORDS and len(words) == 1:
         return open_menu()
@@ -418,6 +512,10 @@ def _route(channel, reporter, text, language):
         ai_triage.schedule(case.id)
         if case.severity >= 4 and was < 4:
             return _start_danger_questions(conv, case, msg("danger", code=case.code))
+        if channel == "web":
+            helped = _case_question_reply(case, text, language)
+            if helped:
+                return helped
         return _reply(msg("added", code=case.code), "CASE_OPEN", case)
 
     if conv.state == "DESCRIBE":
@@ -436,18 +534,49 @@ def _route(channel, reporter, text, language):
         conv.save()
         return _reply(msg("describe"), "DESCRIBE")
 
+    if conv.state == "ASK" and not danger:
+        if apply_rules(text).flags:  # they are describing something that happened, so it is a report
+            return _case_reply(create_case(reporter, channel, "5", text, language), conv, text, language)
+        answer = _lookup_answer(text) if (language or "en") == "en" else None
+        if answer:
+            return _reply(_join(answer, msg("answer_follow")), "ASK", options=_after_answer_options())
+        return _reply(_join(msg("ask_none"), msg("ask_none_help")), "ASK", options=_after_answer_options())
+
     if danger:  # a danger phrase skips the menu, in START or PICK_HARM
         return _case_reply(create_case(reporter, channel, "1", text, language), conv)
 
-    if conv.state in ("START", "PICK_HARM") and len(words) >= 3:
+    if conv.state in ("START", "PICK_HARM", "OFFER") and len(words) >= 3:
         # Someone who simply tells us what happened is not sent back to a menu.
         if apply_rules(text).flags:
             return _case_reply(create_case(reporter, channel, "5", text, language), conv, text, language)
+        answer = _knowledge_answer(channel, text, language)
+        if answer:
+            conv.state, conv.draft = "START", {}
+            conv.save()
+            return _reply(_join(answer, msg("answer_follow")), "START", options=_after_answer_options())
         conv.state, conv.draft = "PICK_HARM", {"said": text}
         conv.save()
         return _reply(msg("menu_retry"), "PICK_HARM", options=_menu_options())
 
     return open_menu("menu_retry" if conv.state == "PICK_HARM" else "menu")
+
+
+def _offer_choice(conv, choice, open_menu):
+    """One of the four first choices on the web chat."""
+    if choice == "REPORT":
+        return open_menu("menu_pick")
+    if choice == "TALK":
+        conv.state, conv.draft = "START", {}
+        conv.save()
+        return _reply(_join(msg("talk_call"), msg("talk_here")), "START",
+                      options=[{"key": "REPORT", "label": "Write here"}, {"key": "MENU", "label": "Back to menu"}])
+    if choice == "PROOF":
+        conv.state, conv.draft = "START", {}
+        conv.save()
+        return _reply(_entry_answer(EVIDENCE_ENTRY_ID) or msg("ask_none_help"), "START", options=_after_answer_options())
+    conv.state, conv.draft = "ASK", {}
+    conv.save()
+    return _reply(msg("ask_question"), "ASK", options=[{"key": "MENU", "label": "Back to menu"}])
 
 
 def _keep_voice_notes(reporter, channel, out, notes):
@@ -499,6 +628,46 @@ def handle(channel, sender_id, text="", language=None, attachments=None, locatio
             attach_meta(Case.objects.get(code=out["case_code"]), meta)
     out["first_reply_ms"] = round((time.perf_counter() - started) * 1000)
     return out
+
+
+def _proof_check(case, image, content_type):
+    """Compare a proof picture with what the child reported. None when no check is set up."""
+    if image is None:
+        return None
+    latest = list(case.messages.filter(direction="in").order_by("-id").values_list("text", flat=True)[:5])
+    said = " ".join(reversed(latest))
+    return ai_client.check_proof(image, content_type, said, (picks().get(case.pick) or {}).get("short_en", ""))
+
+
+def add_proof(sender_id, note, image=None):
+    """Put an uploaded proof file on the child's open case. Returns (reply, kept).
+
+    `image` is the picture's bytes when it can be checked against the report.
+    """
+    _channel.set("web")
+    with transaction.atomic():
+        reporter = Reporter.objects.filter(pseudo_id=pseudo_id("web", str(sender_id), settings.HMAC_SECRET)).first()
+        conv = reporter.conversations.filter(channel="web").order_by("-updated_at").first() if reporter else None
+        case = conv.case if conv else None
+        if case is None:
+            return _for_buttons(_reply(msg("proof_need_case"), "START")), False
+        check = _proof_check(case, image, note.get("type", ""))
+        proofs.attach(case, proofs.checked(note, check))
+        if case.status in followup.CLOSED or case.status in (Case.Status.RESOLVED, Case.Status.SAFETY_CHECK):
+            followup.reopen(case, "child added proof")
+        more = [{"key": "PROOF_ADD", "label": "Add more"}, {"key": "PROOF_DONE", "label": "That is all"}]
+        flag = "proof_sensitive" if check and check["sensitive"] else "proof_unclear" if check and check["relevant"] == "no" else ""
+        if flag:
+            case.flags = sorted(set(case.flags) | {flag})
+            case.save(update_fields=["flags"])
+        if flag == "proof_sensitive":
+            reply = _reply(msg("proof_sensitive"), conv.state, case, more)
+        elif flag == "proof_unclear":
+            reply = _reply(_join(msg("proof_unclear"), msg("proof_unclear_ask")), conv.state, case,
+                           [{"key": "PROOF_RIGHT", "label": "Yes, it is right"}, {"key": "PROOF_ADD", "label": "Add another"}])
+        else:
+            reply = _reply(msg("proof_saved"), conv.state, case, more)
+        return _for_buttons(reply), True
 
 
 def handle_voice_transcript(channel, sender_id, transcript, language=None) -> dict:
