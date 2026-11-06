@@ -2,7 +2,7 @@
 
 A child-first online safety companion for Uganda (UCC Testbed Hackathon 2026, Track 5: intelligent reporting, response and referral).
 
-A child can report something that happened online from almost any door: SMS, USSD, the Telegram bot, a web chat, a browser button, a voice note, or a share from a social app. Every door leads to the same case engine. Serious cases go to the right partner with a tracked acknowledgement, late cases escalate automatically, and the child can follow their case without giving a name.
+A child can report something that happened online from almost any door: SMS, USSD, a bot, a web chat, a browser button, a voice note, or a share from a social app. Every door leads to the same case engine. Serious cases go to the right partner with a tracked acknowledgement, late cases escalate automatically, and the child can follow their case without giving a name.
 
 ## Submission documents (UCC Testbed Hackathon 2026)
 
