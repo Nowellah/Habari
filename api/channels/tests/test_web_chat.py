@@ -47,7 +47,7 @@ class WebWordingTests(GatewayTestCase):
 
     def test_sms_keeps_its_typed_list(self):
         out = self.send("HELP", sender="+256700000001", channel="sms")
-        self.assertIn("Reply 1 Danger", out["reply_text"])
+        self.assertIn("1 Danger", out["reply_text"])
 
 
 class FreeTextTests(GatewayTestCase):

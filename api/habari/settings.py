@@ -30,9 +30,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-insecure-key-change-me")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "1") == "1"
 
-# Local runs print emails (officer alerts) to the console instead of failing
-# quietly with no mail server. Set EMAIL_BACKEND for real email.
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# Email is configured in the MAILERS block below (Django 6.x). Local runs print
+# officer-alert emails to the console instead of failing quietly with no mail
+# server. Set EMAIL_BACKEND for real email (the MAILERS block reads that env var).
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".ngrok-free.app", ".ngrok-free.dev"]
 CSRF_TRUSTED_ORIGINS = ["https://*.ngrok-free.app", "https://*.ngrok-free.dev"]
@@ -179,7 +179,8 @@ STATIC_URL = 'static/'
 
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        # Reads EMAIL_BACKEND so the original env-var override still works.
+        'BACKEND': os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"),
     },
 }
 

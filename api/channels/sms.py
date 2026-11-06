@@ -28,7 +28,11 @@ def send_sms(reporter, text, to_number=None, reply=False):
         vault = ReporterVault.objects.filter(reporter=reporter).first()
         number = vault.raw_contact if vault else None
 
+    # Save first so the simulator outbox shows the reply immediately, before any
+    # provider network call that could block for several seconds.
     row = OutboundSMS(reporter=reporter, text=text)
+    row.save()
+
     if settings.AT_API_KEY and number:
         try:
             r = requests.post(
@@ -40,7 +44,8 @@ def send_sms(reporter, text, to_number=None, reply=False):
             row.provider, row.provider_status = "africastalking", f"HTTP {r.status_code}"
         except requests.RequestException as e:
             row.provider, row.provider_status = "africastalking", f"failed: {type(e).__name__}"
-    row.save()
+        row.save(update_fields=["provider", "provider_status"])
+
     return row
 
 

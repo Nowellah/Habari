@@ -6,7 +6,7 @@ from core import alert
 from core.models import Case, Notification, Officer
 
 
-@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+@override_settings(MAILERS={"default": {"BACKEND": "django.core.mail.backends.locmem.EmailBackend"}})
 class AlertTests(TestCase):
     def setUp(self):
         call_command("seed_demo", verbosity=0)
