@@ -208,3 +208,77 @@ class SextortionFirstReplyTests(GatewayTestCase):
         self.send("4", sender="web-b", channel="web")
         out = self.send("people in my class keep laughing at me", sender="web-b", channel="web")
         self.assertNotIn("do not pay", out["reply_text"])
+
+
+class HurtByAPersonTests(GatewayTestCase):
+    def web(self, text, sender="web-h"):
+        return self.send(text, sender=sender, channel="web")
+
+    def danger_case(self):
+        self.web("HELP")
+        self.web("1")
+        self.web("1")
+        self.web("1")
+        return self.web("My Aunt has beaten me")
+
+    def test_telling_us_someone_hit_them_gets_care_and_a_question_not_a_bare_thank_you(self):
+        out = self.danger_case()
+        parts = out["reply_text"].split("\n\n")
+        self.assertEqual(parts, ["I am sorry this happened to you.", "It is not your fault. You were right to tell me.", "Are you hurt?"])
+        self.assertEqual([o["key"] for o in out["options"]], ["1", "2", "3"])
+        self.assertNotIn("I added this", out["reply_text"])
+
+    def test_hurt_raises_the_case_and_points_to_a_clinic_and_the_helpline(self):
+        self.danger_case()
+        out = self.web("1")
+        self.assertIn("go to a clinic", out["reply_text"])
+        self.assertIn("call 116", out["reply_text"])
+        case = Case.objects.get()
+        self.assertEqual(case.severity, 4)
+        self.assertIn("child_hurt", case.flags)
+
+    def test_not_hurt_keeps_the_case_and_says_what_happens_next(self):
+        self.danger_case()
+        out = self.web("2")
+        self.assertIn("glad you are not hurt", out["reply_text"])
+        self.assertIn("who can keep you safe", out["reply_text"])
+        self.assertNotIn("child_hurt", Case.objects.get().flags)
+
+    def test_it_is_asked_only_once(self):
+        self.danger_case()
+        self.web("2")
+        later = self.web("she also took my phone")
+        self.assertNotIn("Are you hurt?", later["reply_text"])
+
+    def test_a_typed_answer_is_kept_as_more_information(self):
+        self.danger_case()
+        out = self.web("she does it every night when my mother is away")
+        self.assertEqual(Case.objects.get().messages.filter(direction="in").count(), 2)
+        self.assertNotIn("Are you hurt?", out["reply_text"])
+
+
+class ShareMoreTests(GatewayTestCase):
+    def web(self, text, sender="web-s"):
+        return self.send(text, sender=sender, channel="web")
+
+    def open_case(self):
+        self.web("HELP")
+        self.web("5")
+        self.web("someone keeps sending me rude messages")
+        self.web("1")
+
+    def test_an_added_message_asks_if_there_is_anything_else(self):
+        self.open_case()
+        out = self.web("he also sent a picture")
+        parts = out["reply_text"].split("\n\n")
+        self.assertEqual(parts[0], "Thank you. I added this. A helper will read it.")
+        self.assertIn("anything else you want to share", parts[1])
+        self.assertEqual([o["key"] for o in out["options"]], ["PROOF_ADD", "PROOF_DONE"])
+
+    def test_that_is_all_stops_the_question_for_the_rest_of_the_case(self):
+        self.open_case()
+        self.web("he also sent a picture")
+        self.assertIn("will see everything you added", self.web("PROOF_DONE")["reply_text"])
+        later = self.web("he messaged again today")
+        self.assertEqual(later["reply_text"], "Thank you. I added this. A helper will read it.")
+        self.assertEqual(later["options"], [])
