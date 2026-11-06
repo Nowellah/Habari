@@ -8,9 +8,9 @@ Declare these in the pitch. **Check each licence and each platform's terms again
 |---|---|---|
 | Django | Web app | BSD-3-Clause |
 | Django REST framework, django-htmx | Installed; not essential yet | BSD-3-Clause, MIT |
-| requests, httpx | HTTP calls, tests | Apache-2.0, BSD-3-Clause |
+| requests | HTTP calls to Sunbird, SMS and messaging providers | Apache-2.0 |
 | PyYAML, python-dotenv | Lexicon file, settings | MIT, BSD-3-Clause |
-| FastAPI, uvicorn, python-multipart | AI service | MIT, BSD-3-Clause, Apache-2.0 |
+| pydantic | Rule engine result types | MIT |
 | Leaflet | Heat map | BSD-2-Clause |
 | OpenStreetMap tiles | Heat map background | Data ODbL; follow the OSM tile usage policy (use another tile server for heavy use) |
 | Node.js test runner | Extension tests | MIT |

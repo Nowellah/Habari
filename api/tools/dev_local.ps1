@@ -52,7 +52,7 @@ ngrok config add-authtoken $authToken | Out-Null
 Write-Host "      Done."
 
 # ── 1. Start Django dev server ────────────────────────────────────────────────
-Write-Host "[1/4] Starting Django on http://127.0.0.1:$Port ..." -ForegroundColor Cyan
+Write-Host "[1/3] Starting Django on http://127.0.0.1:$Port ..." -ForegroundColor Cyan
 $django = Start-Process -FilePath "python" `
     -ArgumentList "manage.py", "runserver", "127.0.0.1:$Port" `
     -WorkingDirectory $root `
@@ -61,18 +61,8 @@ Write-Host "      Django PID: $($django.Id)"
 
 Start-Sleep -Seconds 2
 
-# ── 2. Start AI service ────────────────────────────────────────────────────────
-Write-Host "[2/4] Starting AI service on http://127.0.0.1:8001 ..." -ForegroundColor Cyan
-$ai = Start-Process -FilePath "python" `
-    -ArgumentList "-m", "uvicorn", "ai_service.app:app", "--port", "8001", "--log-level", "warning" `
-    -WorkingDirectory $root `
-    -PassThru -NoNewWindow
-Write-Host "      AI PID:     $($ai.Id)"
-
-Start-Sleep -Seconds 2
-
-# ── 3. Start ngrok tunnel ─────────────────────────────────────────────────────
-Write-Host "[3/4] Opening ngrok tunnel on port $Port ..." -ForegroundColor Cyan
+# ── 2. Start ngrok tunnel ─────────────────────────────────────────────────────
+Write-Host "[2/3] Opening ngrok tunnel on port $Port ..." -ForegroundColor Cyan
 $ngrok = Start-Process -FilePath "ngrok" `
     -ArgumentList "http", $Port `
     -PassThru -NoNewWindow
@@ -82,7 +72,7 @@ Write-Host "      ngrok  PID: $($ngrok.Id)"
 Start-Sleep -Seconds 4
 
 # ── 4. Read public URL from ngrok local API ───────────────────────────────────
-Write-Host "[4/4] Reading tunnel URL ..." -ForegroundColor Cyan
+Write-Host "[3/3] Reading tunnel URL ..." -ForegroundColor Cyan
 
 $public = $null
 $attempts = 0
@@ -116,7 +106,6 @@ Write-Host "  USSD ->  Service -> Callback URL:" -ForegroundColor Yellow
 Write-Host "    $public/at/ussd/" -ForegroundColor White
 Write-Host "══════════════════════════════════════════════════════" -ForegroundColor Green
 Write-Host ""
-Write-Host "  AI service        : http://127.0.0.1:8001/health" -ForegroundColor DarkGray
 Write-Host "  ngrok inspect UI  : http://127.0.0.1:4040" -ForegroundColor DarkGray
 Write-Host "  Django            : http://127.0.0.1:$Port" -ForegroundColor DarkGray
 Write-Host "  Child chat        : http://127.0.0.1:$Port/chat" -ForegroundColor DarkGray
@@ -131,7 +120,6 @@ try {
 } finally {
     Write-Host "`nStopping processes..." -ForegroundColor Red
     Stop-Process -Id $django.Id -Force -ErrorAction SilentlyContinue
-    Stop-Process -Id $ai.Id    -Force -ErrorAction SilentlyContinue
     Stop-Process -Id $ngrok.Id  -Force -ErrorAction SilentlyContinue
     Write-Host "Done."
 }
