@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-06T07:35:57+00:00",
+  "generated_at": "2026-11-06T07:07:49+00:00",
   "method": "lexicon rules v0.4 + rule engine (ai_service/triage.py), text only",
   "target": "Recall of at least 0.90 on severity 3 and 4",
   "synthetic_test": {
@@ -569,15 +569,15 @@
       ]
     },
     "severity_4": {
-      "recall": 1.0,
+      "recall": 0.9090909090909091,
       "precision": 1.0,
-      "true_positives": 11,
-      "false_negatives": 0,
+      "true_positives": 10,
+      "false_negatives": 1,
       "false_positives": 0,
       "support": 11,
       "ci95": [
-        0.7411599827511859,
-        1.0
+        0.6226353745137962,
+        0.9837682477371741
       ]
     },
     "authority_role": {
@@ -964,11 +964,11 @@
   },
   "benign_test": {
     "n": 38,
-    "false_alarms": 10,
-    "false_alarm_rate": 0.2631578947368421,
+    "false_alarms": 9,
+    "false_alarm_rate": 0.23684210526315788,
     "ci95": [
-      0.14971462389701296,
-      0.42009150206375323
+      0.12993561496969508,
+      0.39207119165337856
     ]
   },
   "caveats": [
@@ -982,6 +982,6 @@
     "v0.3 rules were written from the misses in the first hard test set, so that set is NO LONGER BLIND and its score is optimistic. Before v0.3, the rules caught 9 of its 18 serious cases (0.50).",
     "The second hard test set (hard_test_v2) was committed before the v0.3 rules were written and was not used to choose them, so it is the fairest number here. Before v0.3 the rules caught 12 of its 26 serious cases (0.46). It was written by the same person as the v0.3 rules, so even this score may be optimistic. A test set written by someone outside the team is the next step.",
     "v0.4 stopped treating any mention of a parent or teacher as severity 3 (it now needs a sign of harm or a warning sign such as being alone with them). That change first lost 2 serious cases in hard_test_v2, and the warning-sign list was chosen after looking at them, so hard_test_v2 is no longer fully blind either. Its blind score, before v0.4, was 0.92.",
-    "False alarms are measured on benign_test (38 harmless messages, committed before it was scored). English: 2 of 30 raised. Luganda and Swahili: 8 of 8 raised, because text the rules cannot read is sent to a person at severity 3 by design. The rules were not changed after scoring this set."
+    "False alarms are measured on benign_test (38 harmless messages, committed before it was scored). English: 2 of 30 raised. Luganda and Swahili: 7 of 8 raised, because text the rules cannot read is sent to a person at severity 3 by design. The rules were not changed after scoring this set."
   ]
 }
