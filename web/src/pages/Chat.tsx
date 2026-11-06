@@ -195,6 +195,7 @@ export default function Chat() {
           <div className="case-bar">
             Case <strong>{s.caseCode}</strong>
             <button type="button" className="linkish" onClick={() => navigate("/report")}>Review my report</button>
+            <button type="button" className="linkish" onClick={() => navigate("/status")}>Track my case</button>
             <button type="button" className="linkish" onClick={() => navigate("/confirmation")}>Save my code</button>
           </div>
         )}
