@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from channels import voice_notes
+from channels import proofs, voice_notes
 from core import allocation, followup, linking, router, sla
 from core.harm import picks
 from core.messages import _messages
@@ -49,6 +49,7 @@ def case_detail(request, code):
         "events": case.sla_events.order_by("at"),
         "messages": case.messages.order_by("created_at"),
         "voice_notes": voice_notes.for_case(case),
+        "proofs": proofs.for_case(case),
         "replies": _replies(),
         "close_reasons": CLOSE_REASONS,
         "officers": Officer.objects.select_related("user").order_by("user__username"),
@@ -69,6 +70,26 @@ def case_voice(request, code, evidence_id):
         raise Http404("recording not found")
     response = FileResponse(audio, content_type="audio/wav")
     response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@login_required
+def case_proof(request, code, evidence_id):
+    """A screenshot or PDF the child added, for the officer on the case only."""
+    case = _case(request, code)
+    evidence = get_object_or_404(case.evidence, pk=evidence_id, kind=proofs.KIND)
+    try:
+        note = json.loads(evidence.value)
+        data = open(proofs.file_path(note["file"]), "rb")
+    except (ValueError, KeyError, OSError):
+        raise Http404("file not found")
+    content_type = note.get("type", "")
+    if content_type not in ("image/jpeg", "image/png", "image/webp", "application/pdf"):
+        data.close()
+        raise Http404("file not found")
+    response = FileResponse(data, content_type=content_type, as_attachment=content_type == "application/pdf")
+    response["Cache-Control"] = "private, no-store"
+    response["X-Content-Type-Options"] = "nosniff"
     return response
 
 

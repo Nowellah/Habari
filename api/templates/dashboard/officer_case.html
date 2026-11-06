@@ -102,6 +102,14 @@
 </div>
 {% endif %}
 
+{% if proofs %}
+<div class="card">
+  <h2>Proof from the child</h2>
+  <p class="muted">Screenshots and files the child added. Each is saved in the case's tamper-evident record. Open only what you need. The automatic check is a rough guide and can be wrong; look at the file yourself.</p>
+  {% for p in proofs %}<p><span class="muted">{{ p.at|date:"H:i" }} &middot; {{ p.kb }} KB</span><br>{% if p.check %}<span class="muted">Automatic check: {{ p.check.kind }}, {% if p.check.relevant == "no" %}<strong>may not match what the child reported</strong>{% elif p.check.relevant == "yes" %}looks related to the report{% else %}could not tell if it matches{% endif %}{% if p.check.sensitive %}, <strong>may be sensitive</strong>{% endif %}{% if p.check.reason %}. {{ p.check.reason }}{% endif %}</span><br>{% endif %}{% if p.is_image %}<a href="{% url 'case_proof' case.code p.id %}" target="_blank" rel="noopener"><img src="{% url 'case_proof' case.code p.id %}" alt="Screenshot added by the child" style="max-width:320px;max-height:240px"></a>{% else %}<a href="{% url 'case_proof' case.code p.id %}">Download the PDF</a>{% endif %}</p>{% endfor %}
+</div>
+{% endif %}
+
 <div class="card">
   <details>
     <summary>Messages ({{ messages|length }}). Open only if you need to read the child's words.</summary>
