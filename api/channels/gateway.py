@@ -45,6 +45,8 @@ SOURCE_FLAGS = {"1": "danger_from_known", "2": "danger_from_online", "3": "dange
 OFFER_LABELS = {"TALK": "offer_talk", "REPORT": "offer_report", "PROOF": "offer_proof", "ASK": "offer_ask"}
 WEB_START_WORDS = {"MENU", "START", "/START", "HI", "HELLO"}
 EVIDENCE_ENTRY_ID = "keep-evidence"
+HURT_OPTIONS = {"1": "Yes, I am hurt", "2": "No, I am not hurt", "3": "Not sure"}
+HARM_BY_PERSON_FLAGS = {"harm_by_person", "rule:abuse_sexual_or_physical"}
 PROOF_ANSWERS = {"PROOF_LATER": "proof_later", "PROOF_DONE": "proof_done", "PROOF_RIGHT": "proof_right"}
 NEXT_STEPS = re.compile(r"\b(what (do|should|can) i do|what now|what next|what happens next|help me)\b")
 LANG_OPTIONS = {"1": ("lg", "Luganda"), "2": ("rn", "Runyankore"), "3": ("sw", "Swahili"), "4": ("en", "English")}
@@ -193,6 +195,36 @@ def _start_danger_questions(conv, case, lead):
     conv.state, conv.case, conv.draft = "CASE_OPEN", case, {"awaiting": "danger", "step": 1}
     conv.save()
     return _reply(_join(lead, msg("danger_q_safe")), "CASE_OPEN", case, _danger_options(SAFE_OPTIONS))
+
+
+def _ask_if_hurt(conv, case):
+    """The child said someone hurt them. Say it is not their fault, then ask if they are hurt."""
+    case.flags = sorted(set(case.flags) | {"asked_hurt"})
+    case.save(update_fields=["flags"])
+    conv.state, conv.case, conv.draft = "CASE_OPEN", case, {"awaiting": "hurt"}
+    conv.save()
+    return _reply(_join(msg("hurt_sorry"), msg("hurt_notfault"), msg("hurt_ask")), "CASE_OPEN", case,
+                  _danger_options(HURT_OPTIONS))
+
+
+def _answer_hurt(conv, text):
+    """Handle the reply to "Are you hurt?". None means it was more information instead."""
+    conv.draft = {}
+    conv.save()
+    if text not in HURT_OPTIONS:
+        return None
+    case = conv.case
+    if text == "1":
+        was = case.severity
+        case.flags = sorted(set(case.flags) | {"child_hurt"})
+        case.severity = max(was, 4)
+        case.save(update_fields=["flags", "severity"])
+        if case.severity > was:
+            sla.reset_clock(case, f"severity raised {was} -> {case.severity}")
+            sla.once(case, "severity_raised", f"{was} -> {case.severity}: child said they are hurt")
+            ai_triage.schedule(case.id)
+        return _reply(_join(msg("hurt_yes_sorry"), msg("hurt_yes_clinic"), msg("hurt_yes_call")), "CASE_OPEN", case)
+    return _reply(_join(msg("hurt_no_glad"), msg("hurt_no_next")), "CASE_OPEN", case)
 
 
 def _answer_danger(conv, text):
@@ -484,6 +516,9 @@ def _route(channel, reporter, text, language):
         return _reply(msg(key), "PICK_HARM", options=_menu_options())
 
     if channel == "web" and len(words) == 1 and command in PROOF_ANSWERS and conv.case:
+        if command != "PROOF_RIGHT":  # they said they have nothing more to add, so do not ask again
+            conv.case.flags = sorted(set(conv.case.flags) | {"share_done"})
+            conv.case.save(update_fields=["flags"])
         return _reply(msg(PROOF_ANSWERS[command]), conv.state, conv.case)
 
     if channel == "web" and len(words) == 1:
@@ -527,6 +562,11 @@ def _route(channel, reporter, text, language):
 
     if conv.state == "CASE_OPEN" and conv.case and (conv.draft or {}).get("awaiting") == "danger":
         answered = _answer_danger(conv, text)
+        if answered:
+            return answered
+
+    if conv.state == "CASE_OPEN" and conv.case and (conv.draft or {}).get("awaiting") == "hurt":
+        answered = _answer_hurt(conv, text)
         if answered:
             return answered
 
@@ -577,10 +617,15 @@ def _route(channel, reporter, text, language):
         ai_triage.schedule(case.id)
         if case.severity >= 4 and was < 4:
             return _start_danger_questions(conv, case, msg("danger", code=case.code))
+        if channel == "web" and "asked_hurt" not in case.flags and HARM_BY_PERSON_FLAGS & set(apply_rules(text).flags):
+            return _ask_if_hurt(conv, case)
         if channel == "web":
             helped = _case_question_reply(case, text, language)
             if helped:
                 return helped
+        if channel == "web" and "share_done" not in case.flags:
+            return _reply(_join(msg("added", code=case.code), msg("share_more")), "CASE_OPEN", case,
+                          [{"key": "PROOF_ADD", "label": "Add screenshots"}, {"key": "PROOF_DONE", "label": "That is all"}])
         return _reply(msg("added", code=case.code), "CASE_OPEN", case)
 
     if conv.state == "DESCRIBE":
