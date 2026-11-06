@@ -4,31 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="same-origin">
+  <meta name="theme-color" content="#006463">
   <title>{% block title %}Habari{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   {% block head %}{% endblock %}
   <style>
-    /* ── Design tokens ──────────────────────────────────────────── */
+    /* ── Design tokens (aligned with chat UI web/src/styles.css) ── */
     :root {
-      --bg: #f9f8f5;
-      --bg2: #ffffff;
-      --fg: #1a1d21;
-      --muted: #596170;
-      --line: #e8e5dc;
-      --accent: #1e7a5c;
-      --accent-l: #e8f5f0;
-      --accent-d: #155f47;
-      --warm: #fdf6ec;
+      --bg:       #FFF9F0;
+      --bg2:      #ffffff;
+      --fg:       #1a1a2e;
+      --muted:    #4a5568;
+      --muted2:   #6b7686;
+      --line:     #e2e8f0;
+      --accent:   #006463;
+      --accent-l: #e8f4f4;
+      --accent-d: #003F40;
+      --warm:     #fdf6ec;
+      --gold:     #FFC619;
       --s4: #c0251a; --s4-l: #fee2e2;
       --s3: #c2410c; --s3-l: #ffedd5;
       --s2: #92600a; --s2-l: #fef3c7;
       --s1: #4b5563; --s1-l: #f3f4f6;
       --radius: 14px;
-      --shadow: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+      --shadow: 0 2px 12px rgba(0,100,99,.10);
+      --shadow-lg: 0 6px 24px rgba(0,100,99,.18);
+      --font: Nunito, "Segoe UI", system-ui, Arial, sans-serif;
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #13151a; --bg2: #1c1f26;
-        --fg: #e8e6e1; --muted: #9ca3af; --line: #282d35;
+        --fg: #e8e6e1; --muted: #9ca3af; --muted2: #6b7686; --line: #282d35;
         --accent: #3aaa80; --accent-l: #0d2e22; --accent-d: #50c998;
         --warm: #1e1c18;
         --s4: #f87171; --s4-l: #2d1515;
@@ -39,7 +47,7 @@
     }
     /* ── Reset & base ───────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--fg); font: 15px/1.6 system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--fg); font: 16px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
     main { max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; }
@@ -48,15 +56,15 @@
     p { margin-bottom: 8px; }
     /* ── Utilities ──────────────────────────────────────────────── */
     .muted { color: var(--muted); font-size: .9rem; }
-    .small { font-size: .82rem; }
+    .small { font-size: .82rem; color: var(--muted2); }
     /* ── Quick exit ─────────────────────────────────────────────── */
     .exit {
       position: fixed; top: 12px; right: 12px; z-index: 999;
-      background: var(--fg); color: var(--bg);
-      padding: 7px 16px; border-radius: 999px;
+      background: #c0392b; color: #fff;
+      padding: 7px 16px; border-radius: 6px;
       font-size: .85rem; font-weight: 700;
       border: none; cursor: pointer;
-      box-shadow: var(--shadow);
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
     }
     /* ── Card ───────────────────────────────────────────────────── */
     .card {
@@ -117,7 +125,7 @@
       font-size: .88rem;
       position: sticky; top: 0; z-index: 100;
     }
-    .topbar .brand { font-weight: 800; color: var(--accent); font-size: 1.05rem; letter-spacing: -.02em; }
+    .topbar .brand { font-weight: 800; color: var(--accent); font-size: 1.1rem; letter-spacing: -.02em; display: flex; align-items: center; gap: 6px; }
     .topbar a { color: var(--muted); }
     .topbar a:hover { color: var(--accent); text-decoration: none; }
     .topbar .spacer { flex: 1; }

@@ -3,7 +3,7 @@
 
 {% block topbar %}
 <nav class="topbar">
-  <span class="brand">🤝 Habari</span>
+  <span class="brand"><span style="color:var(--gold)">💛</span> Habari</span>
   <a href="/officer/">Queue</a>
   <a href="/officer/partners">Partners</a>
   <a href="/officer/polls">Polls</a>
@@ -13,7 +13,7 @@
   <a href="/metrics">Metrics</a>
   <span class="spacer"></span>
   <form method="post" action="/logout/" style="margin:0">
-    {% csrf_token %}<button class="secondary" style="font-size:.82rem;padding:5px 12px">Log out</button>
+    {% csrf_token %}<button style="font-size:.82rem;padding:5px 14px;background:#c0392b;border-radius:6px;font-weight:700">Log out</button>
   </form>
 </nav>
 {% endblock %}
