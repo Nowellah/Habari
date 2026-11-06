@@ -83,3 +83,12 @@ def show() -> None:
             'Quick Exit takes you away from this page but does not erase your browsing history.'
             '</p>'
         )
+
+        # Officer portal link (subtle, at the bottom)
+        ui.html('<hr class="section-divider" style="width:100%;">')
+        ui.button(
+            "🛡️ Officer Portal",
+            on_click=lambda: ui.navigate.to("/officer/login"),
+        ).props("flat no-caps").style(
+            "color:#718096;font-size:0.8rem;align-self:center;"
+        )

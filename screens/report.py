@@ -5,6 +5,8 @@ from nicegui import ui, app
 from components.header import create_header
 from services.session import session_manager
 from services.api_client import api_client
+from services.case_store import case_store
+from services.safety import safety_service
 from models.report import Report
 
 
@@ -157,6 +159,27 @@ def show() -> None:
 
             # Use real case code if backend returned one; else generate demo code
             case_code = response.get("case_code") or _demo_case_code()
+
+            # Register in the local case store so the officer dashboard sees it
+            current = session_manager.get_session(session_id)
+            urgency = safety_service.check_urgency(desc)
+            # Map string severity → integer scale (1-4) matching Django backend
+            _sev_map = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+            sev_int = _sev_map.get(report.severity, 2)
+            case_store.register_case(
+                session_id=session_id,
+                harm_category=report.harm_category,
+                description=desc,
+                severity=sev_int,
+                language=report.language,
+                age_bracket=report.age_bracket,
+                messages=[
+                    {"role": m.role, "text": m.text}
+                    for m in (current.messages if current else [])
+                ],
+                is_urgent=urgency["urgent"],
+                case_code=case_code,
+            )
 
             session_manager.update_session(
                 session_id,

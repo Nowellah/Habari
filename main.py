@@ -7,7 +7,12 @@ load_dotenv()
 from components.theme import inject_styles
 from screens import welcome, age, language, chat, report, confirmation, status
 from screens import help as help_screen
+from screens.officer import login as officer_login
+from screens.officer import dashboard as officer_dashboard
+from screens.officer import case_detail as officer_case
 
+
+# ── Child-facing screens ──────────────────────────────────────────────────────
 
 @ui.page("/")
 def index():
@@ -56,6 +61,31 @@ def help_page():
     inject_styles()
     help_screen.show()
 
+
+# ── Officer portal ────────────────────────────────────────────────────────────
+
+@ui.page("/officer/login")
+def officer_login_page():
+    officer_login.show()
+
+
+@ui.page("/officer")
+def officer_root():
+    # Redirect /officer → /officer/login
+    ui.navigate.to("/officer/login")
+
+
+@ui.page("/officer/dashboard")
+def officer_dashboard_page():
+    officer_dashboard.show()
+
+
+@ui.page("/officer/case/{code}")
+def officer_case_page(code: str):
+    officer_case.show(code)
+
+
+# ── Run ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     ui.run(
