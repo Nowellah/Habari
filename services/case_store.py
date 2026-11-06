@@ -203,7 +203,7 @@ class CaseStore:
                 "description": "I have been feeling like I don't want to be here anymore. Everything is too much.",
                 "age_bracket": "16–17", "status": "assigned", "is_urgent": True,
                 "language": "en", "delta_hours": 3,
-                "assigned_to": "Officer Nakato",
+                "assigned_to": "admin",
                 "flags": ["urgent", "self_harm"],
             },
             {
@@ -220,7 +220,7 @@ class CaseStore:
                 "description": "Some kids from school made a fake account with my name and are posting bad things.",
                 "age_bracket": "13–15", "status": "in_progress", "is_urgent": False,
                 "language": "en", "delta_hours": 12,
-                "assigned_to": "Officer Ssemakula",
+                "assigned_to": "officer",
                 "flags": ["impersonation"],
             },
             {
@@ -236,7 +236,7 @@ class CaseStore:
                 "description": "Someone on TikTok told me to keep our chat secret from my parents.",
                 "age_bracket": "10–12", "status": "resolved", "is_urgent": False,
                 "language": "en", "delta_hours": 48,
-                "assigned_to": "Officer Nakato",
+                "assigned_to": "admin",
             },
             {
                 "pick": "5", "severity": 2,
@@ -251,7 +251,7 @@ class CaseStore:
                 "description": "My uncle threatens me and says nobody will believe me.",
                 "age_bracket": "13–15", "status": "referred", "is_urgent": True,
                 "language": "en", "delta_hours": 72,
-                "assigned_to": "Officer Ssemakula",
+                "assigned_to": "officer",
                 "flags": ["urgent", "authority_figure"],
             },
         ]

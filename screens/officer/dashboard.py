@@ -1,330 +1,286 @@
 """
-Officer Dashboard — main view.
+Officer Dashboard — mirrors main branch officer_list.html and base.html exactly.
 
-Sections:
-  1. Header + officer identity + sign-out
-  2. Summary metric cards (total, open, urgent, critical)
-  3. Severity matrix (bar chart via HTML/CSS)
-  4. Cases by category (horizontal bars)
-  5. Status breakdown table
-  6. Full case queue — sorted by severity desc, then age asc
-     Filters: All | Open | Critical | Unassigned
+Design tokens, topbar, severity badges, stat strip, and case table
+are all ported from api/templates/base.html + dashboard/officer_list.html
+on the main branch.
 """
+import html as _h
 import os
-import html as _html
 from nicegui import ui, app
 from services.case_store import case_store
-from models.case import SEVERITY_META, STATUS_LABELS, PICKS
+from models.case import PICKS, SEVERITY_META, STATUS_LABELS
+
+# ── CSS — exact port of main branch base.html + officer_list styles ──────────
+_CSS = """\
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{
+  --bg:#f9f8f5;--bg2:#ffffff;--fg:#1a1d21;--muted:#596170;--line:#e8e5dc;
+  --accent:#1e7a5c;--accent-l:#e8f5f0;--accent-d:#155f47;--warm:#fdf6ec;
+  --s4:#c0251a;--s4-l:#fee2e2;--s3:#c2410c;--s3-l:#ffedd5;
+  --s2:#92600a;--s2-l:#fef3c7;--s1:#4b5563;--s1-l:#f3f4f6;
+  --radius:14px;--shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#13151a;--bg2:#1c1f26;--fg:#e8e6e1;--muted:#9ca3af;--line:#282d35;
+    --accent:#3aaa80;--accent-l:#0d2e22;--accent-d:#50c998;--warm:#1e1c18;
+    --s4:#f87171;--s4-l:#2d1515;--s3:#fb923c;--s3-l:#2d1a0d;
+    --s2:#facc15;--s2-l:#2a230a;--s1:#9ca3af;--s1-l:#1f2128;}
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,-apple-system,sans-serif;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+main{max-width:980px;margin:0 auto;padding:24px 16px 48px;}
+h1{font-size:1.45rem;font-weight:700;letter-spacing:-.01em;margin-bottom:16px;}
+h2{font-size:1.05rem;font-weight:600;margin-bottom:10px;}
+p{margin-bottom:8px;}
+.muted{color:var(--muted);font-size:.9rem;}
+.small{font-size:.82rem;}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow);}
+.card+.card{margin-top:14px;}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:.9rem;}
+th{text-align:left;padding:8px 12px;color:var(--muted);font-weight:600;font-size:.8rem;
+  text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--line);}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--warm);}
+.sev{display:inline-block;font-weight:700;font-size:.82rem;padding:2px 8px;border-radius:999px;}
+.sev-4{color:var(--s4);background:var(--s4-l);}
+.sev-3{color:var(--s3);background:var(--s3-l);}
+.sev-2{color:var(--s2);background:var(--s2-l);}
+.sev-1{color:var(--s1);background:var(--s1-l);}
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px;
+  background:var(--bg2);border-bottom:1px solid var(--line);font-size:.88rem;
+  position:sticky;top:0;z-index:100;}
+.topbar .brand{font-weight:800;color:var(--accent);font-size:1.05rem;letter-spacing:-.02em;}
+.topbar a{color:var(--muted);}
+.topbar a:hover{color:var(--accent);text-decoration:none;}
+.topbar .spacer{flex:1;}
+button,.btn{font:inherit;padding:7px 16px;border-radius:8px;border:none;
+  background:var(--accent);color:#fff;font-weight:600;cursor:pointer;transition:background .15s;}
+button:hover,.btn:hover{background:var(--accent-d);}
+button.secondary{background:transparent;border:1.5px solid var(--accent);color:var(--accent);}
+button.secondary:hover{background:var(--accent-l);}
+/* Officer list extras */
+.page-head{display:flex;align-items:baseline;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.page-head h1{margin:0;}
+.stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:10px;
+  padding:12px 18px;min-width:110px;}
+.stat .n{font-size:1.6rem;font-weight:800;line-height:1;}
+.stat .l{font-size:.78rem;color:var(--muted);margin-top:2px;}
+.stat.red .n{color:var(--s4);}
+.stat.amber .n{color:var(--s2);}
+.stat.green .n{color:var(--accent);}
+.alert-card{background:var(--s4-l);border:1px solid var(--s4);border-radius:10px;
+  padding:14px 18px;margin-bottom:16px;}
+.alert-card strong{color:var(--s4);}
+td.code a{font-weight:700;color:var(--accent);font-family:monospace;letter-spacing:.03em;}
+td.code a:hover{text-decoration:underline;}
+tr.urgent td{background:#fff9f9;}
+tr.urgent:hover td{background:#fff0f0;}
+/* Severity matrix bars */
+.bar-row{margin-bottom:10px;}
+.bar-label{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px;}
+.bar-track{background:var(--line);border-radius:99px;height:9px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;transition:width .4s;}
+/* Category chart */
+.cat-row{margin-bottom:8px;}
+</style>"""
 
 
-# ── Auth guard ────────────────────────────────────────────────────────────────
-
-def _require_officer():
+def _require_officer() -> bool:
     if not app.storage.user.get("officer"):
         ui.navigate.to("/officer/login")
         return False
     return True
 
 
-# ── Page ─────────────────────────────────────────────────────────────────────
-
 def show() -> None:
     if not _require_officer():
         return
 
-    officer = app.storage.user.get("officer", "Officer")
+    ui.add_head_html(_CSS)
+    officer = app.storage.user.get("officer", "Admin")
     is_demo = bool(os.getenv("DEMO_MODE", "").strip())
 
-    _officer_topbar(officer, is_demo)
+    _topbar(officer)
 
-    with ui.column().style(
-        "max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; width: 100%;"
-    ):
-        # Page title
-        ui.html(
-            '<h1 style="font-size:1.4rem;font-weight:800;color:#003F40;margin:0 0 4px;">'
-            '🛡️ Officer Dashboard</h1>'
-        )
-        ui.html(
-            f'<p style="color:#718096;font-size:0.88rem;margin:0 0 20px;">'
-            f'Most urgent first. No child identities are shown. '
-            f'Logged in as <strong>{_html.escape(officer)}</strong>.</p>'
-        )
-
-        if is_demo:
-            ui.html(
-                '<div style="background:#fff3cd;border:2px solid #FFC619;border-radius:10px;'
-                'padding:10px 16px;margin-bottom:16px;font-weight:600;color:#7a5c00;'
-                'font-size:0.88rem;">⚠️ DEMO MODE — All cases and data are simulated.</div>'
-            )
-
-        # Pull fresh metrics
-        m = case_store.metrics()
-
-        # ── 1. Summary cards ─────────────────────────────────────────────────
-        _summary_cards(m)
-
-        # ── 2. Severity matrix + category breakdown ───────────────────────────
-        with ui.row().style("gap:16px;flex-wrap:wrap;width:100%;margin-bottom:20px;"):
-            with ui.element("div").style(
-                "flex:1;min-width:260px;background:white;border-radius:14px;"
-                "padding:20px;box-shadow:0 2px 12px rgba(0,100,99,0.08);"
-            ):
-                _severity_matrix(m["by_severity"], m["total"])
-
-            with ui.element("div").style(
-                "flex:1;min-width:260px;background:white;border-radius:14px;"
-                "padding:20px;box-shadow:0 2px 12px rgba(0,100,99,0.08);"
-            ):
-                _category_chart(m["by_pick"], m["total"])
-
-        # ── 3. Status breakdown ───────────────────────────────────────────────
-        with ui.element("div").style(
-            "background:white;border-radius:14px;padding:20px;"
-            "box-shadow:0 2px 12px rgba(0,100,99,0.08);margin-bottom:20px;"
-        ):
-            _status_breakdown(m["by_status"])
-
-        # ── 4. Case queue ─────────────────────────────────────────────────────
-        _case_queue()
-
-
-# ── Summary cards ─────────────────────────────────────────────────────────────
-
-def _summary_cards(m: dict) -> None:
-    cards = [
-        {"label": "Total Cases",    "value": m["total"],  "bg": "#e8f4f4", "fg": "#006463", "icon": "📋"},
-        {"label": "Open",           "value": m["open"],   "bg": "#e8f4f4", "fg": "#006463", "icon": "🔓"},
-        {"label": "Urgent",         "value": m["urgent"], "bg": "#fdecea", "fg": "#B3261E", "icon": "🚨"},
-        {"label": "Critical (sev 4)","value": m["by_severity"].get(4, 0), "bg": "#fdecea", "fg": "#B3261E", "icon": "⚠️"},
-        {"label": "High (sev 3)",    "value": m["by_severity"].get(3, 0), "bg": "#fff3e0", "fg": "#E65100", "icon": "🔶"},
-        {"label": "Medium (sev 2)",  "value": m["by_severity"].get(2, 0), "bg": "#fff8e1", "fg": "#F57C00", "icon": "🔸"},
-        {"label": "Low (sev 1)",     "value": m["by_severity"].get(1, 0), "bg": "#e8f5e9", "fg": "#2E7D32", "icon": "🟢"},
-    ]
-    with ui.row().style("gap:12px;flex-wrap:wrap;width:100%;margin-bottom:20px;"):
-        for c in cards:
-            ui.html(
-                f'<div style="flex:1;min-width:120px;background:{c["bg"]};'
-                f'border-radius:12px;padding:16px 14px;text-align:center;'
-                f'box-shadow:0 1px 6px rgba(0,0,0,0.06);">'
-                f'  <div style="font-size:1.6rem;">{c["icon"]}</div>'
-                f'  <div style="font-size:1.8rem;font-weight:800;color:{c["fg"]};">{c["value"]}</div>'
-                f'  <div style="font-size:0.75rem;color:#4a5568;font-weight:600;margin-top:2px;">{c["label"]}</div>'
-                f'</div>'
-            )
-
-
-# ── Severity matrix ───────────────────────────────────────────────────────────
-
-def _severity_matrix(by_severity: dict, total: int) -> None:
-    ui.html('<h3 style="font-size:1rem;font-weight:700;color:#003F40;margin:0 0 14px;">Severity Matrix</h3>')
-    total_safe = max(total, 1)
-    rows = [
-        (4, "Critical"),
-        (3, "High"),
-        (2, "Medium"),
-        (1, "Low"),
-    ]
-    for sev, label in rows:
-        count = by_severity.get(sev, 0)
-        pct = round(count / total_safe * 100)
-        meta = SEVERITY_META[sev]
-        ui.html(
-            f'<div style="margin-bottom:10px;">'
-            f'  <div style="display:flex;justify-content:space-between;'
-            f'       align-items:center;margin-bottom:4px;">'
-            f'    <span style="font-size:0.82rem;font-weight:700;color:{meta["fg"]};">'
-            f'      {label}</span>'
-            f'    <span style="font-size:0.82rem;color:#4a5568;font-weight:600;">'
-            f'      {count} cases ({pct}%)</span>'
-            f'  </div>'
-            f'  <div style="background:#f0f4f8;border-radius:20px;height:10px;overflow:hidden;">'
-            f'    <div style="width:{pct}%;height:100%;background:{meta["fg"]};"'
-            f'         transition:"width 0.4s";border-radius:20px;"></div>'
-            f'  </div>'
-            f'</div>'
-        )
-
-
-# ── Category chart ────────────────────────────────────────────────────────────
-
-def _category_chart(by_pick: dict, total: int) -> None:
-    ui.html('<h3 style="font-size:1rem;font-weight:700;color:#003F40;margin:0 0 14px;">Cases by Category</h3>')
-    total_safe = max(total, 1)
-    colours = ["#B3261E", "#E65100", "#E65100", "#F57C00", "#2E7D32"]
-    for idx, (_, p) in enumerate(PICKS.items()):
-        label = p["short_en"]
-        count = by_pick.get(label, 0)
-        pct = round(count / total_safe * 100)
-        colour = colours[idx % len(colours)]
-        ui.html(
-            f'<div style="margin-bottom:10px;">'
-            f'  <div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
-            f'    <span style="font-size:0.8rem;font-weight:600;color:#003F40;">{label}</span>'
-            f'    <span style="font-size:0.8rem;color:#718096;">{count}</span>'
-            f'  </div>'
-            f'  <div style="background:#f0f4f8;border-radius:20px;height:8px;overflow:hidden;">'
-            f'    <div style="width:{pct}%;height:100%;background:{colour};border-radius:20px;"></div>'
-            f'  </div>'
-            f'</div>'
-        )
-
-
-# ── Status breakdown ──────────────────────────────────────────────────────────
-
-def _status_breakdown(by_status: dict) -> None:
-    ui.html('<h3 style="font-size:1rem;font-weight:700;color:#003F40;margin:0 0 14px;">Status Breakdown</h3>')
-    status_colours = {
-        "received":    ("#e3f2fd", "#1565c0"),
-        "triaged":     ("#e8f5e9", "#2E7D32"),
-        "assigned":    ("#e8f5e9", "#2E7D32"),
-        "referred":    ("#fff3e0", "#E65100"),
-        "in_progress": ("#fff3e0", "#E65100"),
-        "acknowledged":("#e8f5e9", "#2E7D32"),
-        "resolved":    ("#e8f5e9", "#2E7D32"),
-        "closed":      ("#f5f5f5", "#424242"),
-        "closed_unfounded":  ("#f5f5f5", "#424242"),
-        "closed_child_stop": ("#f5f5f5", "#424242"),
-        "safety_check":      ("#fff8e1", "#F57C00"),
-    }
-    with ui.row().style("gap:8px;flex-wrap:wrap;"):
-        for status, count in sorted(by_status.items(), key=lambda x: -x[1]):
-            label = STATUS_LABELS.get(status, status.replace("_", " ").title())
-            bg, fg = status_colours.get(status, ("#f0f4f8", "#4a5568"))
-            ui.html(
-                f'<div style="background:{bg};border-radius:10px;padding:12px 16px;'
-                f'min-width:130px;text-align:center;">'
-                f'  <div style="font-size:1.6rem;font-weight:800;color:{fg};">{count}</div>'
-                f'  <div style="font-size:0.75rem;color:{fg};font-weight:600;">{label}</div>'
-                f'</div>'
-            )
-
-
-# ── Case queue ────────────────────────────────────────────────────────────────
-
-def _case_queue() -> None:
-    with ui.element("div").style(
-        "background:white;border-radius:14px;padding:20px;"
-        "box-shadow:0 2px 12px rgba(0,100,99,0.08);"
-    ):
-        with ui.row().style("justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;"):
-            ui.html('<h3 style="font-size:1rem;font-weight:700;color:#003F40;margin:0;">Case Queue</h3>')
-            with ui.row().style("gap:6px;flex-wrap:wrap;"):
-                filter_state = {"active": "all"}
-                filter_container = ui.element("div").style("display:contents;")
-
-        cases = case_store.all_cases()
-        _render_case_table(cases)
-
-
-def _render_case_table(cases: list) -> None:
-    if not cases:
-        ui.html('<p style="color:#718096;font-style:italic;text-align:center;padding:20px 0;">No cases yet.</p>')
-        return
-
-    # Table header
-    ui.html("""
-    <div style="overflow-x:auto;width:100%;">
-    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-    <thead>
-      <tr style="border-bottom:2px solid #e2e8f0;">
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Case</th>
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Severity</th>
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Category</th>
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Status</th>
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Officer</th>
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Age</th>
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Flags</th>
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Received</th>
-        <th style="text-align:left;padding:8px 10px;color:#003F40;font-weight:700;">Action</th>
-      </tr>
-    </thead>
-    <tbody>
+    ui.html(f"""
+    <main>
+      <div class="page-head">
+        <h1>Case queue</h1>
+        <span class="muted small">Most urgent first · no reporter identities shown</span>
+      </div>
     """)
 
-    for case in cases:
-        meta = case.severity_meta
-        status_label = case.status_label
-        flags_html = " ".join(
-            f'<span style="background:#fdecea;color:#B3261E;border-radius:4px;'
-            f'padding:1px 6px;font-size:0.7rem;font-weight:700;">{_html.escape(f)}</span>'
-            for f in case.flags
-        ) if case.flags else '<span style="color:#a0aec0;">—</span>'
+    if is_demo:
+        ui.html(
+            '<div class="alert-card" style="background:var(--s2-l);border-color:var(--s2);">'
+            '<strong style="color:var(--s2);">⚠ DEMO MODE</strong> — '
+            'All cases and data are simulated.'
+            '</div>'
+        )
 
-        row_bg = "#fff8f8" if case.severity == 4 and case.is_open else "transparent"
-        safe_desc = _html.escape(case.description[:60]) + ("…" if len(case.description) > 60 else "")
+    m = case_store.metrics()
+    cases = case_store.all_cases()
 
-        ui.html(f"""
-        <tr style="border-bottom:1px solid #f0f4f8;background:{row_bg};" title="{safe_desc}">
-          <td style="padding:10px 10px;">
-            <a href="/officer/case/{case.case_code}"
-               style="font-weight:700;color:#006463;text-decoration:none;font-family:monospace;font-size:0.9rem;">
-               {case.case_code}</a>
-          </td>
-          <td style="padding:10px 10px;">
-            <span style="background:{meta['bg']};color:{meta['fg']};border-radius:20px;
-                  padding:3px 12px;font-weight:700;font-size:0.8rem;white-space:nowrap;">
-              {meta['label']}
-            </span>
-          </td>
-          <td style="padding:10px 10px;color:#4a5568;">{_html.escape(case.pick_label)}</td>
-          <td style="padding:10px 10px;color:#4a5568;">{_html.escape(status_label)}</td>
-          <td style="padding:10px 10px;color:#4a5568;">{_html.escape(case.assigned_to or '—')}</td>
-          <td style="padding:10px 10px;color:#4a5568;">{_html.escape(case.age_display)}</td>
-          <td style="padding:10px 10px;">{flags_html}</td>
-          <td style="padding:10px 10px;color:#718096;white-space:nowrap;">{case.submitted_display}</td>
-          <td style="padding:10px 10px;">
-            <a href="/officer/case/{case.case_code}"
-               style="background:#006463;color:white;border-radius:6px;padding:4px 12px;
-                      font-size:0.8rem;font-weight:700;text-decoration:none;white-space:nowrap;">
-              View →
-            </a>
-          </td>
-        </tr>
-        """)
+    # ── Stat strip ────────────────────────────────────────────────────────────
+    urgent_count = sum(1 for c in cases if c.severity == 4 and c.is_open)
+    open_count   = sum(1 for c in cases if c.is_open)
+    total        = len(cases)
 
-    ui.html("</tbody></table></div>")
+    ui.html(f"""
+    <div class="stat-row">
+      <div class="stat {'green' if total else ''}">
+        <div class="n">{total}</div><div class="l">Total cases</div>
+      </div>
+      <div class="stat {'green' if open_count else ''}">
+        <div class="n">{open_count}</div><div class="l">Open</div>
+      </div>
+      <div class="stat {'red' if urgent_count else ''}">
+        <div class="n">{urgent_count}</div><div class="l">Critical (sev 4)</div>
+      </div>
+      <div class="stat {'amber' if m['by_severity'].get(3,0) else ''}">
+        <div class="n">{m['by_severity'].get(3,0)}</div><div class="l">High (sev 3)</div>
+      </div>
+      <div class="stat">
+        <div class="n">{m['by_severity'].get(2,0)}</div><div class="l">Medium (sev 2)</div>
+      </div>
+      <div class="stat">
+        <div class="n">{m['by_severity'].get(1,0)}</div><div class="l">Low (sev 1)</div>
+      </div>
+    </div>
+    """)
 
+    # ── Severity matrix + category breakdown side by side ────────────────────
+    with ui.row().style("gap:14px;flex-wrap:wrap;margin-bottom:20px;"):
+        # Severity matrix
+        with ui.element("div").style(
+            "flex:1;min-width:240px;background:var(--bg2);border:1px solid var(--line);"
+            "border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);"
+        ):
+            ui.html('<h2>Severity matrix</h2>')
+            total_s = max(total, 1)
+            for sev, label, css in [
+                (4, "Critical", "var(--s4)"),
+                (3, "High",     "var(--s3)"),
+                (2, "Medium",   "var(--s2)"),
+                (1, "Low",      "var(--s1)"),
+            ]:
+                n   = m["by_severity"].get(sev, 0)
+                pct = round(n / total_s * 100)
+                ui.html(f"""
+                <div class="bar-row">
+                  <div class="bar-label">
+                    <span class="sev sev-{sev}">{label}</span>
+                    <span class="muted">{n} &nbsp;({pct}%)</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill" style="width:{pct}%;background:{css};"></div>
+                  </div>
+                </div>""")
 
-# ── Officer top bar ───────────────────────────────────────────────────────────
+        # Category breakdown
+        with ui.element("div").style(
+            "flex:1;min-width:240px;background:var(--bg2);border:1px solid var(--line);"
+            "border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);"
+        ):
+            ui.html('<h2>Cases by category</h2>')
+            colours = ["var(--s4)","var(--s3)","var(--s3)","var(--s2)","var(--s1)"]
+            for idx, (pid, p) in enumerate(PICKS.items()):
+                label = p["short_en"]
+                n   = m["by_pick"].get(label, 0)
+                pct = round(n / max(total, 1) * 100)
+                ui.html(f"""
+                <div class="cat-row">
+                  <div class="bar-label">
+                    <span style="font-size:.82rem;font-weight:600;">{_h.escape(label)}</span>
+                    <span class="muted">{n}</span>
+                  </div>
+                  <div class="bar-track">
+                    <div class="bar-fill" style="width:{pct}%;background:{colours[idx]};"></div>
+                  </div>
+                </div>""")
 
-def _officer_topbar(officer: str, is_demo: bool) -> None:
-    with ui.row().style(
-        "background:#003F40;padding:10px 20px;width:100%;align-items:center;"
-        "gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.3);position:sticky;top:0;z-index:100;"
-        "flex-wrap:wrap;"
+    # ── Status breakdown ──────────────────────────────────────────────────────
+    with ui.element("div").style(
+        "background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);"
+        "padding:18px;box-shadow:var(--shadow);margin-bottom:20px;"
     ):
-        ui.html(
-            '<span style="color:#FFC619;font-weight:800;font-size:1.1rem;'
-            'letter-spacing:2px;cursor:pointer;" onclick="location.href=\'/officer/login\'">HABARI</span>'
-        )
-        ui.html(
-            '<span style="color:#a0d8d8;font-size:0.85rem;font-weight:600;">'
-            '· Officer Portal</span>'
-        )
-        if is_demo:
-            ui.html('<span style="background:#FFC619;color:#003F40;font-weight:800;'
-                    'font-size:0.7rem;padding:2px 8px;border-radius:20px;">DEMO</span>')
-        ui.element("div").style("flex:1;")
-        ui.html(
-            f'<span style="color:#a0d8d8;font-size:0.82rem;">👤 {_html.escape(officer)}</span>'
-        )
-        ui.button(
-            "← Child UI",
-            on_click=lambda: ui.navigate.to("/"),
-        ).props("flat no-caps").style(
-            "color:#FFC619;font-size:0.82rem;font-weight:700;padding:4px 10px;"
-        )
-        ui.button(
-            "Sign Out",
-            on_click=_sign_out,
-        ).props("flat no-caps").style(
-            "color:white;background:#c0392b;border-radius:6px;"
-            "font-size:0.8rem;font-weight:700;padding:4px 12px;min-height:30px;"
-        )
+        ui.html('<h2>Status breakdown</h2>')
+        with ui.row().style("gap:8px;flex-wrap:wrap;"):
+            for status, count in sorted(m["by_status"].items(), key=lambda x: -x[1]):
+                label = STATUS_LABELS.get(status, status.replace("_"," ").title())
+                ui.html(f"""
+                <div style="background:var(--bg);border:1px solid var(--line);border-radius:10px;
+                     padding:10px 16px;min-width:120px;text-align:center;">
+                  <div style="font-size:1.5rem;font-weight:800;">{count}</div>
+                  <div class="small muted">{_h.escape(label)}</div>
+                </div>""")
+
+    # ── Case table ────────────────────────────────────────────────────────────
+    with ui.element("div").classes("card"):
+        ui.html('<h2>Cases</h2>')
+        if not cases:
+            ui.html('<p class="muted" style="text-align:center;padding:24px 0;">No cases yet.</p>')
+        else:
+            rows_html = ""
+            for c in cases:
+                urgent_cls = "urgent" if c.severity == 4 and c.is_open else ""
+                flags = ", ".join(c.flags) if c.flags else "—"
+                sev_badge = f'<span class="sev sev-{c.severity}">{c.severity}</span>'
+                status_lbl = _h.escape(c.status_label)
+                officer_lbl = _h.escape(c.assigned_to or "—")
+                age_lbl = _h.escape(c.age_display)
+                pick_lbl = _h.escape(c.pick_label)
+                received = c.submitted_display
+                rows_html += f"""
+                <tr class="{urgent_cls}" style="cursor:pointer"
+                    onclick="location.href='/officer/case/{c.case_code}'">
+                  <td class="code">
+                    <a href="/officer/case/{c.case_code}">{_h.escape(c.case_code)}</a>
+                  </td>
+                  <td>{sev_badge}</td>
+                  <td>{pick_lbl}</td>
+                  <td>{status_lbl}</td>
+                  <td>{officer_lbl}</td>
+                  <td class="muted small">{age_lbl}</td>
+                  <td class="muted small">{_h.escape(flags)}</td>
+                  <td class="muted small">{_h.escape(received)}</td>
+                </tr>"""
+
+            ui.html(f"""
+            <div class="wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Case</th><th>Severity</th><th>Category</th>
+                  <th>Status</th><th>Officer</th><th>Age</th>
+                  <th>Flags</th><th>Received</th>
+                </tr>
+              </thead>
+              <tbody>{rows_html}</tbody>
+            </table>
+            </div>""")
+
+    ui.html("</main>")
 
 
-def _sign_out() -> None:
-    app.storage.user.pop("officer", None)
-    app.storage.user.pop("officer_pin", None)
-    ui.navigate.to("/officer/login")
+def _topbar(officer: str) -> None:
+    ui.html(f"""
+    <nav class="topbar">
+      <span class="brand">🤝 Habari</span>
+      <a href="/officer/dashboard">Queue</a>
+      <span class="spacer"></span>
+      <span class="muted small">👤 {_h.escape(officer)}</span>
+      <a href="/" style="font-size:.82rem;">← Child UI</a>
+      <a href="/officer/login" onclick="event.preventDefault();
+         fetch('/officer/logout',{{method:'POST'}}).finally(()=>location.href='/officer/login')"
+         style="font-size:.82rem;color:var(--s4);">Sign out</a>
+    </nav>""")
