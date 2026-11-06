@@ -1,6 +1,6 @@
 # Habari architecture
 
-Habari is one case engine with many doors. A child can report from whatever they have (a basic phone, WhatsApp, a browser) and every report becomes the same kind of case, triaged, assigned, referred and tracked the same way.
+Habari is one case engine with many doors. A child can report from whatever they have (a basic phone, Telegram, a browser) and every report becomes the same kind of case, triaged, assigned, referred and tracked the same way.
 
 ## Overview
 
@@ -8,8 +8,7 @@ Habari is one case engine with many doors. A child can report from whatever they
 flowchart LR
   subgraph Doors["Ways a child can report"]
     SMS["SMS / USSD<br/>(Africa's Talking)"]
-    TG["Telegram"]
-    WA["WhatsApp"]
+    TG["Telegram bot"]
     WEB["Web chat and React app<br/>(voice notes, share-to-Habari)"]
     EXT["Browser extension"]
   end
@@ -33,7 +32,7 @@ flowchart LR
   SUN["Sunbird AI<br/>(Luganda, Runyankore,<br/>Swahili, English)"]
   PART["Partners: Sauti 116,<br/>Police CFPU, UCC,<br/>counsellors"]
 
-  SMS & TG & WA & WEB & EXT --> GW
+  SMS & TG & WEB & EXT --> GW
   GW --> RULES --> CASE
   GW -. reply in seconds .-> Doors
   CASE -- after reply --> TRIAGE
@@ -59,7 +58,7 @@ flowchart LR
 
 | Folder | What it does |
 |---|---|
-| `api/channels/` | Gateway and adapters: SMS, USSD, Telegram, WhatsApp, web chat, voice notes |
+| `api/channels/` | Gateway and adapters: SMS, USSD, Telegram bot, web chat, voice notes (a WhatsApp adapter is in the code but not part of the pilot) |
 | `api/core/` | Case engine: models, first-pass rules, AI triage hook, allocation, referral router, SLA clocks, alerts, follow-up |
 | `api/ai_service/` | FastAPI service: lexicon (`lexicon.yaml`), rule engine (`engine/`), language ID, speech to text, Sunbird client |
 | `api/dashboard/` | Officer dashboard, case pages, partner board, heat map, `/metrics`, `/about/status` |

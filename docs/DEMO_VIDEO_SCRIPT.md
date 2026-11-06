@@ -21,7 +21,7 @@ Total: 3:00. Times are guides, not exact.
 
 3. Tap **No, I am not safe**, then **Someone online**.
 4. Point at the case code.
-> "She gets a case code. That's all she needs to follow her case. She can do the same from SMS, USSD on any basic phone, Telegram or WhatsApp, in English, Luganda or Swahili."
+> "She gets a case code. That's all she needs to follow her case. She can do the same from SMS or USSD on any basic phone, or the Telegram bot, in English or Luganda."
 
 ### 1:10–1:50 · The officer side
 **Screen:** officer dashboard, logged in as `peter`.
