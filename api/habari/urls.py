@@ -7,6 +7,7 @@ from channels.sms import sms_hook
 from channels.ussd import ussd_hook
 from channels.whatsapp import whatsapp_hook
 from channels.views import channel_api
+from channels.proof_views import proof_upload
 from channels.voice_views import voice_note, voice_shortcut, voice_transcribe
 from dashboard import officer_views as ov
 from dashboard import pwa_views
@@ -45,6 +46,7 @@ urlpatterns = [
     path("voice", voice_shortcut, name="voice"),
     path("api/voice/transcribe", voice_transcribe, name="voice_transcribe"),
     path("api/voice-note", voice_note, name="voice_note"),
+    path("api/proof", proof_upload, name="proof_upload"),
     path("status/<str:code>", status_page, name="status"),
     path("officer/", officer_list, name="officer_list"),
     path("officer/partners", ov.partner_board, name="partner_board"),
@@ -58,6 +60,7 @@ urlpatterns = [
     path("officer/polls/<int:poll_id>/send", ov.poll_send, name="poll_send"),
     path("officer/case/<str:code>/", ov.case_detail, name="case_detail"),
     path("officer/case/<str:code>/voice/<int:evidence_id>", ov.case_voice, name="case_voice"),
+    path("officer/case/<str:code>/proof/<int:evidence_id>", ov.case_proof, name="case_proof"),
     path("officer/case/<str:code>/ack", ov.case_ack, name="case_ack"),
     path("officer/case/<str:code>/reply", ov.case_reply, name="case_reply"),
     path("officer/case/<str:code>/refer", ov.case_refer, name="case_refer"),
